@@ -1,0 +1,82 @@
+@charset "utf-8";
+/* CSS Document */
+*{margin:0;padding:0;font-family:"微软雅黑",Arial, Helvetica, sans-serif;color:#666;}
+
+.box{width:1000px;margin:0 auto;}
+.header{background:url(../images/header_bg.png) ;height:127px;}
+.logo{background:url(../images/logo.png) 20px 20px no-repeat;width:318px;height:61px;}
+
+.main1{background:#f0f0f0 url(../images/main_bg.png) top repeat-x;height:	650px;}
+.main2{background:#f0f0f0 url(../images/main_bg.png) top repeat-x;height:	730px;}
+.login_box{
+	position:relative;
+	top:10px;
+	left:50px;
+	height: auto;
+	padding-bottom: 30px;
+}
+.login_box input{border:1px solid #ccc;width:170px;}
+.login_box select{width:170px;}
+.login_box th,.login_box td{padding:2px 0;}
+.login_box th{text-align:right;font-weight:normal;font-size:14px;letter-spacing:1px; width:180px;}
+.btn_login{
+	position:relative;
+	left:205px;
+	height: 37px;
+	width: 125px;
+	background-color:#1B5AB5;
+}
+.btn_login input,.upgrade,.restart{background:url(../images/btn.png) no-repeat;color:#fff;border:0;width:125px;height:37px;font-size:14px;}
+.footer{background:#04367d;height:25px;line-height:25px;text-align:center;color:#fff;}
+
+/*第二页样式 */
+.main_l{width:350px;float:left;position:relative;}
+.main_r{margin-left:350px;background:url(../images/login_bg.png)  no-repeat;width:527px;height:359px;position:relative;top:30px;}
+.name02{
+	position:absolute;
+	top:5px;
+	left:72px;
+	font-size:20px;
+	color:#fff;
+	top:13px;
+	width: 191px;
+}
+.content{position:absolute;top:35px;width:180px;left:90px;border:1px solid #ccc;padding:1px;}
+.content dt{background:#04367d;color:#fff;height:25px;line-height:25px;text-align:center;font-size:16px;border:1px solid #ccc;}
+.content dd{font-size:12px;padding:8px;}
+
+#faq a{color:#fff;text-decoration:none;}
+#faq dt:hover{background:#71affd;}
+#faq dd p{margin-bottom:10px;}
+
+.total {width: 527px;float: none;}
+.subtit1 {
+	background-image: url(../images/login_bg_r1_c1.png);
+	height: 56px;
+}
+.subtit2 {
+	background-image: url(../images/login_bg_r2_c1.png);
+	height: 3px;
+}
+.subtit3 {
+	background-image: url(../images/login_bg_r3_c1.png);
+	background-repeat: repeat-y;
+	height: auto;
+}
+.subtit4 {
+	background-image: url(../images/login_bg_r5_c1.png);
+	height: 58px;
+}
+.subtit5 {
+	background-image: url(../images/login_bg_r3_c1.png);
+	background-repeat: repeat-y;
+	height: auto;
+	padding-top: 20px;
+	padding-left:25px;
+	font-size:16px;
+	font-weight: bold;
+}
+.STYLE1 {
+	font-size: 12px;
+	color: #0033FF;
+}

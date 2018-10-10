@@ -1,0 +1,94 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>RG-WP200_System</title>
+<link href="css/style.css" rel="stylesheet" />
+<script type="text/javascript" src="action.js"></script>
+</head>
+
+<body>
+<div class="box">
+	<div class="header">
+    	<div class="logo"></div>
+    </div><!--header-->
+    <div class="main1">
+    	<div class="main_l">
+        	<div class="content">
+                <dl id="faq">
+                    <dt><a href="hedbasic.html">Basic</a></dt>
+                    <dt><a href="hedfirmware.html">System</a> </dt>
+                    <dd><p><strong>Firmware Infomation: </strong>Mac address,hardware version,firmware version.</p>
+<p><strong>Upload firmware: </strong>Select the firmware file and click the“upgrade” button, then you can upgrade your firmware.</p>
+</dd>
+                </dl>
+			</div><!--content-->
+        </div>
+        <div class="main_r">
+			<div class="total">
+				<div class="subtit1">
+					<div class="name02">System information</div>
+				</div>
+				<form id="systeminfo" name="systeminfo" method="get" action="">
+				<div class="subtit5">Firmware Infomation </div>
+				<div class="subtit2"></div>
+				<div class="subtit3"><table class="login_box">
+					<tr>
+						<th>Mac Address:&nbsp;</th>
+						<td><label>
+            <input name="MAC Address" type="text" id="MacAdr" value="0" readonly="readonly"/></label>
+</td>
+					</tr>
+					<tr>
+						<th>Hardware Version:&nbsp;</th>
+						<td><label>
+            <input name="Hardware Version" type="text" id="HardVer" value="0" readonly="readonly"/>
+          </label></td>
+					</tr>
+					<tr>
+						<th>Firmware Version:&nbsp;</th>
+						<td><label>
+            <input name="Firmware Version" type="text" id="FirmVer" value="0" readonly="readonly" disabled="disabled"/>
+          </label></td>
+					</tr>
+					<tr>
+						<th>Release Time:&nbsp;</th>
+						<td><label>
+            <input name="Release Time" type="text" id="RelTime" value="0" readonly="readonly" disabled="disabled"/>
+          </label></td>
+					</tr>
+				</table>
+				<div class="btn_login">
+				  <label>
+		  	        <input name="restart" type="hidden" value="1" />
+                <input type="button" id="restart" onClick="Restart()" value="Restart System" />
+              </label>
+				</div>	
+				</div>
+				</form>			
+				<!--下一区块-->	
+				<form action="" method="post" enctype="multipart/form-data" name="FirmWareUpgrade" id="form1">
+				<div class="subtit5">Upload firmware </div>
+				<div class="subtit2"></div>
+				<div class="subtit3"><table class="login_box">
+					<tr>
+						<th>Firmware File:&nbsp;</th>
+						<td><input type="file" name="file" /></td>
+					</tr>								
+				</table>
+				<div class="btn_login">
+				  <label>
+                <input name="Save" type="button" id="Save" onClick="UpGrade()" value="Upgrade" />	  
+              </label>
+				</div>
+				</div>
+				</form>	
+		  </div><!--subtit3--> 
+  			<div class="subtit4"></div>
+	  </div><!--total-->		
+	</div><!--box--><div class="footer">©2010-2014 REGO, Inc. All rights reserved. </div>
+  </div>
+    <div style="clear:both;"></div> 
+  </div>
+  </body>
+</html>

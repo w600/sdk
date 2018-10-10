@@ -1,0 +1,6 @@
+#!/bin/sh
+
+./makefs fs fsdata_lwip.c
+./makefs fs_basic fsdata_lwip_basic.c
+./makefs fs_ru fsdata_lwip_russian.c
+./makefs fs_ruigong fsdata_lwip_ruigong.c

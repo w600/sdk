@@ -1,0 +1,128 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>RG-WP200_Basic</title>
+<link href="css/style.css" rel="stylesheet" />
+<script type="text/javascript" src="action.js"></script>
+</head>
+
+<body>
+<div class="box">
+	<div class="header">
+	<div class="logo"></div>
+ 	</div><!--header-->
+  
+	<div class="main2">
+		<div class="main_l">
+			<div class="content">
+				<dl id="faq">
+					<dt><a href="hedbasic.html">Basic</a></dt>
+					<dt><a href="hedfirmware.html">System</a> </dt>
+					<dd><strong>WIFI: </strong>Wireless settings is the basic step for you to use the wifi module. The encryption can guarantee the security of your data.</br></br>
+					<strong>TCP/IP: </strong>TCP/IP connections configuration information.</br></br>
+					<strong>Advance: </strong>When the network connection is needed to bind AP mac address.</dd>
+				</dl>
+			</div><!--content-->
+		</div><!--main_l-->	
+			
+		<div class="main_r">
+			<div class="total">
+				<div class="subtit1">
+					<div class="name02">System configure</div>
+				</div>
+				<form id="form1" name="form1" method="get" action="">
+				<div class="subtit5">WIFI</div>
+				<div class="subtit2"></div>
+				<div class="subtit3"><table class="login_box">
+					<tr>
+						<th>Work Type:&nbsp;</th>
+						<td>
+							<select name="Mode" size="1" id="Mode" onChange="mode()" > <option value="0" selected="selected">Sta</option>  <option value="1">Adhoc</option> <option value="2">AP</option>
+            </select>						
+						</td>
+					</tr>
+					<tr>
+						<th>SSID:&nbsp;</th>
+						<td><input name="Ssid" type="text"  id="Ssid" value="noos" size="30" maxlength="32" /></td>
+					</tr>
+					<label><input name="ApEnable" type="hidden"  id="ApEnable" value="0"/></label>
+					<tr>
+						<th>Encryption:&nbsp;</th>
+						<td>
+							<select name="Encry" size="1" id="Encry" onchange="key()"  > <option value="0" >Disable</option> <option value="1" selected="selected">WEP64</option> <option value="2" >WEP128</option> <option value="3">WPA-PSK(TKIP)</option> <option value="4">WPA-PSK(CCMP)</option> <option value="5">WPA2-PSK(TKIP)</option> <option value="6">WPA2_PSK(CCMP)</option>
+			  </select>							</td>
+					</tr>
+					<tr>
+						<th>Key Format:&nbsp;</th>
+						<td>
+							<select name="KeyType" size="1" id="KeyType" > <option value="0" selected="selected">HEX</option> <option value="1">ASCII</option>
+              </select>							</td>
+					</tr>
+					<tr>
+						<th>Encryption Key:&nbsp;</th>
+						<td><input name="Key" type="text" id="Key" value="" size="30" maxlength="63"  /></td>
+					</tr>
+				</table>
+				<div class="btn_login"><input name="Save" type="submit" id="Save" onclick="return saveconfig()" value="Save" /></div>	
+				</div>
+				</form>
+				<!--下一区块-->	
+				<form id="form1" name="form1" method="get" action="">
+				<div class="subtit5">TCP/IP </div>
+				<div class="subtit2"></div>
+				<div class="subtit3"><table class="login_box">
+					<tr>
+						<th></th>
+						<td><label><input name="Dhcp" type="checkbox" id="Dhcp" onclick="dhcp1()" value="1"  /></label></td>
+					</tr>
+					<tr>
+						<th>Fixed IP:&nbsp;</th>
+						<td><label>
+                    <input name="Ip" type="text"  id="Ip" value="10.3.3.173" size="15" maxlength="15" />
+                  </label></td>
+					</tr>
+					<tr>
+					  <th>Subnet:&nbsp;</th>
+					  <td><label>
+                    <input name="Sub" type="text"  id="Sub" value="255.255.255.0" size="15" maxlength="15" />
+                  </label></td>
+					</tr>
+					<tr>
+					 <th>Gateway:&nbsp;</th>
+					  <td><label>
+                    <input name="Gate" type="text"  id="Gate" value="10.3.3.1" size="15" maxlength="15" />
+                  </label></td>
+					</tr>
+					<tr>
+					  <th>DNS:&nbsp;</th>
+					  <td><label>
+                    <input name="Dns" type="text"  id="Dns" value="10.2.4.51" size="15" maxlength="15" />
+                  </label></td>
+					</tr>
+					<tr>
+						<th>Tcp Link TimeOut:&nbsp;</th>
+					  <td><label>
+            <input name="TCP_TimeOut" type="text"  id="TCP_TimeOut" value="10000" size="5" maxlength="8" />
+          </label>
+					    <span class="STYLE1">S([0,10000000])</span></td>
+					</tr>
+					<tr>
+						<th>Port:&nbsp;</th>
+						<td><label>
+            <input name="Port" type="text"  id="Port" value="10000" size="5" maxlength="5" />
+          </label></td>
+					</tr>									
+				</table>
+				<div class="btn_login"><input name="Save" type="submit" id="Save" onclick="return MM_popupMsg()" value="Save" /></div>
+				</div>
+				</form>			
+		  </div><!--subtit3--> 
+  			<div class="subtit4"></div>
+	  </div><!--total-->		
+	</div><!--box--><div class="footer">©2010-2014 REGO, Inc. All rights reserved. </div>
+  </div>
+    <div style="clear:both;"></div> 
+  </div>
+  </body>
+</html>

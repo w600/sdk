@@ -1,0 +1,13 @@
+LWIP1.4.1升级到LWIP2.0.3工程及配置文件修改：
+
+1.wm_config.h中将TLS_CONFIG_LWIP_VER2_0_3设置为CFG_ON
+
+2.将工程中的Include Path从如下包含目录
+  ..\..\..\Src\Network\lwip1.4.1\include
+  ..\..\..\Src\Network\lwip1.4.1\include\lwip
+  ..\..\..\Src\Network\lwip1.4.1\include\ipv4
+  ..\..\..\Src\Network\lwip1.4.1\include\ipv4\lwip
+  ..\..\..\Src\Network\lwip1.4.1\include\arch
+  ..\..\..\Src\Network\lwip1.4.1\include\netif
+  替换为如下包含目录
+  ..\..\..\Src\Network\lwip2.0.3\include
