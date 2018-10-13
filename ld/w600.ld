@@ -7,7 +7,7 @@
  */
 MEMORY
 {
-  FLASH (rx) : ORIGIN = 0x800e000, LENGTH = 450K /* 128K */
+  FLASH (rx) : ORIGIN = 0x8010100, LENGTH = 450K /* 128K */
   RAM (rwx) : ORIGIN = 0x20000000, LENGTH = 0x38000 /* 288K */
 }
 

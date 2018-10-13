@@ -16,8 +16,8 @@
 #include "wm_config.h"
 #include "wm_type_def.h"
 
-/**    OS TICK Frequency   */
-#define HZ        (500)
+/**    OS TICK Frequency   ,this value needs to keep the same as OS self-defined tick value*/
+static const unsigned int HZ = 500;
 
 /** Type definition of os_time_t */
 typedef long os_time_t;

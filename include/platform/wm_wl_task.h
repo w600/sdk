@@ -28,7 +28,9 @@
 #define TLS_HTTP_CLIENT_TASK_PRIO           (TASK_WL_PRIO_MAX + 9)
 #define AP_SOCKET_S_TASK_PRIO               (TASK_WL_PRIO_MAX + 10)
 #define TLS_UPNP_TASK_PRIO                  (TASK_WL_PRIO_MAX + 11)
-#define TLS_ONESHOT_TASK_PRIO          (TASK_WL_PRIO_MAX + 15)
+#define TLS_ONESHOT_TASK_PRIO          		(TASK_WL_PRIO_MAX + 15)
+#define TLS_ONESHOT_SPEC_TASK_PRIO			(TASK_WL_PRIO_MAX + 16)
+
 
 #define TLS_MBOX_ALL_COUNT                  8
 #define TLS_MBOX_ID_WL_TASK                 0

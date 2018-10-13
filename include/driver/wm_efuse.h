@@ -31,6 +31,16 @@ enum {
 //#define TX_GAIN_NEW_ADDR (VCG_ADDR+VCG_LEN)
 #define TX_GAIN_LEN   (28*3)
 
+/**
+* @brief 	This function is used to init ft param.
+*
+* @param[in]	None
+*
+* @retval	 	TRUE			init success
+* @retval		FALSE			init failed
+*/
+int tls_ft_param_init(void);
+
 
 /**
 * @brief 	This function is used to write ft_param.

@@ -83,9 +83,9 @@ void _mutex_release (u32 *mutex) {
 u32 TaskStartStk[TASK_START_STK_SIZE];
 
 
-#define FW_MAJOR_VER           0x02
-#define FW_MINOR_VER           0x02
-#define FW_PATCH_VER           0x08
+#define FW_MAJOR_VER           0x03
+#define FW_MINOR_VER           0x00
+#define FW_PATCH_VER           0x00
 
 const char FirmWareVer[4] = {
 	'G',
@@ -124,6 +124,17 @@ void tls_os_timer_init(void)
 /* main program */
 /****************/
 
+void vApplicationIdleHook( void )
+{
+#if !defined(__CC_ARM)
+        __asm volatile ("wfi");
+#else
+        __WFI();
+#endif
+
+    return;
+}
+
 void SystemInit()
 {
 	//SCB->VTOR = (unsigned int)&$$Image$$LR$$LR_IROM1$$Base;
@@ -153,7 +164,7 @@ int main(void)
 {
 	SystemInit();
 
-	tls_sys_clk_set(CPU_CLK_80M);
+	tls_sys_clk_set(CPU_CLK_40M);
 
 	tls_os_init(NULL);
 
@@ -226,6 +237,7 @@ void task_start (void *data)
 
 	tls_fls_init();
 	/*PARAM GAIN,MAC default*/
+	tls_ft_param_init();
 	tls_param_load_factory_default();
 	tls_param_init(); /*add param to init sysparam_lock sem*/
 
@@ -271,6 +283,8 @@ void task_start (void *data)
 
 	UserMain();
 	tls_sys_auto_mode_run();
+
+    NVIC_SystemLPConfig(NVIC_LP_SLEEPDEEP, ENABLE);
 	
     for (;;)
     {

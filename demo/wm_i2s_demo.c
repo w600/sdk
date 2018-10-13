@@ -14,6 +14,7 @@
 #include "wm_config.h"
 #include "wm_mem.h"
 #include "wm_demo.h"
+#include "wm_gpio_afsel.h"
 
 /** @addtogroup wm_i2s_demo  wm i2s demo
 * @{
@@ -23,8 +24,16 @@
 * @{
 */
 
-#define WM_I2S_TX_DMA_CHANNEL (4)
-#define WM_I2S_RX_DMA_CHANNEL (5)
+#if DEMO_I2S
+
+#define DEMO_DATA_SIZE        (1024)
+
+/*
+ * User need to send additional DUMMY_DATA_SIZE words at the end to ensure a complete transmission.
+ * Notice that only at the end of the user data, such as at the end of a music file.
+*/
+#define DUMMY_DATA_SIZE       (16)
+
 
 enum 
 {
@@ -38,7 +47,7 @@ enum
     WM_I2S_RX
 };
 
-uint32_t * i2s_demo_test;
+uint32_t i2s_demo_buff[DEMO_DATA_SIZE] = { 0 };
 
 /** @} */
 
@@ -56,10 +65,11 @@ uint32_t * i2s_demo_test;
  *
  * @note               
  */
-void tls_i2s_tx_dma_callback()
+void tls_i2s_demo_tx_dma_callback()
 {
     TLS_I2S_TX_DISABLE();
     DMA_CHNLCTRL_REG(WM_I2S_TX_DMA_CHANNEL) |= DMA_CHNL_CTRL_CHNL_ON;
+    tls_dma_free(WM_I2S_TX_DMA_CHANNEL);
 }
 
 /**
@@ -71,70 +81,64 @@ void tls_i2s_tx_dma_callback()
  *
  * @note               
  */
-void tls_i2s_rx_dma_callback()
+void tls_i2s_demo_rx_dma_callback()
 {
     TLS_I2S_RX_DISABLE();
-    tls_mem_free(i2s_demo_test);
+    tls_dma_free(WM_I2S_RX_DMA_CHANNEL);
+    printf("recv %d\r\n", DEMO_DATA_SIZE);
+    for(u16 i=0; i<DEMO_DATA_SIZE; i++)
+    {
+        printf("%X ", i2s_demo_buff[i]);
+    }
 }
 
 
 
 
-void tls_i2s_rx_demo_callback()
+void tls_i2s_rx_demo_callback(u16 len)
 {
-	tls_mem_free(i2s_demo_test);
+    printf("recv %d\r\n", len);
+    for(u16 i=0; i<len; i++) 
+    {
+        printf("%X ", i2s_demo_buff[i]);
+    }
 }
 
-void tls_i2s_tx_demo_callback()
-{
-    tls_mem_free(i2s_demo_test);
-}
 
 /** @} */
 
 void tls_i2s_tx_dma_demo()
 {	
-	uint16_t i;
-	uint32_t * ptr;	
-	
-	i2s_demo_test = tls_mem_alloc(1024);
-	ptr = i2s_demo_test;
+    for(u16 len = 0; len < DEMO_DATA_SIZE; len++)
+    {
+        i2s_demo_buff[len] = 0xA55A55A0+len;
+    }
 
-	for(i = 0; i < 256; i++)
-	{
-		*ptr++ = 0xABCD0100 + i;
-	}
-	tls_i2s_tx_dma(i2s_demo_test, 1024, tls_i2s_tx_dma_callback);
+    tls_i2s_tx_dma(i2s_demo_buff, (DEMO_DATA_SIZE+DUMMY_DATA_SIZE)*sizeof(i2s_demo_buff[0]), tls_i2s_demo_tx_dma_callback);
+    printf("send %d\r\n", DEMO_DATA_SIZE);
 }
 
 void tls_i2s_rx_dma_demo()
 {
-	i2s_demo_test = tls_mem_alloc(1024);	
-	tls_i2s_rx_dma(i2s_demo_test, 1024,  tls_i2s_rx_dma_callback);		
+    memset(i2s_demo_buff, 0, DEMO_DATA_SIZE*sizeof(i2s_demo_buff[0]));
+	tls_i2s_rx_dma(i2s_demo_buff, DEMO_DATA_SIZE*sizeof(i2s_demo_buff[0]),  tls_i2s_demo_rx_dma_callback);		
 }
 
 void tls_i2s_tx_demo()
 {
-        uint16_t len;
-        uint32_t *ptr = NULL;
-        uint32_t * i2s_tx_test = tls_mem_alloc(1024);
-		
-        if (i2s_tx_test == NULL)
-        {
-            return;
-        }
-        for (len = 0; len < 256; len++)
-        {
-            *ptr++ = 0xABCD0200 + len;
-        }        	        
-        tls_i2s_tx_block(i2s_tx_test, 1024);
-        tls_mem_free(i2s_tx_test);
+    for(u16 len = 0; len < DEMO_DATA_SIZE; len++)
+    {
+        i2s_demo_buff[len] = 0xA55A55A0+len;
+    }
+
+    tls_i2s_tx_block(i2s_demo_buff, DEMO_DATA_SIZE);
+    printf("send %d\r\n", DEMO_DATA_SIZE);
 }
 
 void tls_i2s_rx_demo()
 {
-    i2s_demo_test = tls_mem_alloc(1024);   
-    tls_i2s_rx_nonblock(i2s_demo_test, 1024, tls_i2s_rx_demo_callback);	
+    memset(i2s_demo_buff, 0, DEMO_DATA_SIZE*sizeof(i2s_demo_buff[0]));
+    tls_i2s_rx_nonblock(i2s_demo_buff, DEMO_DATA_SIZE, tls_i2s_rx_demo_callback);
 }
 
 
@@ -149,8 +153,8 @@ void tls_i2s_rx_demo()
  *	- \ref 3: pcmb 
  *
  * @param[in]  tx_rx
- *    - \ref 0: transmit
- *    - \ref 1: receiver
+ *    - \ref 1: transmit
+ *    - \ref 2: receive
  *
  * @param[in]  freq
  *    sample rate 
@@ -163,7 +167,7 @@ void tls_i2s_rx_demo()
  *
  * @param[in]  stereo   
  *    - \ref 0: stereo
- *	- \ref 1: mono
+ *	  - \ref 1: mono
  *
  * @param[in]  mode         
  *    - \ref 0: interrupt
@@ -171,7 +175,11 @@ void tls_i2s_rx_demo()
  *
  * @retval            
  *
- * @note              
+ * @note 
+ * t-i2s=(0,1,44100,16,0,0)  -- M_I2S send(ISR mode) 
+ * t-i2s=(0,1,44100,16,0,1)  -- M_I2S send(DMA mode)
+ * t-i2s=(0,2,44100,16,0,0)  -- S_I2S recv(ISR mode)
+ * t-i2s=(0,2,44100,16,0,1)  -- S_I2S recv(DMA mode)
  */
 int tls_i2s_demo(s8  format,
 	             s8  tx_rx,
@@ -185,8 +193,8 @@ int tls_i2s_demo(s8  format,
 	opts.format = format;
 	opts.data_width = datawidth;
 	opts.stereo_mono = stereo;
-	opts.rx_en = tx_rx & WM_I2S_TX;
-	opts.tx_en = tx_rx & WM_I2S_RX;
+	opts.tx_en = tx_rx & WM_I2S_TX;
+	opts.rx_en = tx_rx & WM_I2S_RX;
 	opts.sample_rate = freq;
 	
 	if (format == -1)
@@ -250,6 +258,23 @@ int tls_i2s_demo(s8  format,
 		}
 	}
 
+    //define your own io here.
+    if( opts.tx_en )
+    {
+        wm_i2s_m_ck_config(WM_IO_PB_08);
+        wm_i2s_m_do_config(WM_IO_PB_09);
+        wm_i2s_m_ws_config(WM_IO_PB_10);
+    }
+    else
+    {
+        wm_i2s_s_di_config(WM_IO_PB_14);
+        wm_i2s_s_ck_config(WM_IO_PB_15);
+        wm_i2s_s_ws_config(WM_IO_PB_16);
+    }
+    
+    printf("\r\n");
+	printf("format:%d, tx_en:%d, freq:%d, datawidth:%d, ", opts.format, opts.tx_en, opts.sample_rate, opts.data_width);
+    printf("stereo:%d, mode:%d\r\n", opts.stereo_mono, mode);
 	tls_i2s_port_init(&opts);
 
 	if (WM_I2S_MODE_INT == mode)
@@ -260,7 +285,7 @@ int tls_i2s_demo(s8  format,
 	    }
 	    if ((tx_rx & WM_I2S_RX) == WM_I2S_RX)
 	    {
-	        tls_i2s_rx_demo();      
+	        tls_i2s_rx_demo();
 	    }
 	}
 	else if (WM_I2S_MODE_DMA == mode)
@@ -277,6 +302,7 @@ int tls_i2s_demo(s8  format,
     return WM_SUCCESS;
 }
 
+#endif
 /** @} */
 
 /*** (C) COPYRIGHT 2014 Winner Microelectronics Co., Ltd. ***/

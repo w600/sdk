@@ -59,6 +59,7 @@ void airkiss_lan_task_create(void);
 #endif
 
 static u32 airkiss_chan_cnt = 0;
+static u32 airkiss_chan_bw40 = 0;
 
 void oneshot_airkiss_send_reply(void)
 {
@@ -127,13 +128,14 @@ static void oneshot_airkiss_finish(void)
     }
 #endif
     tls_netif_add_status_event(wm_oneshot_netif_status_event);
-    tls_wifi_set_oneshot_flag(0);
     if (tls_oneshot_is_ssid_bssid_match((u8*)result.ssid, result.ssid_length, ak_bssid))
     {
+    	tls_wifi_set_oneshot_flag(0);
         ret = tls_wifi_connect_by_ssid_bssid((u8*)result.ssid, result.ssid_length, ak_bssid, (u8*)result.pwd, result.pwd_length);
     }
     else
     {
+    	tls_wifi_set_oneshot_flag(0);
         ret = tls_wifi_connect((u8*)result.ssid, result.ssid_length, (u8*)result.pwd, result.pwd_length);
     }
 
@@ -676,7 +678,7 @@ void tls_airkiss_recv_new(u8 *pdata, u8 *data, u16 data_len)
                         }
                         else
                         {
-                            tls_oneshot_switch_channel_tim_stop();
+                            tls_oneshot_switch_channel_tim_stop(hdr);
                             stairkissdata->airkiss_total_index = stairkissdata->airkiss_total_len % 4 == 0 ? stairkissdata->airkiss_total_len / 4: stairkissdata->airkiss_total_len / 4+1;
                             stairkissdata->airkiss_last_packet_len = stairkissdata->airkiss_total_len % 4;
                             if (tls_oneshot_is_ssid_crc_match(stairkissdata->airkiss_ssid_crc, airkiss_ssid, &stairkissdata->airkiss_ssid_len))
@@ -812,6 +814,8 @@ void tls_airkiss_recv(u8 *data, u16 data_len)
     tls_airkiss_recv_new((u8*)pakcontext, data, data_len);
 #else
     int ret;
+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr*)data;
+
     // printf("A1:"MACSTR",A2:"MACSTR",A3:"MACSTR"\n", MAC2STR(data+4),MAC2STR(data+10), MAC2STR(data+16));
     ret = airkiss_recv(pakcontext, data, data_len);
     if (/*(ret == AIRKISS_STATUS_CHANNEL_LOCKED)||*/(airkiss_chan_cnt == 2))/* 8.已经锁定在了当前的信道，此时无需再轮询切换信道监听了 */
@@ -839,13 +843,18 @@ void tls_airkiss_recv(u8 *data, u16 data_len)
         }
 #else
         airkiss_chan_cnt = 3;
-        tls_oneshot_switch_channel_tim_temp_stop();
+		airkiss_chan_bw40 = hdr->duration_id&0x0001;
+//        tls_oneshot_switch_channel_tim_temp_stop();
 #endif
     }
     else if (ret == AIRKISS_STATUS_CHANNEL_LOCKED)
     {
         //printf("mac:"MACSTR",addr:"MACSTR"\n", MAC2STR(data+10), MAC2STR(data+16));
-        tls_oneshot_switch_channel_tim_stop();
+        if(1 == airkiss_chan_bw40)
+        {
+			hdr->duration_id |= 0x0001;		//if chan temp is bw40, force change to bw40
+		}
+        tls_oneshot_switch_channel_tim_stop((struct ieee80211_hdr *)data);
     }
     else if ((ret == AIRKISS_STATUS_COMPLETE)&&(is_airkiss == FALSE))/* 9.已经接收到了所有的配置数据 */
     {

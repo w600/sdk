@@ -9,7 +9,7 @@
  */
 
 #include <string.h>
-#include "wm_iouart.h"
+//#include "wm_iouart.h"
 #include "wm_debug.h"
 #include "wm_irq.h"
 #include "wm_config.h"
@@ -33,7 +33,7 @@ void iouart_timer_cb(void)
 
 // if(io_uart.ifrx)
     {
-        if (0 == io_uart.bitnum)    // ÆğÊ¼Î»
+        if (0 == io_uart.bitnum)    // èµ·å§‹ä½
         {
             io_uart.bit[io_uart.bitcnt++] = tls_gpio_read(IO_UART_RX);
             if (io_uart.bit[0] != 0)
@@ -64,7 +64,7 @@ void iouart_timer_cb(void)
                 io_uart.bitcnt = 0;
             }
         }
-        else if (io_uart.bitnum >= 1 && io_uart.bitnum <= 8)    // Êı¾İÎ»
+        else if (io_uart.bitnum >= 1 && io_uart.bitnum <= 8)    // æ•°æ®ä½
         {
             i--;
             if (i <= 0)
@@ -84,7 +84,7 @@ void iouart_timer_cb(void)
                 }
             }
         }
-        else if (9 == io_uart.bitnum)   // Í£Ö¹Î»
+        else if (9 == io_uart.bitnum)   // åœæ­¢ä½
         {
             i--;
             if (i <= 0)
@@ -93,7 +93,7 @@ void iouart_timer_cb(void)
                 if (IO_UART_ONEBITE_SAMPLE_NUM == io_uart.bitcnt)
                 {
                     bit = io_uart.bit[0] | io_uart.bit[1] | io_uart.bit[2];
-                    if (1 == bit)   // Õı³£µÄÍ£Ö¹Î»
+                    if (1 == bit)   // æ­£å¸¸çš„åœæ­¢ä½
                     {
 #if 0
                         if (CIRC_SPACE
@@ -191,7 +191,7 @@ void iouart_tx_byte(u8 datatoSend)
     u8 i, tmp;
     u32 cpu_sr = 0;
 
-    cpu_sr = tls_os_set_critical(); // ·¢ËÍÒ»¸öbyteµÄ¹ı³ÌÖĞ²»ÄÜ±»´ò¶Ï£¬·ñÔò¿ÉÄÜ»áÓĞ´íÎóÂë
+    cpu_sr = tls_os_set_critical(); // å‘é€ä¸€ä¸ªbyteçš„è¿‡ç¨‹ä¸­ä¸èƒ½è¢«æ‰“æ–­ï¼Œå¦åˆ™å¯èƒ½ä¼šæœ‰é”™è¯¯ç 
 /* Start bit */
     tls_gpio_write(TLS_GPIO_TYPE_A, IO_UART_TX, 0);
 #if IO_UART_FOR_PRINT

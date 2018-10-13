@@ -17,9 +17,9 @@
 
 #include "wm_type_def.h"
 
-//Ã¿´ÎÆô¶¯dmaÖ®ºó£¬ĞèÒªÒ»¶ÎÎÈ¶¨Ê±¼ä£¬ËùÒÔ²É¼¯µ½µÄÊı¾İÇ°ÃæµÄ12¸öbyte²»ÎÈ¶¨£¬ÒªÉáÈ¥
-#define ADC_DEST_BUFFER_DMA     		(u32)0x20028000//(u32)0x20037000	//Ç°ÃæµÄµØ·½¸ßËÙSPI¿ÉÄÜ»áÓÃ	
-#define ADC_DEST_BUFFER_SIZE			65532//2000			//ÒÔ°ë×ÖÎªµ¥Î»	
+//æ¯æ¬¡å¯åŠ¨dmaä¹‹åï¼Œéœ€è¦ä¸€æ®µç¨³å®šæ—¶é—´ï¼Œæ‰€ä»¥é‡‡é›†åˆ°çš„æ•°æ®å‰é¢çš„12ä¸ªbyteä¸ç¨³å®šï¼Œè¦èˆå»
+#define ADC_DEST_BUFFER_DMA     		(u32)0x20028000//(u32)0x20037000	//å‰é¢çš„åœ°æ–¹é«˜é€ŸSPIå¯èƒ½ä¼šç”¨	
+#define ADC_DEST_BUFFER_SIZE			65532//2000			//ä»¥åŠå­—ä¸ºå•ä½	
 #define SAMPLE_NUM_PER_CHANNEL  		20//2000
 
 
@@ -56,15 +56,15 @@
 #define ADC_INT_TYPE_DMA				1
 #define ADC_INT_TYPE_ADC_COMP 			2
 
-#define ADC_REFERENCE_EXTERNAL  		0       //Íâ²¿²Î¿¼
-#define ADC_REFERENCE_INTERNAL  		1       //ÄÚ²¿²Î¿¼
+#define ADC_REFERENCE_EXTERNAL  		0       //å¤–éƒ¨å‚è€ƒ
+#define ADC_REFERENCE_INTERNAL  		1       //å†…éƒ¨å‚è€ƒ
 
 typedef struct adc_st{
 	u8 dmachannel;
 	void (*adc_cb)(u16 *buf, u16 len);
 	void (*adc_bigger_cb)(u16 *buf, u16 len);
 	void (*adc_dma_cb)(u16 *buf,u16 len);
-	u16 valuelen;		/*dma ²ÉÑùÊı¾İ³¤¶È*/
+	u16 valuelen;		/*dma é‡‡æ ·æ•°æ®é•¿åº¦*/
 	u16 offset;
 }ST_ADC;
 
@@ -166,7 +166,7 @@ void tls_adc_config_cmp_reg(int cmp_data, int cmp_pol);
 * Description: 	This function is used to set adc reference source.
 *
 * Arguments  : 	ref     ADC_REFERENCE_EXTERNAL
-                                          ADC_REFERENCE_INTERNAL 
+                        ADC_REFERENCE_INTERNAL 
 * Returns    : 
 **********************************************************************************************************/
 void tls_adc_reference_sel(int ref);
@@ -175,6 +175,11 @@ void signedToUnsignedData(u16 *adcValue, u16 *offset);
 void tls_adc_buffer_bypass_set(u8 isset);
 void tls_adc_cmp_start(int Channel, int cmp_data, int cmp_pol);
 
+u8  adc_get_offset(void);
+u32 adc_get_interTemp(void);
+u16 adc_get_inputVolt(u8 channel);
+u16 adc_get_interVolt(void);
+u32 adc_temp(void);
 
 #endif
 

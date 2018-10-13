@@ -29,7 +29,7 @@
 #define   lws_debug printf
 #define   SEND_MSG_MIN   128 // only {"msg_type":"keepalive"}
 #define   DEMO_LWS_RECV_TASK_SIZE      2048
-#define   DEMO_LWS_SEND_TASK_SIZE      128
+#define   DEMO_LWS_SEND_TASK_SIZE      256
 #define   LWS_USE_SSL       (1 && TLS_CONFIG_HTTP_CLIENT_SECURE)
 #define   LWS_SERVER_NAME   "192.168.1.100"
 #define   LWS_SERVER_PORT   8080//4

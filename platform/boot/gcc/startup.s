@@ -221,9 +221,9 @@ Default_Handler:
     def_irq_handler tls_wl_rx_isr           /* EXTI Line 0 */
     def_irq_handler tls_wl_mgmt_tx_isr           /* EXTI Line 1 */
     def_irq_handler tls_wl_data_tx_isr           /* EXTI Line 2 */
-    def_irq_handler PMU_TIMER1_IRQHandler           /* EXTI Line 3 */
-    def_irq_handler PMU_TIMER0_IRQHandler           /* EXTI Line 4 */
-    def_irq_handler PMU_GPIO_WAKE_IRQHandler   /* DMA1 Channel 1 */
+    /*def_irq_handler PMU_TIMER1_IRQHandler*/          /* EXTI Line 3 */
+    /*def_irq_handler PMU_TIMER0_IRQHandler*/          /* EXTI Line 4 */
+    /*def_irq_handler PMU_GPIO_WAKE_IRQHandler*/   /* DMA1 Channel 1 */
     def_irq_handler PMU_SDIO_WAKE_IRQHandler   /* DMA1 Channel 2 */
     def_irq_handler DMA_Channel0_IRQHandler   /* DMA1 Channel 3 */
     def_irq_handler DMA_Channel1_IRQHandler   /* DMA1 Channel 4 */
@@ -231,7 +231,7 @@ Default_Handler:
     def_irq_handler DMA_Channel3_IRQHandler   /* DMA1 Channel 6 */
     def_irq_handler DMA_Channel4_7_IRQHandler   /* DMA1 Channel 7 */
     def_irq_handler DMA_BRUST_IRQHandler          /* ADC1 & ADC2 */
-    def_irq_handler I2C_IRQHandler  /* USB High Priority or CAN1 TX */
+    /*def_irq_handler I2C_IRQHandler*/  /* USB High Priority or CAN1 TX */
     def_irq_handler ADC_IRQHandler /* USB Low  Priority or CAN1 RX0 */
     def_irq_handler SPI_LS_IRQHandler        /* CAN1 RX1 */
     def_irq_handler SPI_HS_IRQHandler        /* CAN1 SCE */
@@ -247,9 +247,9 @@ Default_Handler:
     def_irq_handler WDG_IRQHandler         /* I2C1 Error */
     def_irq_handler PMU_IRQHandler         /* I2C2 Event */
     def_irq_handler FLASH_IRQHandler         /* I2C2 Error */
-    def_irq_handler PWM_IRQHandler            /* SPI1 */
-    def_irq_handler I2S_IRQHandler            /* SPI2 */
-    def_irq_handler PMU_RTC_IRQHandler          /* USART1 */
+    /*def_irq_handler PWM_IRQHandler*/            /* SPI1 */
+    /*def_irq_handler I2S_IRQHandler*/            /* SPI2 */
+    /*def_irq_handler PMU_RTC_IRQHandler*/          /* USART1 */
     def_irq_handler RSA_IRQHandler          /* USART2 */
     def_irq_handler CRYPTION_IRQHandler          /* USART3 */
     def_irq_handler GPIOB_IRQHandler       /* EXTI Line 15..10 */

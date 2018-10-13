@@ -8,7 +8,7 @@
 #include "wm_cpu.h"
 #include "tls_common.h"
 #include "wm_pmu.h"
-
+#include "wm_wifi.h"
 
 struct pmu_irq_context {
     tls_pmu_irq_callback callback;
@@ -250,7 +250,7 @@ void tls_pmu_timer0_stop(void)
 void tls_pmu_timer1_start(u16 msec)
 {
 	u32 val;
-	//Ä¬ÈÏ²ÉÓÃ×îĞ¡µ¥Î»1ms
+	//é»˜è®¤é‡‡ç”¨æœ€å°å•ä½1ms
 	val = (msec-1) | (1<<16) | (1<<17) | (0<<20) | (0<<24);
 	tls_reg_write32(HR_PMU_TIMER1, val);
 }
@@ -289,7 +289,7 @@ void tls_pmu_standby_start(void)
 {
 	u32 val;
 
-	tls_irq_enable(PMU_GPIO_WAKEUP_INT);		//Ä¬ÈÏ´ò¿ªÖĞ¶ÏÎªÁËÇå³şIO»½ĞÑµÄÖĞ¶Ï±ê¼Ç
+	tls_irq_enable(PMU_GPIO_WAKEUP_INT);		//é»˜è®¤æ‰“å¼€ä¸­æ–­ä¸ºäº†æ¸…æ¥šIOå”¤é†’çš„ä¸­æ–­æ ‡è®°
 	
 	val = tls_reg_read32(HR_PMU_PS_CR);
 	TLS_DBGPRT_INFO("goto standby here\n");
@@ -297,5 +297,36 @@ void tls_pmu_standby_start(void)
 	tls_reg_write32(HR_PMU_PS_CR, val);
 }
 
+/**
+ * @brief          	This function is used to close peripheral's clock
+ *
+ * @param[in]      	devices  	peripherals
+ *
+ * @return         	None
+ *
+ * @note           	None
+ */
+void tls_close_peripheral_clock(tls_peripheral_type_s devices)
+{
+    tls_reg_write32(HR_CLK_BASE_ADDR, tls_reg_read32(HR_CLK_BASE_ADDR) | devices);
+
+    return;
+}
+
+/**
+ * @brief          	This function is used to open peripheral's clock
+ *
+ * @param[in]      	devices  	peripherals
+ *
+ * @return         	None
+ *
+ * @note           	None
+ */
+void tls_open_peripheral_clock(tls_peripheral_type_s devices)
+{
+    tls_reg_write32(HR_CLK_BASE_ADDR, tls_reg_read32(HR_CLK_BASE_ADDR) & ~(devices));
+
+    return;
+}
 
 

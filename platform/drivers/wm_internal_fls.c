@@ -196,7 +196,158 @@ static unsigned int getFlashDensity(void)
 
 	return 0;
 }
+/*sr start*/
+/************************************************************
+addr:
+For GD,		      address:0x000,0x100
+For ESMT,		address:0xFF000,0xFF100
+For WINBOND,	address:0x1000
+*************************************************************/
+int readSR(unsigned int cmd, unsigned long addr, unsigned char *buf, unsigned long sz)
+{
+	int i = 0;
+	int word = sz/4;
+	int byte = sz%4;
+	unsigned long addr_read;
 
+	M32(0x40002000) = cmd|((sz-1)<<16);
+	M32(0x40002004) = 0x10000000|((addr&0xFFFFF)<<8);
+	
+	addr_read = 0x40002200;
+	for(i = 0;i < word; i ++)
+	{
+		M32(buf) = M32(addr_read);
+		buf += 4;
+		addr_read += 4;
+	}
+	
+	if(byte > 0)
+	{
+		M32(buf) = M32(addr_read);
+		buf += 3;							//point last byte
+		while(byte)
+		{
+			*buf = 0;
+			buf --;
+			byte --;
+		}
+	}	
+
+	return 0;
+}
+
+void flashSRRW(unsigned long offset,unsigned char *buf,unsigned long sz, unsigned char *backbuf, unsigned int backlen, unsigned int rd)
+{
+#define SR_TOTAL_SZ (512)
+#define SR_PROGRAM_SZE (256)
+ 	unsigned int i;    
+	unsigned int j;
+	unsigned int baseaddr = 0; 
+	unsigned int sectoroffset = 0;
+	unsigned int sectorsize = 0;
+	unsigned int sectornum = 0;
+	unsigned int remainsz;
+	unsigned int erasecmd = 0;
+	unsigned int readcmd  = 0;
+	unsigned int writecmd = 0;
+
+	unsigned char flashid = 0;
+	if (!buf ||((rd == 0)&&( !backbuf || (backlen < 512))))
+	{
+		return;
+	}
+
+	flashid = readRID();
+	switch(flashid)
+	{
+		case SPIFLASH_MID_GD:
+			baseaddr = 0x0;
+			sectoroffset = 256;
+			sectorsize = 256;
+			sectornum = 2;
+			erasecmd	 = 0x80000844;
+			readcmd 	 = 0xBC00C048;
+			writecmd	 = 0x80009042;
+		break;
+
+		case SPIFLASH_MID_ESMT:
+		{
+			baseaddr = 0xFF000;
+			sectoroffset = 0;
+			sectorsize = 512;
+			sectornum = 1;
+			erasecmd	 = 0x80000820;
+			readcmd 	 = 0xBC00C00B;
+			writecmd	 = 0x80009002;
+
+			M32(0x40002000) = 0x3A;             /*enter OTP*/
+			M32(0x40002004) = 0x10000000;
+		}
+		break;
+
+		case SPIFLASH_MID_PUYA:
+			baseaddr = 0x1000;
+			sectoroffset = 0;
+			sectorsize = 512;
+			sectornum = 1;
+			erasecmd	 = 0x80000844;
+			readcmd 	 = 0xBC00C048;
+			writecmd	 = 0x80009042;
+
+		break;
+
+		default:
+		{
+		}
+		break;
+	}
+
+	for (i =0 ; i < sectornum; i++)
+	{
+		readSR(readcmd, baseaddr + sectoroffset*i, backbuf+i*sectorsize, sectorsize);
+	}
+
+	if (rd)
+	{
+		for(i=0;i<sz;i++)				//Copy
+		{
+			buf[i] = backbuf[i+offset];	  
+		}
+	}
+	else
+	{
+		for (i = 0; i < sectornum ; i++)
+		{
+			eraseSR(erasecmd, baseaddr + sectoroffset*i);
+		}
+
+		remainsz = (sz < (SR_TOTAL_SZ - offset))? sz : (SR_TOTAL_SZ - offset);
+		for(i= 0; i< remainsz; i++)
+		{
+			backbuf[i+offset]= buf[i];	  
+		}
+
+		for ( i = 0; i < sectornum; i++)
+		{
+			for (j = 0; j < (sectorsize/SR_PROGRAM_SZE); j++)
+			{
+				programSR(writecmd, baseaddr + sectoroffset*i + j*SR_PROGRAM_SZE,  backbuf, SR_PROGRAM_SZE);
+				backbuf += SR_PROGRAM_SZE;
+			}
+		}
+	}
+
+
+
+	if (SPIFLASH_MID_ESMT == flashid)
+	{
+		/*Write Disable*/
+		M32(0x40002000) = 0x4;
+		M32(0x40002004) = 0x10000000;
+	}
+}
+
+/*sr end*/
 int readByCMD(unsigned long addr, unsigned char *buf, unsigned long sz, unsigned int mode)
 {
 	int i = 0;

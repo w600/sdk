@@ -2500,8 +2500,9 @@ char * do_cgi_config(int iIndex, int iNumParams, char *pcParam[], char *pcValue[
 		{
 			memset(&ssid, 0, sizeof(struct tls_param_ssid));
 			HtmlConvertURLStr((char *)ssid.ssid, pcValue[i], strlen(pcValue[i]));
-			ssid.ssid_len = strlen((char *)ssid.ssid);
-			strcpy(gucssidData, ssid.ssid);
+            ssid.ssid_len = strlen(pcValue[i]);
+            memset(gucssidData, 0, sizeof(gucssidData));
+            memcpy(gucssidData, ssid.ssid, ssid.ssid_len);
 			tls_param_set(TLS_PARAM_ID_SSID, (void *)&ssid, FALSE);
 		} 
         else if (strcmp(pcParam[i], "Key") == 0)

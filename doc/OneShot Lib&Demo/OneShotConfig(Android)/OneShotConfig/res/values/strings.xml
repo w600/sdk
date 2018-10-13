@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">OneShotConfig</string>
+    <string name="action_settings">Settings</string>
+    <string name="action_get_ver">Version</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="text_ssid">ssid</string>
+    <string name="text_psw">password</string>
+    <string name="btn_conf">Start Configuration</string>
+    <string name="btn_stop_conf">Stop Configuration</string>
+    <string name="menu_cus_data">Custom</string>
+    <string name="menu_ssid_psw">ssid psw config</string>
+    <string name="title_activity_cus_data">CusDataActivity</string>
+    <string name="text_cus_data">Custom Data:</string>
+    <string name="btn_cus_data">Send Data</string>
+    <string name="btn_stop_cus_data">Stop</string>
+    <string name="title_activity_one_shot">OneShotActivity</string>
+
+</resources>

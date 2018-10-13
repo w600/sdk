@@ -9,6 +9,7 @@
 #include "wm_include.h"
 #include "wm_i2c.h"
 #include <string.h>
+#include "wm_gpio_afsel.h"
 
 #if DEMO_I2C
 
@@ -139,6 +140,9 @@ int i2c_demo(char *buf)
 	u8 testbuf[] = {"AT24CXX I2C TEST OK"};
 	u8 datatmp[32];
 
+    wm_i2c_scl_config(WM_IO_PB_11);
+    wm_i2c_sda_config(WM_IO_PB_12);
+    
 	tls_i2c_init(I2C_FREQ);
 
 	while(AT24CXX_Check())

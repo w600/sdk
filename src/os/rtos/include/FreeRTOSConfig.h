@@ -69,7 +69,7 @@
  *----------------------------------------------------------*/
 
 #define configUSE_PREEMPTION		1	//使用抢先式内核
-#define configUSE_IDLE_HOOK			0	//不使用空闲钩子
+#define configUSE_IDLE_HOOK			1	//使用空闲钩子
 #define configUSE_TICK_HOOK			0	//不使用时间片钩子
 
 #define configCPU_CLOCK_HZ			( ( unsigned long ) 40000000 )	/* =12.0MHz xtal multiplied by 5 using the PLL. *///内部处理器执行频率

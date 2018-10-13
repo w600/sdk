@@ -23,6 +23,7 @@ typedef int32 psPool_t;
 #define _psTraceInt  _psTrace
 #define _psTraceStr  _psTrace
 #define psTraceBytes(tag, p, len);  TLS_DBGPRT_DUMP(p, len)
+#if 0
 #if (GCC_COMPILE==1)
 void _psError(char *msg)
 #else
@@ -32,6 +33,7 @@ static inline void _psError(char* msg)
 	_psTrace(msg);
 	_psTrace("\n");
 }
+#endif
 
 #define psAssert(C)  if (C) ; else \
 {_psTraceStr("psAssert %s", __FILE__);_psTraceInt(":%d ", __LINE__);\

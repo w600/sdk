@@ -53,6 +53,12 @@
 extern "C" {
 #endif
 
+#if LWIP_NETIF_STATUS_CALLBACK
+#define NETIF_STATUS_CALLBACK(n, s) do{ if (n->status_callback) { (n->status_callback)(n, s); }}while(0)
+#else
+#define NETIF_STATUS_CALLBACK(n, s)
+#endif /* LWIP_NETIF_STATUS_CALLBACK */
+
 /* Throughout this file, IP addresses are expected to be in
  * the same byte order as in IP_PCB. */
 

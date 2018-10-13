@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <beans xmlns="http://www.springframework.org/schema/beans"  
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"  
+        xmlns:context="http://www.springframework.org/schema/context"  xmlns:mvc="http://www.springframework.org/schema/mvc"  
+        xsi:schemaLocation="http://www.springframework.org/schema/beans   
+           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd  
+           http://www.springframework.org/schema/context   
+           http://www.springframework.org/schema/context/spring-context-3.0.xsd
+           http://www.springframework.org/schema/mvc  
+        	http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd">  
+          
+       <!-- 把标记了@Controller注解的类转换为bean -->  
+      <context:component-scan base-package="com.winnermicro" />  
+      <mvc:annotation-driven />
+        
+       <bean
+		class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
+		<property name="order" value="1" />
+		<property name="favorParameter" value="false"/>
+		<property name="ignoreAcceptHeader" value="true" />
+		<property name="defaultContentType" value="text/html" />  
+		<property name="mediaTypes">
+			<map>
+				<entry key="json" value="application/json" />
+				<entry key="xml" value="application/xml" />
+			</map>
+		</property>
+		<property name="viewResolvers">  
+		<list>
+			<bean class="org.springframework.web.servlet.view.BeanNameViewResolver" />
+	       <!-- 对模型视图名称的解析，即在模型视图名称添加前后缀 -->  
+	       <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver"  
+	          p:prefix="" p:suffix=".jsp" />  
+	        
+	    </list>
+		</property>
+		<property name="defaultViews">
+			<list>
+				<!-- JSON View -->
+				<bean
+					class="org.springframework.web.servlet.view.json.MappingJackson2JsonView">
+				</bean>
+				<!-- XML view -->
+				<bean class="org.springframework.web.servlet.view.xml.MarshallingView">
+					<constructor-arg>
+						<bean class="org.springframework.oxm.jaxb.Jaxb2Marshaller">
+							<property name="classesToBeBound">
+								<list>
+									<value>com.winnermicro.controller.User</value>
+								</list>
+							</property>
+						</bean>
+					</constructor-arg>
+				</bean>
+			</list>
+		</property>
+	</bean>  
+	<bean id="jsonHttpMessageConverter" class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter"/>  
+	<bean id="jaxb2HttpMessageConverter" class="org.springframework.http.converter.xml.Jaxb2RootElementHttpMessageConverter"/>
+	<!--  这里申明的id必须为multipartResolver  -->  
+<bean id="multipartResolver"  
+    class="org.springframework.web.multipart.commons.CommonsMultipartResolver">  
+  
+    <!-- one of the properties available; the maximum file size in bytes -->  
+    <property name="maxUploadSize" value="100000"/>  
+</bean> 
+  </beans>  

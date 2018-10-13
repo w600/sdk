@@ -22,6 +22,7 @@
 #if TLS_CONFIG_HTTP_CLIENT_TASK
 #include "wm_http_client.h"
 #endif
+#include "wm_efuse.h"
 
 /* host interface hardware mode, indicate which port used */
 #define HOSTIF_MODE_HSPI       (0)
@@ -563,7 +564,11 @@ typedef struct HOSTIF_CMD_PARAMS_TXGR{
  typedef  struct _HOSTIF_CMD_PARAMS_VCGCTRL{
     int vcg;
  }__attribute__((packed))HOSTIF_CMD_PARAMS_VCGCTRL;
- 
+
+ typedef struct _HOSTIF_CMDRSP_PARAMS_TEM {
+    u8      offsetLen;
+    u8      offset[8];
+}__attribute__((packed))HOSTIF_CMDRSP_PARAMS_TEM; 
 
  union HOSTIF_CMD_PARAMS_UNION{
 
@@ -833,10 +838,6 @@ typedef struct _HOSTIF_CMDRSP_PARAMS_ATM {
     u8      mode;
 }__attribute__((packed))HOSTIF_CMDRSP_PARAMS_ATM;
 
-typedef struct _HOSTIF_CMDRSP_PARAMS_TEM {
-    u8      offsetLen;
-    u8      offset[8];
-}__attribute__((packed))HOSTIF_CMDRSP_PARAMS_TEM; 
 
 typedef struct _HOSTIF_CMDRSP_PARAMS_ATRM {
     u32 timeout; 

@@ -161,6 +161,46 @@ void tls_pmu_timer1_stop(void);
 void tls_pmu_standby_start(void);
 
 
+typedef enum {
+    TLS_PERIPHERAL_TYPE_I2C   = (1 << 0),
+    TLS_PERIPHERAL_TYPE_UART0 = (1 << 1),
+    TLS_PERIPHERAL_TYPE_UART1 = (1 << 2),
+    TLS_PERIPHERAL_TYPE_LSPI  = (1 << 3),
+    TLS_PERIPHERAL_TYPE_DMA   = (1 << 4),
+    TLS_PERIPHERAL_TYPE_RFCFG = (1 << 5),
+    TLS_PERIPHERAL_TYPE_TIMER = (1 << 6),
+    TLS_PERIPHERAL_TYPE_GPIO  = (1 << 7),
+    TLS_PERIPHERAL_TYPE_SDADC = (1 << 8),
+    TLS_PERIPHERAL_TYPE_PWM   = (1 << 9),
+    TLS_PERIPHERAL_TYPE_LCD   = (1 << 10),
+    TLS_PERIPHERAL_TYPE_I2S   = (1 << 11),
+    TLS_PERIPHERAL_TYPE_RSA   = (1 << 12),
+    TLS_PERIPHERAL_TYPE_GPSEC = (1 << 13),
+    TLS_PERIPHERAL_TYPE_7816  = (1 << 14)
+}tls_peripheral_type_s;
+
+/**
+ * @brief          	This function is used to close peripheral's clock
+ *
+ * @param[in]      	devices  	peripherals
+ *
+ * @return         	None
+ *
+ * @note           	None
+ */
+void tls_close_peripheral_clock(tls_peripheral_type_s devices);
+
+/**
+ * @brief          	This function is used to open peripheral's clock
+ *
+ * @param[in]      	devices  	peripherals
+ *
+ * @return         	None
+ *
+ * @note           	None
+ */
+void tls_open_peripheral_clock(tls_peripheral_type_s devices);
+
 #endif
 
 

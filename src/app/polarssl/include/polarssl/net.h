@@ -129,7 +129,7 @@ void net_usleep( unsigned long usec );
  *                 or a non-zero error code; POLARSSL_ERR_NET_WANT_READ
  *                 indicates read() is blocking.
  */
-int net_recv( void *ctx, unsigned char *buf, size_t len );
+static int net_recv( void *ctx, unsigned char *buf, size_t len );
 
 /**
  * \brief          Write at most 'len' characters. If no error occurs,
@@ -143,7 +143,7 @@ int net_recv( void *ctx, unsigned char *buf, size_t len );
  *                 or a non-zero error code; POLARSSL_ERR_NET_WANT_WRITE
  *                 indicates write() is blocking.
  */
-int net_send( void *ctx, const unsigned char *buf, size_t len );
+static int net_send( void *ctx, const unsigned char *buf, size_t len );
 
 /**
  * \brief          Gracefully shutdown the connection

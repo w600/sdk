@@ -233,7 +233,7 @@ struct sockaddr_in;
 #endif /* not USE_OLD_CYASSL */
 #else
 #if defined(LWS_USE_POLARSSL)
-#include <HttpClientWrapper.h>
+#include <HTTPClientWrapper.h> 
 #include <polarssl/ssl.h>
 struct lws_polarssl_context {
 	x509_cert ca; /**< ca */
@@ -350,7 +350,9 @@ LWS_VISIBLE LWS_EXTERN void lwsl_hexdump(void *buf, size_t len);
 #define lwsl_client(...) do {} while(0)
 #define lwsl_latency(...) do {} while(0)
 #define lwsl_hexdump(a, b)
+#ifndef assert
 #define assert do{}while(0)
+#endif
 
 #endif
 

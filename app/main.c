@@ -17,6 +17,15 @@
 void UserMain(void)
 {
 	printf("\n user task\n");
+	unsigned char power_mode = 0;
+    tls_param_get(TLS_PARAM_ID_PSM, (void *)&power_mode, (bool)1);
+    printf("power_mode: %d\r\n", power_mode);
+    if(power_mode == 0)
+    {
+        printf("open low power mode\r\n");
+        power_mode = 1;
+        tls_param_set(TLS_PARAM_ID_PSM, (void *)&power_mode, (bool)1);
+    }
 
 #if DEMO_CONSOLE
 	CreateDemoTask();

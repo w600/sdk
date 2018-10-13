@@ -32,7 +32,7 @@
 #if TLS_CONFIG_RMMS
 #include "wm_cmdp_hostif.h"
 #endif
-
+#include "misc.h"
 
 
 struct tls_sys_msg
@@ -606,12 +606,12 @@ static void sys_net_status_changed(u8 status)
             {
                 TLS_DBGPRT_INFO("net disconnected\n");
             }
-                tls_sys_net_down();
+            tls_sys_net_down();
             break;
         case NETIF_IP_NET_UP:
             /*对于STA，拿到IP之后再依据节能标志设置节能模式，联网拿IP过程中不节能*/
             tls_param_get(TLS_PARAM_ID_PSM, &enable, TRUE);		
-            tls_wifi_set_psflag(enable, 0);
+            tls_wifi_set_psflag(enable, FALSE);
 
 #if TLS_CONFIG_TLS_DEBUG
             ethif = tls_netif_get_ethif();

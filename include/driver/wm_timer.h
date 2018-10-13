@@ -90,6 +90,19 @@ void tls_timer_start(u8 timer_id);
 void tls_timer_stop(u8 timer_id);
 
 /**
+ * @brief           This function is used to change a timer wait time
+ *
+ * @param[in]      	timer_id    timer id[0~5]
+ *
+ * @param[in]      	newtime     new wait time
+ *
+ * @retval         	None
+ *
+ * @note            If the timer does not start, this function will start the timer
+ */
+void tls_timer_change(u8 timer_id, u32 newtime);
+
+/**
  * @brief          This function is used to delete a timer
  *
  * @param[in]      timer_id    timer id

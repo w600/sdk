@@ -332,7 +332,8 @@ int tls_param_init(void)
 	bool is_damage[TLS_PARAM_PARTITION_NUM];
 	u8 damaged;
 	int err;
-	u32 i;
+	signed short i;
+	u16 tryrestore = 0;
 	struct tls_param_flash *flash;
 	
 	if(flash_param.magic == TLS_PARAM_MAGIC) 
@@ -356,7 +357,7 @@ int tls_param_init(void)
 	flash = NULL;
 	memset(&flash_param, 0, sizeof(flash_param));
 	memset(&sram_param, 0, sizeof(sram_param));
-	
+	tryrestore = 0;
 	do 
 	{
 		flash = tls_mem_alloc(sizeof(*flash));
@@ -378,31 +379,44 @@ int tls_param_init(void)
 				TLS_DBGPRT_WARNING("parameter partition - %d has been damaged.\n", i);
 				is_damage[i] = TRUE;
 				damaged++;
-				continue;
+				//continue;
 			}
-
-			if (get_crc32((u8 *)flash, flash->length - 4) != *(u32*)((u8*)flash + flash->length - 4))
+			else if (get_crc32((u8 *)flash, flash->length - 4) != *(u32*)((u8*)flash + flash->length - 4))
 			{
 				is_damage[i] = TRUE;
 				damaged++;
-				continue;
+				//continue;
+			}
+			else
+			{
+				/* Load the latest parameters */
+				TLS_DBGPRT_INFO("read parameter partition modify count - %d.\n", flash->modify_count);
+				TLS_DBGPRT_INFO("current parameter partition modify count - %d.\n", flash_param.modify_count);
+				if ((flash_param.magic == 0) || (flash_param.modify_count < flash->modify_count)) 
+				{
+					TLS_DBGPRT_INFO("update the parameter in sram using partition - %d,%d,%d.\n", i, flash->length,sizeof(*flash));
+					if (flash->length != sizeof(*flash)){
+						MEMCPY(&flash_param, flash, (flash->length-4));
+						MEMCPY(&sram_param, &flash_param.parameters, sizeof(sram_param));	
+					}else{
+						MEMCPY(&flash_param, flash, sizeof(*flash));
+						MEMCPY(&sram_param, &flash_param.parameters, sizeof(sram_param));
+					}
+				}
+				memset(flash, 0, sizeof(*flash)); 
 			}
 
-			/* Load the latest parameters */
-			TLS_DBGPRT_INFO("read parameter partition modify count - %d.\n", flash->modify_count);
-			TLS_DBGPRT_INFO("current parameter partition modify count - %d.\n", flash_param.modify_count);
-			if ((flash_param.magic == 0) || (flash_param.modify_count < flash->modify_count)) 
+			/* try to erase one sector at the same block to restore parameter area*/
+			if ((tryrestore == 0)&&(damaged >= TLS_PARAM_PARTITION_NUM))
 			{
-				TLS_DBGPRT_INFO("update the parameter in sram using partition - %d,%d,%d.\n", i, flash->length,sizeof(*flash));
-				if (flash->length != sizeof(*flash)){
-					MEMCPY(&flash_param, flash, (flash->length-4));
-					MEMCPY(&sram_param, &flash_param.parameters, sizeof(sram_param));	
-				}else{
-				MEMCPY(&flash_param, flash, sizeof(*flash));
-				MEMCPY(&sram_param, &flash_param.parameters, sizeof(sram_param));
-				}
+				damaged= 0;
+				is_damage[0] = is_damage[1] = FALSE;
+				memset(&flash_param, 0, sizeof(flash_param));
+				memset(&sram_param, 0, sizeof(sram_param));
+				tls_fls_erase(TLS_FLASH_PARAM_RESTORE_ADDR);
+				tryrestore = 1;
+				i = -1;
 			}
-			memset(flash, 0, sizeof(*flash)); 
 		}
 
 		if (damaged >= TLS_PARAM_PARTITION_NUM) 
@@ -1284,43 +1298,3 @@ void tls_param_set_updp_mode(u8 mode)
     updp_mode = mode;
 }
 
-#if 0
-int tls_param_get_program_param(u32 *pBase)
-{
-	struct tls_param_boot_param footer;
-	int err;
-	err = tls_fls_read(TLS_FLASH_BOOT_FOOTER_ADDR, (u8 *)(&footer), sizeof(footer));
-	if(err != TLS_FLS_STATUS_OK) 
-	{
-		return err;
-	}
-	if (footer.signature == TLS_BOOT_IMAGE_SIGNATURE_WORD){
-        *pBase = TLS_FLASH_FIRMWARE1_ADDR;
-	}else{
-        *pBase = TLS_FLASH_FIRMWARE1_ADDR;
-	}
-	return TLS_FLS_STATUS_OK;
-}
-
-int tls_param_set_program_param(u32 base, u32 totallen, u32 checksum)
-{
-	struct tls_param_boot_param footer;
-	int err = 0;
-	
-	memset(&footer, 0, sizeof(footer));
-	footer.signature = TLS_BOOT_IMAGE_SIGNATURE_WORD;
-	footer.base = base;
-	footer.length = totallen;
-	footer.type = 4;
-	footer.load_address = footer.exec_address = TLS_SRAM_FIRMWARE_EXEC_ADDR;
-	footer.image_checksum = checksum;
-	strcpy(footer.name, "cuckoo");
-	
-	err = tls_fls_write(TLS_FLASH_BOOT_FOOTER_ADDR, (u8 *)&footer, sizeof(footer));
-	if (err != TLS_FLS_STATUS_OK)
-	{
-		return err;
-	}
-	return 0;
-}	
-#endif

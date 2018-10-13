@@ -19,8 +19,8 @@
 *****************************************************************/
 extern int demo_connect_net(void *,...);
 extern int demo_oneshot(void *, ...);
-extern int demo_socket_config(void);
-extern int demo_webserver_config(void);
+extern int demo_socket_config(void *, ...);
+extern int demo_webserver_config(void *, ...);
 extern int demo_create_softap(void *,...);
 extern int uart_demo(void *,...);
 extern int ntp_demo(void *, ...);
@@ -66,6 +66,8 @@ extern int demo_wps_get_pin(void *, ...);
 extern int demo_iperf_auto_test(void *, ...);
 extern int CreateSSLServerDemoTask(void *, ...);
 extern int lwsDemoTest(void *, ...);
+extern int tls_i2s_demo(void *, ...); 
+extern int i2c_demo(void *, ...);
 
 
 
@@ -111,7 +113,7 @@ struct demo_console_info_t  console_tbl[] =
 {
 	//To Do When Add New Demo
 #if DEMO_CONNECT_NET
-	{"t-connect", 	demo_connect_net, 0, 2, "Test connecting with AP via API; For example, t-connect(\"ssid\",\"pwd\"); For OPEN encrypt type, pwd SHOULD be empty string"},
+	{"t-connect", 	demo_connect_net, 0, 2, "Test connecting ap;t-connect(\"ssid\",\"pwd\"); For open ap, pwd should be empty"},
 	{"t-oneshot",     demo_oneshot,  0, 0, "Test Oneshot  configuration"},
 //	{"t-socketcfg",  demo_socket_config, 0, 0, "Test socket configuration"},
 	{"t-webcfg",      demo_webserver_config, 0, 0, "Test web server configuration"},	
@@ -158,10 +160,10 @@ struct demo_console_info_t  console_tbl[] =
 #endif
 
 #if DEMO_HTTP
-	{"t-httpfwup",  http_fwup_demo,	0x1,    1, "Test firmware update via HTTP"},
-	{"t-httpget", 	http_get_demo,	0x1,    1, "Test HTTP Download"},
-	{(char*)HTTP_POST,  http_post_demo,	0x1,    1, "Test HTTP Upload"},
-	{(char*)HTTP_PUT,   http_put_demo,  0x1,    1, "Test HTTP Put method"},
+	{"t-httpfwup",  http_fwup_demo,	0x0,    1, "Test firmware update via HTTP, like this t-httpfwup=(http://192.168.1.100:8080/WM_W600_SEC.img)"},
+	{"t-httpget", 	http_get_demo,	0x0,    1, "Test HTTP get method, like this t-httpget"},
+	{(char*)HTTP_POST,  http_post_demo,	0x0,    1, "Test HTTP post method, like this t-httppost=(user=winnermicro)"},
+	{(char*)HTTP_PUT,   http_put_demo,  0x0,    1, "Test HTTP put method, like this t-httpput=(user=winnermicro)"},
 #endif
 
 #if DEMO_GPIO
@@ -176,7 +178,15 @@ struct demo_console_info_t  console_tbl[] =
 #endif
 
 #if DEMO_PWM
-    {"t-pwm",   	pwm_demo,	0xF,    5, "Test PWM output, channel: 0~4; freq: 3Hz~160kHz; duty: 0~255; mode: 0:WM_PWM_OUT_MODE_BRAKE, 1:WM_PWM_OUT_MODE_ALLSYC, 2:WM_PWM_OUT_MODE_2SYC, 3:WM_PWM_OUT_MODE_MC, 4:WM_PWM_OUT_MODE_INDPT,num:period 0 to 255"},
+    {"t-pwm",   	pwm_demo,	0x1F,    5, "Test PWM output, for example t-pwm=(0,20,99,1,0) to test ALLSYC mode."},
+#endif
+
+#if DEMO_I2S
+    {"t-i2s",   	tls_i2s_demo,	0x3F,    6, "Test I2S module, for example t-i2s=(0,1,44100,16,0,0) to send data."},
+#endif
+
+#if DEMO_I2C
+    {"t-i2c",   	i2c_demo,	0x1,    1, "Test I2C module, for example t-i2c to W&R AT24CXX."},
 #endif
 
 #if DEMO_PMU
@@ -222,7 +232,7 @@ struct demo_console_info_t  console_tbl[] =
 	{"t-iperf",  demo_iperf_auto_test,   0x7E,    7, "Iperf auto test"},
 #endif
 #if DEMO_SSL_SERVER
-	{"t-ssl-server",  CreateSSLServerDemoTask,   0x0,    1, "Test ssl server"},
+	{"t-ssl-server",  CreateSSLServerDemoTask,   0x0,    1, "Test ssl server,remember to turn on TLS_CONFIG_SERVER_SIDE_SSL"},
 #endif
 #if DEMO_WEBSOCKETS
 	{"t-websockets", lwsDemoTest, 0x0,    0, "websockets demo test"},

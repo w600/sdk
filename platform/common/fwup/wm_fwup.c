@@ -77,7 +77,7 @@ static int img_header_check(T_BOOTER *img_param)
 	tls_crypto_crc_init(&crcContext, 0xFFFFFFFF, CRYPTO_CRC_TYPE_32, 3);
 	tls_crypto_crc_update(&crcContext, (unsigned char *)img_param, sizeof(T_BOOTER)-4);
 	tls_crypto_crc_final(&crcContext, &value);
-	if (img_param->hd_checksum == value)
+	if ((img_param->hd_checksum == value) && (((img_param->upd_img_addr|FLASH_BASE_ADDR) + img_param->upd_img_len) <= USER_ADDR_START))
 	{
 		return TRUE;
 	}
@@ -92,10 +92,10 @@ static void img_update_header(T_BOOTER* img_param)
 	char current_img;	
 	psCrcContext_t	crcContext;
 	
-	tls_fls_read(IMAGE_HEADER_ADDR1, (unsigned char *)&imgheader[0], sizeof(T_BOOTER));
-	tls_fls_read(IMAGE_HEADER_ADDR2, (unsigned char *)&imgheader[1], sizeof(T_BOOTER));
+	tls_fls_read(CODE_RUN_HEADER_ADDR, (unsigned char *)&imgheader[0], sizeof(T_BOOTER));
+	tls_fls_read(CODE_UPD_HEADER_ADDR, (unsigned char *)&imgheader[1], sizeof(T_BOOTER));
 
-	//将两个upd_no中较大的那个值取出来，再将其加1后赋值给 IMAGE_HEADER_ADDR2 处的header；
+	//将两个upd_no中较大的那个值取出来，再将其加1后赋值给 CODE_UPD_HEADER_ADDR 处的header；
 	if (img_header_check(&imgheader[1]))
 	{
 		current_img = (imgheader[1].upd_no > imgheader[0].upd_no);
@@ -109,7 +109,7 @@ static void img_update_header(T_BOOTER* img_param)
 	tls_crypto_crc_init(&crcContext, 0xFFFFFFFF, CRYPTO_CRC_TYPE_32, 3);
 	tls_crypto_crc_update(&crcContext, (unsigned char *)img_param, sizeof(T_BOOTER)-4);
 	tls_crypto_crc_final(&crcContext, &img_param->hd_checksum);
-	tls_fls_write(IMAGE_HEADER_ADDR2,  (unsigned char *)img_param,  sizeof(T_BOOTER));
+	tls_fls_write(CODE_UPD_HEADER_ADDR,  (unsigned char *)img_param,  sizeof(T_BOOTER));
 }
 
 static void fwup_scheduler(void *data)
@@ -127,7 +127,7 @@ static void fwup_scheduler(void *data)
 	while (1) 
 	{
 		err = tls_os_queue_receive(fwup_msg_queue, (void **)&msg, 0, 0);
-        tls_watchdog_clr();
+        		tls_watchdog_clr();
 		if(err != TLS_OS_SUCCESS) 
 		{
 			continue;
@@ -189,21 +189,25 @@ static void fwup_scheduler(void *data)
 								
 								if (!img_header_check(&booter))
 								{
+									request->status = TLS_FWUP_REQ_STATUS_FIO;
+									fwup->current_state |= TLS_FWUP_STATE_ERROR_IO;
 									goto request_finish;
 								}
 							
-								if (booter.zip_type == ZIP_FILE)
+								//if (booter.zip_type == ZIP_FILE)
 								{
-									fwup->program_base = booter.zip_img_addr | FLASH_BASE_ADDR;
-									fwup->total_len = booter.zip_img_len;
-									org_checksum = booter.zip_checksum;
+									fwup->program_base = booter.upd_img_addr | FLASH_BASE_ADDR;
+									fwup->total_len = booter.upd_img_len;
+									org_checksum = booter.upd_checksum;
 								}
+#if 0								
 								else
 								{
 									fwup->program_base = booter.img_addr| FLASH_BASE_ADDR;
 									fwup->total_len = booter.img_len;
 									org_checksum = booter.org_checksum;
 								}
+#endif
 								fwup->updated_len = 0;
 							}
 						}
@@ -212,7 +216,7 @@ static void fwup_scheduler(void *data)
 					if (request->data_len > 0) 
 					{
 					//	TLS_DBGPRT_INFO("write the firmware image to the flash. %x\n\r", fwup->program_base + fwup->program_offset);
-                        err = tls_fls_fast_write(fwup->program_base + fwup->program_offset, buffer, request->data_len);
+                        				err = tls_fls_fast_write(fwup->program_base + fwup->program_offset, buffer, request->data_len);
 						if(err != TLS_FLS_STATUS_OK) 
 						{
 							TLS_DBGPRT_ERR("failed to program flash!\n");
@@ -268,7 +272,7 @@ static void fwup_scheduler(void *data)
 
 							if (org_checksum != image_checksum)			
 							{
-                                TLS_DBGPRT_ERR("varify incorrect[0x%02x, but 0x%02x]\n", org_checksum, image_checksum);
+                                					TLS_DBGPRT_ERR("varify incorrect[0x%02x, but 0x%02x]\n", org_checksum, image_checksum);
 								request->status = TLS_FWUP_REQ_STATUS_FCRC;
 								fwup->current_state |= TLS_FWUP_STATE_ERROR_CRC;
 								goto request_finish;
@@ -303,7 +307,7 @@ request_finish:
 					if(fwup->updated_len >= (fwup->total_len))
 					{
 					    fwup_update_autoflag();
-						tls_sys_reset();
+					    tls_sys_reset();
 					}
 				}
 				break;

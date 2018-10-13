@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "wm_socket_fwup.h"
+#include "wm_fwup.h"
 #include "wm_http_fwup.h"
 #include "wm_debug.h"
 #include "wm_mem.h"
@@ -25,6 +26,7 @@ int http_fwup(HTTPParameters ClientParams)
     u32  partLen;
     u32 totalLen = 0;
     u32 recvLen = 0;
+    T_BOOTER *booter;
 #if USE_BREAK_POINT_RESUME == 0
     u32 breakFlag = 0;
     u32 breakLen = 0;
@@ -111,7 +113,8 @@ int http_fwup(HTTPParameters ClientParams)
                     nRetCode = HTTPClientReadData(pHTTP,Buffer+3,nSize,RECV_TIMEOUT,&nSize);
                     if( recvLen == 0 ){
                         //fileSize = headerSize(fixed: 56) + appCodeSize                   
-                        totalLen = Buffer[15]+(Buffer[16]<<8)+(Buffer[17]<<16)+56;
+                        booter = (Buffer+3);
+                        totalLen = booter->upd_img_len + sizeof(T_BOOTER);
                     }
                     
                     if(nRetCode != HTTP_CLIENT_SUCCESS && nRetCode != HTTP_CLIENT_EOS){
@@ -202,7 +205,7 @@ int t_http_fwup(char *url)
 	memset(&httpParams, 0, sizeof(HTTPParameters));
 	if (url == NULL)
 	{
-		httpParams.Uri = "http://%d.%d.%d.%d:8080/TestWeb/cuckoo.do";
+		httpParams.Uri = "http://192.168.1.100:8080/WM_W600_SEC.img";
 	}
 	else
 	{

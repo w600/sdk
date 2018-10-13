@@ -1,0 +1,25 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "44a6a0ce-4de1-f64b-b099-0b3ef3cc1589++403",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+    "44a6a0ce-4de1-f64b-b099-0b3ef3cc1589++403" : {
+
+    }
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "44a6a0ce-4de1-f64b-b099-0b3ef3cc1589++403" : 9223372036854775807
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "718F0529-202F-49AC-BB41-D695FED108FD",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "44a6a0ce-4de1-f64b-b099-0b3ef3cc1589++403" : "OneShotConfig%E7%BB%84%E5%B9%BF%E6%92%AD%E4%BF%AE%E6%94%B9%E7%89%88%E6%96%B0%E5%8A%A0%E6%8E%A5%E6%94%B6%E5%8A%9F%E8%83%BD\/"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "OneShotConfig",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "OneShotConfig.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/192.168.100.150:8443\/svn\/WM2014_01",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Subversion",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "44a6a0ce-4de1-f64b-b099-0b3ef3cc1589++403"
+    }
+  ]
+}

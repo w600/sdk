@@ -74,7 +74,7 @@
 /** The address of the CRC output register. */
 #define HR_CRYPTO_CRC_RESULT    HR_CRYPTO_SHA1_DIGEST4
 
-#define ERR_OK          0    ///< No error, everything OK.
+#define ERR_CRY_OK          0    ///< No error, everything OK.
 #define ERR_FAILURE        -1    /* failure */
 #define ERR_ARG_FAIL			-6	/* Failure due to bad function param */
 

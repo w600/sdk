@@ -340,7 +340,7 @@ mDNSexport mStatus mDNSPlatformSendUDP(const mDNS *const m, const DNSMessage *co
 	{
 		//LOG("mDNSPlatformSendUDP got error %d (%s) sending packet to %#a on interface %#a/%s/%d",
 		//	      errno, strerror(errno), dst, &thisIntf->coreIntf.ip, thisIntf->intfName, thisIntf->index);
-		LOG("mDNSPlatformSendUDP got err %d, dst->type %d\n", err, dst->type);
+		LOG("mDNSPlatformSendUDP got err %d, dst->type %d\n", (int)err, (long)dst->type);
 	}
 	return PosixErrorToStatus(err);
 }

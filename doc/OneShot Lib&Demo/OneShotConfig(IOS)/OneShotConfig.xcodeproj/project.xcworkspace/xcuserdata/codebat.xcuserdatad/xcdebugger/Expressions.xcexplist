@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VariablesViewState
+   version = "1.0">
+   <ContextStates>
+      <ContextState
+         contextName = "+[TCPSocketHandle preparePack:passWd:]:TCPSocketHandle.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "array[0]">
+            </PersistentString>
+            <PersistentString
+               value = "array[2]">
+            </PersistentString>
+            <PersistentString
+               value = "dataPack[1]">
+            </PersistentString>
+            <PersistentString
+               value = "array[1]">
+            </PersistentString>
+            <PersistentString
+               value = "array[3]">
+            </PersistentString>
+            <PersistentString
+               value = "dataPack[0]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[SmartConfigViewController sendData]:SmartConfigViewController.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "networkName.text">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "+[PackManager convertDataWithS:G:Dll:Data:size:]:PackManager.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "bf[13]">
+            </PersistentString>
+            <PersistentString
+               value = "data[7]">
+            </PersistentString>
+            <PersistentString
+               value = "bf[18]">
+            </PersistentString>
+            <PersistentString
+               value = "dll[1]">
+            </PersistentString>
+            <PersistentString
+               value = "bf[19]">
+            </PersistentString>
+            <PersistentString
+               value = "dll[0]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "main:main.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[SmartConfigViewController prepareForSegue:sender:]:SmartConfigViewController.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "[dest class]">
+            </PersistentString>
+            <PersistentString
+               value = "dest.class">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "+[PackManager preparePacks:size:]:PackManager.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "bs[2]">
+            </PersistentString>
+            <PersistentString
+               value = "[[k objectAtIndex:i] UTF8String]">
+            </PersistentString>
+            <PersistentString
+               value = "bytes[0][8]">
+            </PersistentString>
+            <PersistentString
+               value = "bs[26]">
+            </PersistentString>
+            <PersistentString
+               value = "bs[20]">
+            </PersistentString>
+            <PersistentString
+               value = "bs[1]">
+            </PersistentString>
+            <PersistentString
+               value = "bs[21]">
+            </PersistentString>
+            <PersistentString
+               value = "size">
+            </PersistentString>
+            <PersistentString
+               value = "l">
+            </PersistentString>
+            <PersistentString
+               value = "k[0]">
+            </PersistentString>
+            <PersistentString
+               value = "strlen((void*)bytes[m]">
+            </PersistentString>
+            <PersistentString
+               value = "[k count]">
+            </PersistentString>
+            <PersistentString
+               value = "[k objectAtIndex:i]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "mach_msg_trap:(null)">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.timer">
+            </PersistentString>
+            <PersistentString
+               value = "Flag">
+            </PersistentString>
+            <PersistentString
+               value = "_timer">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "+[TCPSocketHandle sendPackToAddress:Port:WithPackage:]:TCPSocketHandle.m">
+      </ContextState>
+      <ContextState
+         contextName = "+[PackManager convertDataWithS:G:Dll:Data:]:PackManager.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "result">
+            </PersistentString>
+            <PersistentString
+               value = "dll[0]">
+            </PersistentString>
+            <PersistentString
+               value = "dl">
+            </PersistentString>
+            <PersistentString
+               value = "bf">
+            </PersistentString>
+            <PersistentString
+               value = "dll_len">
+            </PersistentString>
+            <PersistentString
+               value = "dll[1]">
+            </PersistentString>
+            <PersistentString
+               value = "4+dll_len-1+dl+1">
+            </PersistentString>
+            <PersistentString
+               value = "bf[4+i]">
+            </PersistentString>
+            <PersistentString
+               value = "tl">
+            </PersistentString>
+            <PersistentString
+               value = "da">
+            </PersistentString>
+            <PersistentString
+               value = " bf[4+dll_len-1+dl+1] ">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[SmartConfigViewController smartConfig:]:SmartConfigViewController.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "networkName.text">
+            </PersistentString>
+            <PersistentString
+               value = "self fetchSSIDInfo">
+            </PersistentString>
+            <PersistentString
+               value = "btnStartConfig.titleLabel.text">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "+[PackManager encodePacks:size:]:PackManager.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "ret[1][2]">
+            </PersistentString>
+            <PersistentString
+               value = "newbs[3]">
+            </PersistentString>
+            <PersistentString
+               value = "[bytes[0] lenth]">
+            </PersistentString>
+            <PersistentString
+               value = "ret[1][3]">
+            </PersistentString>
+            <PersistentString
+               value = "tempa[0]">
+            </PersistentString>
+            <PersistentString
+               value = "newbs[j]">
+            </PersistentString>
+            <PersistentString
+               value = "newbs[2]">
+            </PersistentString>
+            <PersistentString
+               value = "len">
+            </PersistentString>
+            <PersistentString
+               value = "j">
+            </PersistentString>
+            <PersistentString
+               value = "tempb[0]">
+            </PersistentString>
+            <PersistentString
+               value = "ret[1][0]">
+            </PersistentString>
+            <PersistentString
+               value = "ret[0][0]">
+            </PersistentString>
+            <PersistentString
+               value = "lenght">
+            </PersistentString>
+            <PersistentString
+               value = "newbs[1]">
+            </PersistentString>
+            <PersistentString
+               value = "newbs[4]">
+            </PersistentString>
+            <PersistentString
+               value = "ret[1][1]">
+            </PersistentString>
+            <PersistentString
+               value = "ret[0][1]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[ManualConfigViewController configuration:]:ManualConfigViewController.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "[packArray count]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+   </ContextStates>
+</VariablesViewState>

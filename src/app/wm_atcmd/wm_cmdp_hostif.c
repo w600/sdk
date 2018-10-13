@@ -68,11 +68,7 @@ extern void tls_net_set_sourceip(u32 ipvalue);
 #else
 static u32 source_ip = 0;
 #endif
-
-#if TLS_CONFIG_TEM
 static u32 temAtStartUp = 0;
-#endif
-
 
 extern void wm_cmdp_oneshot_status_event(u8 status);
 extern	int wm_cmdp_oneshot_task_init(void);
@@ -1130,9 +1126,7 @@ int tls_hostif_init(void)
     err = tls_hostif_task_init();
 #endif
 
-#if TLS_CONFIG_TEM
     temAtStartUp = adc_temp();
-#endif
     return err; 
 }
 
@@ -3215,7 +3209,6 @@ int fwup_proc(u8 set_opt, u8 update_flash, union HOSTIF_CMD_PARAMS_UNION *cmd, u
 #endif
 #endif
 
-#if TLS_CONFIG_TEM
 int tem_proc(u8 set_opt, u8 update_flash, union HOSTIF_CMD_PARAMS_UNION *cmd, union HOSTIF_CMDRSP_PARAMS_UNION * cmdrsp){
     int ret = 0;
     struct tls_cmd_tem_t tem = { 0 };
@@ -3252,7 +3245,6 @@ int tem_proc(u8 set_opt, u8 update_flash, union HOSTIF_CMD_PARAMS_UNION *cmd, un
     
    return ret ? -CMD_ERR_OPS : 0;
 }
-#endif
 
 int qmac_proc(u8 set_opt, u8 update_flash, union HOSTIF_CMD_PARAMS_UNION *cmd, union HOSTIF_CMDRSP_PARAMS_UNION * cmdrsp){
     u8 *mac = NULL;
@@ -4348,6 +4340,10 @@ int wwps_proc(u8 set_opt, u8 update_flash, union HOSTIF_CMD_PARAMS_UNION *cmd, u
         }else
             err = 1;
     }
+	else
+	{
+		err = 1;
+	}
 /*    else{
         err = tls_cmd_get_wps_params(&wps);
         cmdrsp->wps.mode=wps.mode;
@@ -4440,9 +4436,7 @@ static struct tls_cmd_t  at_ri_cmd_tbl[] = {
     { "HTTPC", HOSTIF_CMD_HTTPC, 0x22, 2, 3, httpc_proc},
     { "FWUP", HOSTIF_CMD_FWUP, 0x22, 1, 0, fwup_proc},
 #endif
-#if TLS_CONFIG_TEM
     { "TEM", HOSTIF_CMD_TEM, 0x7F, 1, 1, tem_proc},
-#endif
 #endif
     { "QMAC", HOSTIF_CMD_MAC, 0x19, 0, 0, qmac_proc},
     { "QVER", HOSTIF_CMD_VER, 0x19, 0, 0, qver_proc},
@@ -6146,6 +6140,10 @@ int at_format_func(char *at_name, u8 set_opt, u8 update_flash, union HOSTIF_CMDR
                     *res_len += sprintf(res_resp + *res_len, "%c", cmdrsp->wps.pin[i]);
             }
         }
+		else
+		{
+			*res_len = atcmd_ok_resp(res_resp);
+		}
 /*        else{
             if(cmdrsp->wps.result==2){
                 *res_len = sprintf(res_resp, "+OK=%u", cmdrsp->wps.mode);
@@ -6662,12 +6660,10 @@ int ri_format_func(s16 ri_cmd_id, u8 set_opt, u8 update_flash, union HOSTIF_CMDR
     }
 #endif
 
-#if TLS_CONFIG_TEM
 	else if(ri_cmd_id == HOSTIF_CMD_TEM)
     {
         *res_len = sizeof(struct tls_hostif_cmd_hdr) + strlen((char *)cmdrsp->mac.addr);
     }
-#endif	
     else
         return CMD_ERR_UNSUPP;
     return 0;

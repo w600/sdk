@@ -7,14 +7,13 @@
 
 u8 RemoteIp[4] = {192,168,1,100};	//demo作为client时，远程服务器的IP
 
-
-u32   http_snd_req(HTTPParameters ClientParams, HTTP_VERB verb, char* pSndData, u8 parseXmlJson)
+u32 http_snd_req(HTTPParameters ClientParams, HTTP_VERB verb, char* pSndData, u8 parseXmlJson)
 {
 	int                   nRetCode;
-    u32                  nSize,nTotal = 0;
-    char*                   Buffer = NULL;
-    HTTP_SESSION_HANDLE     pHTTP;
-    u32                  nSndDataLen ;
+    u32                   nSize,nTotal = 0;
+    char*                 Buffer = NULL;
+    HTTP_SESSION_HANDLE   pHTTP;
+    u32                   nSndDataLen ;
     do
     {
         Buffer = (char*)tls_mem_alloc(HTTP_CLIENT_BUFFER_SIZE);
@@ -23,7 +22,7 @@ u32   http_snd_req(HTTPParameters ClientParams, HTTP_VERB verb, char* pSndData, 
             return HTTP_CLIENT_ERROR_NO_MEMORY;
         }
         memset(Buffer, 0, HTTP_CLIENT_BUFFER_SIZE);
-        printf("\nHTTP Client v1.0\n\n");
+        printf("HTTP Client v1.0\r\n");
         nSndDataLen = (pSndData==NULL ? 0 : strlen(pSndData));
         // Open the HTTP request handle
         pHTTP = HTTPClientOpenRequest(0);
@@ -74,7 +73,7 @@ u32   http_snd_req(HTTPParameters ClientParams, HTTP_VERB verb, char* pSndData, 
         {
             break;
         }
-	 printf("Start to receive data from remote server...\n");
+	    printf("Start to receive data from remote server...\r\n");
 
         // Get the data until we get an error or end of stream code
         while(nRetCode == HTTP_CLIENT_SUCCESS || nRetCode != HTTP_CLIENT_EOS)
@@ -95,7 +94,7 @@ u32   http_snd_req(HTTPParameters ClientParams, HTTP_VERB verb, char* pSndData, 
         HTTPClientCloseRequest(&pHTTP);
     if(ClientParams.Verbose == TRUE)
     {
-        printf("\n\nHTTP Client terminated %d (got %d kb)\n\n",nRetCode,(nTotal/ 1024));
+        printf("\n\nHTTP Client terminated %d (got %d b)\n\n", nRetCode, nTotal);
     }
     return nRetCode;
 }
@@ -119,6 +118,7 @@ u32 http_put(HTTPParameters ClientParams, char* pSndData)
 int http_get_demo(char *buf)
 {
     HTTPParameters httpParams;
+    
     memset(&httpParams, 0, sizeof(HTTPParameters));
     httpParams.Uri = (char*)tls_mem_alloc(128);
     if(httpParams.Uri == NULL)
@@ -128,9 +128,6 @@ int http_get_demo(char *buf)
     }
     memset(httpParams.Uri, 0, 128);
     sprintf(httpParams.Uri, "http://%d.%d.%d.%d:8080/TestWeb/", RemoteIp[0],RemoteIp[1],RemoteIp[2],RemoteIp[3]);
-    //httpParams.ProxyHost = "61.175.96.34";
-    //httpParams.ProxyPort = 9999;
-    //httpParams.UseProxy = TRUE;
     httpParams.Verbose = TRUE;
     printf("Location: %s\n",httpParams.Uri);
     http_get(httpParams);
@@ -140,8 +137,8 @@ int http_get_demo(char *buf)
 }
 int http_post_demo(char* postData)
 {
-	HTTPParameters httpParams;
-	extern const char HTTP_POST[];
+    HTTPParameters httpParams;
+    
 	memset(&httpParams, 0, sizeof(HTTPParameters));
 	httpParams.Uri = (char*)tls_mem_alloc(128);
 	if(httpParams.Uri == NULL)
@@ -153,14 +150,14 @@ int http_post_demo(char* postData)
 	sprintf(httpParams.Uri, "http://%d.%d.%d.%d:8080/TestWeb/login.do", RemoteIp[0],RemoteIp[1],RemoteIp[2],RemoteIp[3]);
 	printf("Location: %s\n",httpParams.Uri);
 	httpParams.Verbose = TRUE;
-	http_post(httpParams, postData + strlen(HTTP_POST));
+	http_post(httpParams, postData);
 	tls_mem_free(httpParams.Uri);
 	return WM_SUCCESS;
 }
 int http_put_demo(char* putData)
 {
-	HTTPParameters httpParams;
-	extern const char HTTP_PUT[];
+    HTTPParameters httpParams;
+    
 	memset(&httpParams, 0, sizeof(HTTPParameters));
 	httpParams.Uri = (char*)tls_mem_alloc(128);
 	if(httpParams.Uri == NULL)
@@ -172,27 +169,14 @@ int http_put_demo(char* putData)
 	sprintf(httpParams.Uri, "http://%d.%d.%d.%d:8080/TestWeb/login_put.do", RemoteIp[0],RemoteIp[1],RemoteIp[2],RemoteIp[3]);
 	printf("Location: %s\n",httpParams.Uri);
 	httpParams.Verbose = TRUE;
-	http_put(httpParams, putData + strlen(HTTP_PUT));
+	http_put(httpParams, putData);
 	tls_mem_free(httpParams.Uri);
 	return WM_SUCCESS;
 }
 
-int http_fwup_demo(char *buf)
+int http_fwup_demo(char *url)
 {
-	HTTPParameters httpParams;
-	memset(&httpParams, 0, sizeof(HTTPParameters));
-	httpParams.Uri = (char*)tls_mem_alloc(128);
-	if(httpParams.Uri == NULL)
-	{
-	    printf("malloc error.\n");
-	    return WM_FAILED;
-	}
-	memset(httpParams.Uri, 0, 128);
-	sprintf(httpParams.Uri, "http://%d.%d.%d.%d:8080/TestWeb/WM_W600_SEC.img", RemoteIp[0],RemoteIp[1],RemoteIp[2],RemoteIp[3]);
-	printf("Location: %s\n",httpParams.Uri);
-	httpParams.Verbose = TRUE;
-	http_fwup(httpParams);
-	tls_mem_free(httpParams.Uri);
+	t_http_fwup(url);
 
 	return WM_SUCCESS;
 }

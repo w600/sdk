@@ -61,10 +61,11 @@ ifeq ($(COMPILE), gcc)
 else
 	@$(FROMELF) --bin -o  $(FIRMWAREDIR)/$(TARGET).bin $(IMAGEODIR)/$(TARGET).out  
 endif
-	@$(SDK_TOOLS)/makeimg.exe  $(FIRMWAREDIR)/$(TARGET).bin "$(FIRMWAREDIR)/$(TARGET).img" 0 0 "$(FIRMWAREDIR)/version.txt" E000
-	@$(SDK_TOOLS)/makeimg.exe  $(FIRMWAREDIR)/$(TARGET).bin "$(FIRMWAREDIR)/$(TARGET)_sec.img" 0 0 "$(FIRMWAREDIR)/version.txt" 7E800
+	@$(SDK_TOOLS)/wm_gzip.exe  $(FIRMWAREDIR)/$(TARGET).bin
+	@$(SDK_TOOLS)/makeimg.exe  $(FIRMWAREDIR)/$(TARGET).bin "$(FIRMWAREDIR)/$(TARGET).img" 0 0 "$(FIRMWAREDIR)/version.txt" 90000 10100
+	@$(SDK_TOOLS)/makeimg.exe  $(FIRMWAREDIR)/$(TARGET).bin.gz "$(FIRMWAREDIR)/$(TARGET)_gz.img" 0 1 "$(FIRMWAREDIR)/version.txt" 90000 10100 $(FIRMWAREDIR)/$(TARGET).bin
+	@$(SDK_TOOLS)/makeimg.exe  $(FIRMWAREDIR)/$(TARGET).bin "$(FIRMWAREDIR)/$(TARGET)_sec.img" 0 0 "$(FIRMWAREDIR)/version.txt" 90000 10100
 	@$(SDK_TOOLS)/makeimg_all.exe "$(FIRMWAREDIR)/secboot.img" "$(FIRMWAREDIR)/$(TARGET).img" "$(FIRMWAREDIR)/$(TARGET).fls"
-	@mv ./out.img $(FIRMWAREDIR)/$(TARGET).FLS
 	@cp $(IMAGEODIR)/$(TARGET).map $(FIRMWAREDIR)/$(TARGET).map
 	@rm ./test.bin
 	@echo ""

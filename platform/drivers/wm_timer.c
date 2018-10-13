@@ -163,9 +163,36 @@ void tls_timer_start(u8 timer_id)
  */
 void tls_timer_stop(u8 timer_id)
 {
+    if (!(wm_timer_bitmap & BIT(timer_id)))
+        return;
+
     tls_reg_write32(HR_TIMER0_5_CSR, tls_reg_read32(HR_TIMER0_5_CSR)|TLS_TIMER_INT_CLR(timer_id));
     tls_reg_write32(HR_TIMER0_5_CSR, tls_reg_read32(HR_TIMER0_5_CSR) &~ TLS_TIMER_EN(timer_id));
 	
+    return;
+}
+
+/**
+ * @brief           This function is used to change a timer wait time
+ *
+ * @param[in]      	timer_id    timer id[0~5]
+ *
+ * @param[in]      	newtime     new wait time
+ *
+ * @retval         	None
+ *
+ * @note            If the timer does not start, this function will start the timer
+ */
+void tls_timer_change(u8 timer_id, u32 newtime)
+{
+    if (!(wm_timer_bitmap & BIT(timer_id)))
+        return;
+
+    tls_timer_stop(timer_id);
+    if (newtime)
+        tls_reg_write32(HR_TIMER0_PRD + 0x04 * timer_id, newtime);
+    tls_timer_start(timer_id);
+
     return;
 }
 
@@ -180,6 +207,9 @@ void tls_timer_stop(u8 timer_id)
  */
 void tls_timer_destroy(u8 timer_id)
 {
+    if (!(wm_timer_bitmap & BIT(timer_id)))
+        return;
+
     tls_timer_stop(timer_id);
 
     timer_context[timer_id].callback = NULL;

@@ -66,51 +66,127 @@ typedef struct FT_PARAM
 	unsigned char		tx_gain[FT_GAIN_LEN];
 }FT_PARAM_ST;
 
+FT_PARAM_ST gftParam;
+int tls_ft_param_init(void)
+{
+	int i = 0;
+	int usedcnt[2] = {0, 0};
+	u32 crcvalue = 0;
+	psCrcContext_t ctx;	
+	u8 *pmem = NULL;
+	FT_PARAM_ST *pft = NULL;
+	
+	if (gftParam.magic_no == SIGNATURE_WORD)
+	{
+		return TRUE;
+	}
 
+	pmem = tls_mem_alloc(512);
+	if (pmem == NULL)
+	{
+		return FALSE;
+	}
+	
+	pft = tls_mem_alloc(sizeof(FT_PARAM_ST));
+	if (pft == NULL)
+	{
+		return FALSE;
+	}
+
+	
+	for (i = 0; i < 2; i++)
+	{
+		if (i == 0)
+		{
+			tls_fls_read(FT_MAGICNUM_ADDR, (unsigned char *)pft, sizeof(FT_PARAM_ST));
+		}else{
+			flashSRRW(0, pft, sizeof(FT_PARAM_ST), pmem, 512, 1);
+		}
+		if (pft->magic_no == SIGNATURE_WORD)
+		{
+			tls_crypto_init();
+			tls_crypto_crc_init(&ctx, 0xFFFFFFFF, CRYPTO_CRC_TYPE_32, INPUT_REFLECT | OUTPUT_REFLECT);
+			tls_crypto_crc_update(&ctx, (unsigned char *)pft + 12, sizeof(FT_PARAM_ST) - 12);
+			tls_crypto_crc_final(&ctx, &crcvalue);		
+			if (pft->checksum != crcvalue)
+			{
+				usedcnt[i] = -1;
+				continue;
+			}
+
+			if (gftParam.magic_no != SIGNATURE_WORD)
+			{
+				memcpy(&gftParam, pft, sizeof(FT_PARAM_ST));
+			}
+		}
+	}
+
+	if (i == 2)
+	{
+		/*Use default ft param*/
+	}else{
+		for (i  = 0; i < 2; i++)
+		{
+			if (usedcnt[i] < 0)
+			{
+				flashSRRW(0, &gftParam, sizeof(FT_PARAM_ST), pmem, 512, 1);
+			}
+		}
+
+		if ((gftParam.checksum != pft->checksum) && (usedcnt[0] + usedcnt[1] == 0))
+		{
+			flashSRRW(0, &gftParam, sizeof(FT_PARAM_ST), pmem, 512, 1);
+		}
+	}
+	tls_mem_free(pmem);
+	tls_mem_free(pft);
+
+	return TRUE;
+}
 
 int tls_ft_param_get(unsigned int opnum, void *data, unsigned int rdlen)
 {
-	FT_PARAM_ST ft;
+	//FT_PARAM_ST ft;
 
-	tls_fls_read(FT_MAGICNUM_ADDR, (unsigned char *)&ft, sizeof(ft));
+	//tls_fls_read(FT_MAGICNUM_ADDR, (unsigned char *)&ft, sizeof(ft));
 	switch (opnum)
 	{
 		case CMD_MAC:	/*MAC*/
-			memcpy(data, ft.mac_addr, rdlen);
+			memcpy(data, gftParam.mac_addr, rdlen);
 		break;
 		
 		case CMD_TX_DC: /*tx_dcoffset*/
-			*(unsigned int *)data = ft.tx_dcoffset;
+			*(unsigned int *)data = gftParam.tx_dcoffset;
 		break;	
 		
 		case CMD_RX_DC: /*rx_dcoffset*/
-			*(unsigned int *)data = ft.rx_dcoffset;
+			*(unsigned int *)data = gftParam.rx_dcoffset;
 		break;	
 		
 		case CMD_TX_IQ_GAIN:
-			*(unsigned int *)data = ft.tx_iq_gain;
+			*(unsigned int *)data = gftParam.tx_iq_gain;
 		break;	
 		
 		case CMD_RX_IQ_GAIN:
-			*(unsigned int *)data = ft.rx_iq_gain;
+			*(unsigned int *)data = gftParam.rx_iq_gain;
 		break;
 		
 		case CMD_TX_IQ_PHASE:
-			*(unsigned int *)data = ft.tx_iq_phase;
+			*(unsigned int *)data = gftParam.tx_iq_phase;
 		break;	
 		
 		case CMD_RX_IQ_PHASE:
-			*(unsigned int *)data = ft.rx_iq_phase;
+			*(unsigned int *)data = gftParam.rx_iq_phase;
 		break;
 		
 		case CMD_TX_GAIN: /*gain*/
 			if (rdlen < FT_GAIN_LEN)
 			{
-				memcpy(data, ft.tx_gain, rdlen);
+				memcpy(data, gftParam.tx_gain, rdlen);
 			}
 			else
 			{
-				memcpy(data, ft.tx_gain, FT_GAIN_LEN);
+				memcpy(data, gftParam.tx_gain, FT_GAIN_LEN);
 			}
 		break;
 		
@@ -122,9 +198,9 @@ int tls_ft_param_get(unsigned int opnum, void *data, unsigned int rdlen)
 
 int tls_ft_param_set(unsigned int opnum, void *data, unsigned int len)
 {
-	FT_PARAM_ST ft;
 	psCrcContext_t ctx;
 	unsigned int writelen = 0;
+	u8 *pmem = NULL;
 
 
 
@@ -132,35 +208,35 @@ int tls_ft_param_set(unsigned int opnum, void *data, unsigned int len)
 	{
 		return -1;
 	}
-	tls_fls_read(FT_MAGICNUM_ADDR, (unsigned char *)&ft, sizeof(ft));
+	//tls_fls_read(FT_MAGICNUM_ADDR, (unsigned char *)&gftParam, sizeof(gftParam));
 	switch (opnum)
 	{
 		case CMD_MAC:	/*MAC*/
-			memcpy(ft.mac_addr, (unsigned char *)data, len);
+			memcpy(gftParam.mac_addr, (unsigned char *)data, len);
 		break;
 
 		case CMD_TX_DC:	/*tx_dcoffset*/
-			ft.tx_dcoffset = *(unsigned int *)data;
+			gftParam.tx_dcoffset = *(unsigned int *)data;
 		break;	
 		
 		case CMD_RX_DC:	/*rx_dcoffset*/
-			ft.rx_dcoffset = *(unsigned int *)data;
+			gftParam.rx_dcoffset = *(unsigned int *)data;
 		break;	
 		
 		case CMD_TX_IQ_GAIN:
-			ft.tx_iq_gain = *(unsigned int *)data;
+			gftParam.tx_iq_gain = *(unsigned int *)data;
 		break;	
 		
 		case CMD_RX_IQ_GAIN:
-			ft.rx_iq_gain = *(unsigned int *) data;			
+			gftParam.rx_iq_gain = *(unsigned int *) data;			
 		break;	
 		
 		case CMD_TX_IQ_PHASE:
-			ft.tx_iq_phase = *(unsigned int *)data;
+			gftParam.tx_iq_phase = *(unsigned int *)data;
 		break;	
 		
 		case CMD_RX_IQ_PHASE:
-			ft.rx_iq_phase = *(unsigned int *) data;			
+			gftParam.rx_iq_phase = *(unsigned int *) data;			
 		break;	
 		
 		case CMD_TX_GAIN: /*gain*/
@@ -172,7 +248,7 @@ int tls_ft_param_set(unsigned int opnum, void *data, unsigned int len)
 			{
 				writelen = len;
 			}
-			memcpy(ft.tx_gain, data, writelen);
+			memcpy(gftParam.tx_gain, data, writelen);
 		break;
 		
 		default:
@@ -181,12 +257,18 @@ int tls_ft_param_set(unsigned int opnum, void *data, unsigned int len)
 
 	tls_crypto_init();
 	tls_crypto_crc_init(&ctx, 0xFFFFFFFF, CRYPTO_CRC_TYPE_32, INPUT_REFLECT | OUTPUT_REFLECT);
-	ft.magic_no = SIGNATURE_WORD;
-	tls_crypto_crc_update(&ctx, (unsigned char *)&ft + 12, sizeof(ft) -12);
-	tls_crypto_crc_final(&ctx, &ft.checksum);
+	gftParam.magic_no = SIGNATURE_WORD;
+	tls_crypto_crc_update(&ctx, (unsigned char *)&gftParam + 12, sizeof(gftParam) -12);
+	tls_crypto_crc_final(&ctx, &gftParam.checksum);
 	tls_flash_unlock();
-	tls_fls_write(FT_MAGICNUM_ADDR, (unsigned char *)&ft, sizeof(ft));
+	tls_fls_write(FT_MAGICNUM_ADDR, (unsigned char *)&gftParam, sizeof(gftParam));
 	tls_flash_lock();
+	pmem = tls_mem_alloc(512);
+	if (pmem)
+	{
+		flashSRRW(0, (unsigned char *)&gftParam, sizeof(gftParam), pmem, 512, 1);
+		tls_mem_free(pmem);
+	}
 	return 0;
 }
 

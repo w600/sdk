@@ -3,7 +3,7 @@
 #if TLS_CONFIG_SERVER_SIDE_SSL
 
 #include "wm_ssl_server.h"
-#include "lwip\arch.h"
+#include "lwip/arch.h"
 #include "wm_sockets.h"
 
 

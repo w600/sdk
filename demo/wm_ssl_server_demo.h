@@ -59,7 +59,7 @@ typedef struct {
 	uint32			bytes_sent;
 } httpConn_t;
 
-extern int32 httpBasicParse(httpConn_t *cp, unsigned char *buf, uint32 len,
+static int32 httpBasicParse(httpConn_t *cp, unsigned char *buf, uint32 len,
 	int32 trace);
 
 /******************************************************************************/

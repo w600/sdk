@@ -123,6 +123,8 @@ extern "C" {
 #define I2S_TX_FIFO_CNT_MASK		(0xF0)                              /*!< TX fifo count mask */
 
 #define I2S_MAX_RXTXFIFO_LEVEL		(8)                                 /*!< max rx/tx fifo level */
+#define WM_I2S_TX_DMA_CHANNEL       (4)
+#define WM_I2S_RX_DMA_CHANNEL       (5)
 
 
 typedef void (*tls_i2s_callback)();
@@ -208,9 +210,9 @@ typedef struct _tls_i2s_port
     /** instance of tls_i2s_buf struct for data receive */
     tls_i2s_buf  tx_buf;
     /** function pointer for data receiver when in interrupt mode */
-    void 	(*rx_callback)();
+    void 	(*rx_callback)(u16 len);
     /** function pointer for data transmit when in interrupt mode */
-    void 	(*tx_callback)();
+    void 	(*tx_callback)(u16 len);
 
 } tls_i2s_port_t;
 
@@ -295,7 +297,7 @@ int tls_i2s_tx_block(uint32_t *buf, uint16_t len);
  *      this function only submit the data
  *      when the data transfer finished the tx_callback function will be called
  */
-int tls_i2s_tx_nonblock(uint32_t *buf, uint16_t len, void (*tx_callback)());
+int tls_i2s_tx_nonblock(uint32_t *buf, uint16_t len, void (*tx_callback)(u16 len));
 
 /**
  * @brief	This function is used to receive data in non-blocking mode.
@@ -309,7 +311,7 @@ int tls_i2s_tx_nonblock(uint32_t *buf, uint16_t len, void (*tx_callback)());
  *  @note
  *
  */
-int tls_i2s_rx_nonblock(uint32_t *buf, uint16_t len, void (*rx_callback)());
+int tls_i2s_rx_nonblock(uint32_t *buf, uint16_t len, void (*rx_callback)(u16 len));
 
 /**
  * @brief	This function is used to receive data in DMA mode.
@@ -406,7 +408,7 @@ int tls_i2s_rx_dma(uint32_t * addr, uint16_t len, tls_i2s_callback callback);
 		} while(0)
 
 /**
- * @brief   Clear transmit FIFO
+ * @brief   Clear receive FIFO
  *
  */
 #define TLS_I2S_RX_FIFO_CLEAR() \
@@ -415,7 +417,7 @@ int tls_i2s_rx_dma(uint32_t * addr, uint16_t len, tls_i2s_callback callback);
 		} while(0)
 
 /**
- * @brief   Clear receive FIFO
+ * @brief   Clear transmit FIFO
  *
  */
 #define TLS_I2S_TX_FIFO_CLEAR() \

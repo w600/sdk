@@ -94,7 +94,7 @@ int tls_crypto_random_stop(void)
 	sec_cfg = val & ~(1 << RNG_START);
 	tls_reg_write32(HR_CRYPTO_SEC_CFG, sec_cfg);
 	
-	return ERR_OK;
+	return ERR_CRY_OK;
 }
 
 /**
@@ -115,7 +115,7 @@ int tls_crypto_random_init(u32 seed, CRYPTO_RNG_SWITCH rng_switch)
 	tls_reg_write32(HR_CRYPTO_KEY0, seed);
 	sec_cfg = (rng_switch << RNG_SWITCH) | (1 << RNG_LOAD_SEED) | (1 << RNG_START);
 	tls_reg_write32(HR_CRYPTO_SEC_CFG, sec_cfg);
-	return ERR_OK;
+	return ERR_CRY_OK;
 }
 
 /**
@@ -151,7 +151,7 @@ int tls_crypto_random_bytes(unsigned char *out, u32 len)
 			inLen = 0;
 		}
 	}
-	return ERR_OK;
+	return ERR_CRY_OK;
 }
 
 /**
@@ -176,7 +176,7 @@ int tls_crypto_rc4_init(psCipherContext_t * ctx, const unsigned char *key, u32 k
 	memcpy(ctx->arc4.state, key, keylen);
 	ctx->arc4.byteCount = keylen;
 	
-	return ERR_OK;
+	return ERR_CRY_OK;
 }
 
 
@@ -213,7 +213,7 @@ int tls_crypto_rc4(psCipherContext_t * ctx, unsigned char *in, unsigned char *ou
 
 	}
 	crypto_complete = 0;
-	return ERR_OK;
+	return ERR_CRY_OK;
 }
 
 
@@ -243,7 +243,7 @@ int tls_crypto_aes_init(psCipherContext_t * ctx, const unsigned char *IV, const 
 	for (x = 0; x < ctx->aes.blocklen; x++) {
 		ctx->aes.IV[x] = IV[x];
 	}
-	return ERR_OK;
+	return ERR_CRY_OK;
 }
  
 /**
@@ -285,7 +285,7 @@ int tls_crypto_aes_encrypt_decrypt(psCipherContext_t * ctx, unsigned char *in, u
 	
 	}
 	crypto_complete = 0;
-	return ERR_OK;
+	return ERR_CRY_OK;
 }
 
 /**
@@ -315,7 +315,7 @@ int tls_crypto_3des_init(psCipherContext_t * ctx, const unsigned char *IV, const
 		ctx->des3.IV[x] = IV[x];
 	}
 	
-	return ERR_OK;
+	return ERR_CRY_OK;
 }
 
 /**
@@ -354,7 +354,7 @@ int tls_crypto_3des_encrypt_decrypt(psCipherContext_t * ctx, unsigned char *in, 
 
 	}
 	crypto_complete = 0;
-	return ERR_OK;
+	return ERR_CRY_OK;
 }
   
 
@@ -383,7 +383,7 @@ int tls_crypto_des_init(psCipherContext_t * ctx, const unsigned char *IV, const 
 	for (x = 0; x < ctx->des3.blocklen; x++) {
 		ctx->des3.IV[x] = IV[x];
 	}
-	return ERR_OK;
+	return ERR_CRY_OK;
 }
 
 
@@ -423,7 +423,7 @@ int tls_crypto_des_encrypt_decrypt(psCipherContext_t * ctx, unsigned char *in, u
 
 	}
 	crypto_complete = 0;
-	return ERR_OK;
+	return ERR_CRY_OK;
 }
 
  
@@ -448,7 +448,7 @@ int tls_crypto_crc_init(psCrcContext_t * ctx, u32 key, CRYPTO_CRC_TYPE crc_type,
 	ctx->state = key;
 	ctx->type = crc_type;
 	ctx->mode = mode;
-	return ERR_OK;
+	return ERR_CRY_OK;
 }
 
 /**
@@ -505,7 +505,7 @@ int tls_crypto_crc_update(psCrcContext_t * ctx, unsigned char *in, u32 len)
 	}
 	crypto_complete = 0;
 	ctx->state = tls_reg_read32(HR_CRYPTO_CRC_RESULT); 
-	return ERR_OK;
+	return ERR_CRY_OK;
 }
 
 
@@ -523,7 +523,7 @@ int tls_crypto_crc_update(psCrcContext_t * ctx, unsigned char *in, u32 len)
 int tls_crypto_crc_final(psCrcContext_t * ctx, u32 *crc_val)
 {
 	*crc_val = ctx->state; 
-	return ERR_OK;
+	return ERR_CRY_OK;
 }
 
 static void hd_sha1_compress(psDigestContext_t *md)
@@ -947,10 +947,10 @@ static int rsaMulModRead(unsigned char w, pstm_int * a)
 	}
 	pstm_reverse((unsigned char *)in, RSAN * sizeof(u32));
 	/* this a should be initialized outside. */
-	//if ((err = pstm_init_for_read_unsigned_bin(NULL, a, RSAN * sizeof(u32) + sizeof(pstm_int))) != ERR_OK){
+	//if ((err = pstm_init_for_read_unsigned_bin(NULL, a, RSAN * sizeof(u32) + sizeof(pstm_int))) != ERR_CRY_OK){
 	//	return err;
 	//}
-	if ((err = pstm_read_unsigned_bin(a, (unsigned char *)in, RSAN * sizeof(u32))) != ERR_OK) {
+	if ((err = pstm_read_unsigned_bin(a, (unsigned char *)in, RSAN * sizeof(u32))) != ERR_CRY_OK) {
 		pstm_clear(a);
 		return err;
 	}

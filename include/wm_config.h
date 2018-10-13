@@ -70,11 +70,9 @@ CRYPTO
 
 #define TLS_CONFIG_NTP 									CFG_ON
 
-/*using temperature adc */
-#define TLS_CONFIG_TEM 									CFG_OFF
 
-#define  VERC_DNS_OPT						CFG_ON
-#define  VERC_LWIP_OPT                      CFG_ON
+#define  VERC_DNS_OPT						            CFG_ON
+#define  VERC_LWIP_OPT                                  CFG_ON
 #include "wm_os_config.h"  //if you want to use source code,please open
 #include "wm_wifi_config.h"
 #include "wm_ram_config.h"

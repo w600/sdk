@@ -170,8 +170,11 @@ int tls_pwm_out_mode_config(u8 channel, enum tls_pwm_out_mode mode)
     else if(WM_PWM_OUT_MODE_INDPT == mode)
     {
         tls_reg_write32(HR_PWM_CTL,    tls_reg_read32(HR_PWM_CTL)    & (~BIT(6)));
-        tls_reg_write32(HR_PWM_CTL,    tls_reg_read32(HR_PWM_CTL)    & (~BIT(0 + channel / 2)));
-        tls_reg_write32(HR_PWM_CTL,    tls_reg_read32(HR_PWM_CTL)    & (~BIT(14 + channel / 2)));
+        if (channel != 4 )
+        {
+            tls_reg_write32(HR_PWM_CTL,    tls_reg_read32(HR_PWM_CTL)    & (~BIT(0 + channel / 2)));
+            tls_reg_write32(HR_PWM_CTL,    tls_reg_read32(HR_PWM_CTL)    & (~BIT(14 + channel / 2)));
+        }
         tls_reg_write32(HR_PWM_BRKCTL, tls_reg_read32(HR_PWM_BRKCTL) & (~BIT(11 + channel)));    /* enable the independent mode */
     }
     else

@@ -26,9 +26,6 @@ static  tls_i2s_port_t  tls_i2s_port;
 
 static void tls_i2s_fill_txfifo(void);
 
-#define WM_I2S_TX_DMA_CHANNEL    (4)
-#define WM_I2S_RX_DMA_CHANNEL    (5)
-
 /**
  * @brief 	This function is used to initial i2s port.
  * @param[in] opts 	the i2s setting options,if this param is NULL,this function will use the default options.
@@ -189,23 +186,27 @@ void I2S_IRQHandler(void)
 	{
 		tls_reg_write32(HR_I2S_INT_SRC, I2S_FLAG_RXTH);
 		rx_fifocnt = tls_i2s_port.regs->INT_STATUS & I2S_RX_FIFO_CNT_MASK;
+		
 		while(rx_fifocnt-- > 0)
 		{
 			data32 = tls_i2s_port.regs->RX;
 			if (tls_i2s_port.rx_buf.buf != NULL)
 			{
-				tls_i2s_port.rx_buf.buf[tls_i2s_port.rx_buf.index++] = data32;
+				tls_i2s_port.rx_buf.buf[tls_i2s_port.rx_buf.index] = data32;
+	            tls_i2s_port.rx_buf.index++;
 			}
-			if (tls_i2s_port.rx_callback != NULL)
+			if (tls_i2s_port.rx_buf.index >= (tls_i2s_port.rx_buf.len))
 			{
-				if (tls_i2s_port.rx_buf.index >= (tls_i2s_port.rx_buf.len))
+				tls_i2s_port.rx_buf.buf = NULL;
+				tls_i2s_int_config(I2S_INT_MASK_RXTH, 0);
+				if (tls_i2s_port.rx_callback != NULL)
 				{
-				    tls_i2s_port.rx_buf.buf = NULL;
-					tls_i2s_int_config(I2S_INT_MASK_RXTH, 0);
-				    tls_i2s_port.rx_callback();
+					tls_i2s_port.rx_callback(tls_i2s_port.rx_buf.index);
 				}
+				tls_i2s_port.rx_buf.index = 0;
 			}
-		}
+		}		
+
 	}
 	/** RXOV*/
 	if (tls_bitband_read(HR_I2S_INT_SRC, I2S_FLAG_RXOV_Pos) && !tls_bitband_read(HR_I2S_INT_MASK, I2S_FLAG_RXOV_Pos))
@@ -230,7 +231,7 @@ void I2S_IRQHandler(void)
  *
  */
 
-void tls_i2s_rx_register( void (*rx_callback)())
+void tls_i2s_rx_register( void (*rx_callback)(u16 len))
 {
 	tls_i2s_port.rx_callback = rx_callback;
 }
@@ -245,7 +246,7 @@ void tls_i2s_rx_register( void (*rx_callback)())
  * @retval
  *
  */
-void tls_i2s_tx_register(void (* tx_callback)())
+void tls_i2s_tx_register(void (* tx_callback)(u16 len))
 {
     tls_i2s_port.tx_callback = tx_callback;
 }
@@ -256,27 +257,27 @@ static void tls_i2s_fill_txfifo()
 
 	if (tls_i2s_port.tx_buf.index < tls_i2s_port.tx_buf.len)
 	{
-    fifo_left = I2S_MAX_RXTXFIFO_LEVEL - ((tls_i2s_port.regs->INT_STATUS & I2S_TX_FIFO_CNT_MASK)>>4);
-    while (fifo_left--)
-    {
-    	tls_i2s_port.regs->TX = *(uint32_t *)(tls_i2s_port.tx_buf.buf + tls_i2s_port.tx_buf.index);
-		    tls_i2s_port.tx_buf.index ++;
+        fifo_left = I2S_MAX_RXTXFIFO_LEVEL - ((tls_i2s_port.regs->INT_STATUS & I2S_TX_FIFO_CNT_MASK)>>4);
+        while (fifo_left--)
+        {
+        	tls_i2s_port.regs->TX = *(uint32_t *)(tls_i2s_port.tx_buf.buf + tls_i2s_port.tx_buf.index);
+            tls_i2s_port.tx_buf.index ++;
 
-    if(tls_i2s_port.tx_buf.index >= tls_i2s_port.tx_buf.len)
-    {
-        if(tls_i2s_port.tx_sem)
-        {
-					I2S->TX = 0;		
-					while(!tls_bitband_read(HR_I2S_INT_SRC, 7));					
-		    memset(&tls_i2s_port.tx_buf, 0, sizeof(tls_i2s_buf));
-		    tls_os_sem_release(tls_i2s_port.tx_sem);
-		    return;
-        }
-        if (tls_i2s_port.tx_callback)
-        {
-            tls_i2s_port.tx_callback();
-				}
-			}
+            if(tls_i2s_port.tx_buf.index >= tls_i2s_port.tx_buf.len)
+            {
+                if(tls_i2s_port.tx_sem)
+                {
+        			I2S->TX = 0;		
+        			while(!tls_bitband_read(HR_I2S_INT_SRC, 7));					
+        		    memset(&tls_i2s_port.tx_buf, 0, sizeof(tls_i2s_buf));
+        		    tls_os_sem_release(tls_i2s_port.tx_sem);
+        		    return;
+                }
+                if (tls_i2s_port.tx_callback)
+                {
+                    tls_i2s_port.tx_callback(tls_i2s_port.tx_buf.len);
+                }
+        	}
         }
     }
 }
@@ -308,41 +309,16 @@ int tls_i2s_tx_block(uint32_t *buf, uint16_t len)
 	TLS_I2S_TX_FIFO_CLEAR();
 	tls_reg_write32(HR_I2S_INT_SRC, 0x1FF);
 	NVIC_ClearPendingIRQ(I2S_IRQn);
-#if 0	
-	if (len <= WM_I2S_FIFO_LEN)
-	{
-		tls_i2s_int_config(I2S_INT_MASK_TXTH, 0);
-		for(i = 0; i < len; i++)
-		{
-			I2S->TX = buf[i];
-		}
-		TLS_I2S_TX_ENABLE();
-    	TLS_I2S_ENABLE();
-		while(!tls_bitband_read(HR_I2S_INT_SRC, 7));
-		TLS_I2S_TX_DISABLE();
-		if (tls_i2s_port.tx_callback)
-		{
-			tls_i2s_port.tx_callback();
-		}
-		return WM_SUCCESS;
-	}
-	else
-	{
-		for(i = 0; i < 5; i++)
-		{
-			I2S->TX = buf[i];
-		}
-	}
-#endif	
-    tls_i2s_port.tx_buf.buf = (uint32_t *)buf;
+
+    tls_i2s_port.tx_buf.buf = buf;
     tls_i2s_port.tx_buf.len = len;
     tls_i2s_port.tx_buf.index = 0;
 
-    tls_i2s_set_txth(4);
+    tls_i2s_set_txth(5);
     tls_i2s_int_config(I2S_INT_MASK_TXTH, 1);
     TLS_I2S_TX_ENABLE();
     TLS_I2S_ENABLE();
-
+    
     tls_os_sem_acquire(tls_i2s_port.tx_sem, 0);
     tls_os_sem_delete(tls_i2s_port.tx_sem);
     tls_i2s_port.tx_sem = NULL;
@@ -368,13 +344,13 @@ int tls_i2s_tx_block(uint32_t *buf, uint16_t len)
  *
  * @note the \ref len in words
  */
-int tls_i2s_tx_nonblock(uint32_t *buf, uint16_t len, void (*tx_callback)())
+int tls_i2s_tx_nonblock(uint32_t *buf, uint16_t len, void (*tx_callback)(u16 len))
 {
 	tls_i2s_port.tx_buf.buf = (uint32_t *)buf;
 	tls_i2s_port.tx_buf.len = len;
 	tls_i2s_port.tx_buf.index = 0;
 
-	tls_i2s_set_txth(3);
+	tls_i2s_set_txth(5);
     tls_i2s_int_config(I2S_INT_MASK_TXTH, 1);
 	tls_i2s_tx_register( tx_callback);
 
@@ -400,13 +376,13 @@ int tls_i2s_tx_nonblock(uint32_t *buf, uint16_t len, void (*tx_callback)())
  * @retval
  *
  */
-int tls_i2s_rx_nonblock(uint32_t *buf, uint16_t len, void (*rx_callback)())
+int tls_i2s_rx_nonblock(uint32_t *buf, uint16_t len, void (*rx_callback)(u16 len))
 {
-    tls_i2s_port.rx_buf.buf = (uint32_t *)buf;
+    tls_i2s_port.rx_buf.buf = buf;
     tls_i2s_port.rx_buf.len = len;
     tls_i2s_port.rx_buf.index = 0;
 
-    tls_i2s_set_rxth(4);
+    tls_i2s_set_rxth(5);
     tls_i2s_int_config(I2S_INT_MASK_RXTH, 1);
     tls_i2s_rx_register( rx_callback);
 
@@ -441,12 +417,12 @@ void tls_i2s_tx_dma_config(uint8_t dma_channel, uint32_t * addr, uint16_t len)
 	TLS_I2S_TX_DISABLE();
 	TLS_I2S_TX_FIFO_CLEAR();
 	/** Mask i2s txth interrupt*/
-	tls_i2s_set_txth(3);
+	tls_i2s_set_txth(4);
 	tls_i2s_int_config(I2S_INT_MASK_TXTH, 0);
-	DmaDesc.src_addr = (int) addr;
-    DmaDesc.dest_addr = (int)HR_I2S_TX;
+	DmaDesc.src_addr = (unsigned int) addr;
+    DmaDesc.dest_addr = (unsigned int)HR_I2S_TX;
 
-	DmaDesc.dma_ctrl = TLS_DMA_DESC_CTRL_SRC_ADD_INC | TLS_DMA_DESC_CTRL_DATA_SIZE_WORD |
+	DmaDesc.dma_ctrl = TLS_DMA_DESC_CTRL_SRC_ADD_INC | TLS_DMA_DESC_CTRL_DATA_SIZE_WORD | 
                         (len << 7);
 	DmaDesc.valid = TLS_DMA_DESC_VALID;
     DmaDesc.next = NULL;
@@ -472,17 +448,19 @@ void tls_i2s_tx_dma_config(uint8_t dma_channel, uint32_t * addr, uint16_t len)
 int tls_i2s_tx_dma(uint32_t * addr, uint16_t len, tls_i2s_callback callback)
 {
     uint8_t tx_channel;
+    
 	TLS_I2S_TX_FIFO_CLEAR();
 	tls_reg_write32(HR_I2S_INT_SRC, 0x1FF);
 	NVIC_ClearPendingIRQ(I2S_IRQn);
 
-    tx_channel = tls_dma_request(WM_I2S_TX_DMA_CHANNEL, 
-								TLS_DMA_FLAGS_CHANNEL_SEL(TLS_DMA_SEL_I2S_TX) | TLS_DMA_FLAGS_HARD_MODE);
+    TLS_I2S_TX_FIFO_CLEAR();
+    
+    tx_channel = tls_dma_request(WM_I2S_TX_DMA_CHANNEL, TLS_DMA_FLAGS_CHANNEL_SEL(TLS_DMA_SEL_I2S_TX) | TLS_DMA_FLAGS_HARD_MODE);
     if (tx_channel == 0)
     {
         return WM_FAILED;
     }
-    if (tls_dma_stop(tx_channel) == 0)
+    if (tls_dma_stop(tx_channel))
     {
         return WM_FAILED;
     }
@@ -525,7 +503,6 @@ void tls_i2s_rx_dma_config(uint8_t dma_channel, uint32_t * addr,  uint16_t len)
 
 	DmaDesc.dma_ctrl = TLS_DMA_DESC_CTRL_DEST_ADD_INC | TLS_DMA_DESC_CTRL_DATA_SIZE_WORD |
                         (len << 7);
-
 	DmaDesc.valid = TLS_DMA_DESC_VALID;
     DmaDesc.next = NULL;
     tls_dma_start(dma_channel, &DmaDesc, 0);
@@ -535,13 +512,12 @@ int tls_i2s_rx_dma(uint32_t * addr, uint16_t len, tls_i2s_callback callback)
 {
     uint8_t rx_channel;
 
-    rx_channel = tls_dma_request(WM_I2S_RX_DMA_CHANNEL, 
-								TLS_DMA_FLAGS_CHANNEL_SEL(TLS_DMA_SEL_I2S_RX) | TLS_DMA_FLAGS_HARD_MODE);
+    rx_channel = tls_dma_request(WM_I2S_RX_DMA_CHANNEL, TLS_DMA_FLAGS_CHANNEL_SEL(TLS_DMA_SEL_I2S_RX) | TLS_DMA_FLAGS_HARD_MODE);
     if (rx_channel == 0)
     {
         return WM_FAILED;
     }
-    if (tls_dma_stop(rx_channel) == 0)
+    if (tls_dma_stop(rx_channel))
     {
     	return WM_FAILED;
     }

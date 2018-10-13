@@ -1,0 +1,34 @@
+//
+//  OneShotConfig-PrefixHeader.pch
+//  OneShotConfig
+//
+//  Created by codebat on 15-4-8.
+//  Copyright (c) 2015年 Netcent. All rights reserved.
+//
+
+#ifndef SmartConfig_SmartConfig_PrefixHeader_pch
+#define SmartConfig_SmartConfig_PrefixHeader_pch
+
+#import <Availability.h>
+
+#ifndef __IPHONE_5_0
+#warning "This project uses features only available in iOS SDK 5.0 and later."
+#endif
+
+#ifdef __OBJC__
+#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
+#import "MBProgressHUD.h"
+#endif
+// Include any system framework and library headers here that should be included in all compilation units.
+// You will also need to set the Prefix Header build setting of one or more of your targets to reference this file.
+#ifdef DEBUG
+#define NSLog(...) NSLog(__VA_ARGS__)
+#define debugMethod() NSLog(@"%s", __func__)
+#else
+#define NSLog(...)
+#define debugMethod()
+#endif
+
+
+#endif

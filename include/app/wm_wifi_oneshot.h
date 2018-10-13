@@ -40,12 +40,15 @@ extern int tls_filter_module_srcmac(u8 *mac);
 /** JD ONESHOT */
 #define TLS_CONFIG_UDP_JD_ONESHOT       (ONESHOT_OFF&& TLS_CONFIG_UDP_ONE_SHOT)
 /** WinnerMicro ONSHOT */
-#define TLS_CONFIG_UDP_LSD_ONESHOT      (ONESHOT_ON&& TLS_CONFIG_UDP_ONE_SHOT)
+#define TLS_CONFIG_UDP_LSD_ONESHOT      (ONESHOT_OFF&& TLS_CONFIG_UDP_ONE_SHOT)
+
+#define TLS_CONFIG_UDP_LSD_SPECIAL	 	(ONESHOT_ON&& TLS_CONFIG_UDP_ONE_SHOT)
+
 
 /** AP ONESHOT */
 #define TLS_CONFIG_AP_MODE_ONESHOT      (ONESHOT_ON&&TLS_CONFIG_AP)
 #define TLS_CONFIG_WEB_SERVER_MODE      (CFG_ON&&TLS_CONFIG_AP_MODE_ONESHOT)
-#define TLS_CONFIG_SOCKET_MODE                (CFG_ON &&TLS_CONFIG_AP_MODE_ONESHOT)
+#define TLS_CONFIG_SOCKET_MODE          (CFG_ON &&TLS_CONFIG_AP_MODE_ONESHOT)
 
 
 /** AIRKISS ONESHOT */
@@ -176,7 +179,7 @@ int wm_oneshot_task_init(void);
  *
  * @note           None
  */
-void tls_oneshot_switch_channel_tim_stop(void);
+void tls_oneshot_switch_channel_tim_stop(struct ieee80211_hdr *hdr);
 
 /**
  * @brief          This function is used to stop oneshot temp timer

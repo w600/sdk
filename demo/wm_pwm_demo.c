@@ -19,6 +19,7 @@
 #include "wm_demo.h"
 #include "wm_regs.h"
 #include "wm_dma.h"
+#include "wm_gpio_afsel.h"
 
 
 #if DEMO_PWM
@@ -26,21 +27,22 @@ static int pwm_demo_multiplex_config(u8 channel)
 {
 	switch (channel)
 	{
+		case 0:
+			wm_pwm1_config(WM_IO_PB_18);
 		case 1:
-			wm_pwm1_config(WM_IO_PA_00);
+			wm_pwm2_config(WM_IO_PB_17);
 		case 2:
-			wm_pwm2_config(WM_IO_PA_01);
+			wm_pwm3_config(WM_IO_PB_16);
 		case 3:
-			wm_pwm3_config(WM_IO_PA_02);
+			wm_pwm4_config(WM_IO_PB_15);
 		case 4:
-			wm_pwm4_config(WM_IO_PA_03);
-		case 5:
-			wm_pwm5_config(WM_IO_PA_04);
+			wm_pwm5_config(WM_IO_PB_14);
 		default:
 			return -1;
 	}
-	return 0;
 }
+
+/*
 static int pwm_demo_independent_mode(u8 channel,u32 freq, u8 duty, u8 num)
 {
     pwm_init_param pwm_param;
@@ -65,6 +67,7 @@ static int pwm_demo_independent_mode(u8 channel,u32 freq, u8 duty, u8 num)
 
     return ret;
 }
+*/
 
 static int pwm_demo_allsyc_mode(u8 channel,u32 freq, u8 duty, u8 num)
 {
@@ -172,7 +175,7 @@ static void pwm_isr_callback(void)
                 fcount=((tls_reg_read32(HR_PWM_CAPDAT)&0xFFFF0000)>>16);
             }
             tls_reg_write32(HR_PWM_INTSTS, tls_reg_read32(HR_PWM_INTSTS) & 0x40);
-//            printf("fcount = %d\n",fcount);
+            printf("fcount = %d\n",fcount);
         }
         if(status&0x00000020)              //上升沿中断
         {
@@ -181,21 +184,21 @@ static void pwm_isr_callback(void)
                 rcount=(tls_reg_read32(HR_PWM_CAPDAT)&0x0000FFFF);
             }
             tls_reg_write32(HR_PWM_INTSTS, tls_reg_read32(HR_PWM_INTSTS) & 0x20);
-//            printf("rcount = %d\n",rcount);
+            printf("rcount = %d\n",rcount);
         }
     }
 }
 
 u32 pwmDmaCap[100]; 
 
-static pwm_dma_callback(void)
+static void pwm_dma_callback(void)
 {
 	int i;
 
 	for(i=0; i<100; i++)
     {
 		printf("num:%d, pwmH:%d, pwmL:%d\n", i, (pwmDmaCap[i]>>16), (pwmDmaCap[i]&0x0000ffff));
-    } 
+    }
 }
 
 void pwm_capture_mode_int(u8 channel,u32 freq)
@@ -228,7 +231,7 @@ void pwm_capture_mode_dma(u8 channel,u32 freq)
 	
 	dmaCh = tls_dma_request(1, TLS_DMA_FLAGS_CHANNEL_SEL(TLS_DMA_SEL_PWM_CAP0) | TLS_DMA_FLAGS_HARD_MODE);
 	DmaDesc.src_addr = HR_PWM_CAPDAT;
-	DmaDesc.dest_addr = pwmDmaCap;
+	DmaDesc.dest_addr = (unsigned int)pwmDmaCap;
 	DmaDesc.dma_ctrl = TLS_DMA_DESC_CTRL_DEST_ADD_INC | TLS_DMA_DESC_CTRL_BURST_SIZE1 | TLS_DMA_DESC_CTRL_DATA_SIZE_WORD | TLS_DMA_DESC_CTRL_TOTAL_BYTES(400);
 	DmaDesc.valid = TLS_DMA_DESC_VALID;
 	DmaDesc.next = NULL;
@@ -239,10 +242,25 @@ void pwm_capture_mode_dma(u8 channel,u32 freq)
 	tls_pwm_start(channel); 	
 }
 
+/**
+ * @brief          This function is used demonstrate pwm usage.
+ *
+ * @param[in]       channel    pwm channel, range from 0 to 4
+ * @param[in]       freq       freq range from 3Hz~160kHz
+ * @param[in]       duty       duty range from 0 to 255
+ * @param[in]       mode       0:BRAKE, 1:ALLSYC, 2:2SYC, 3:MC, 4:INDPT
+ * @param[in]       pnum       period num,range from 0 to 255
+ *
+ * @retval         WM_SUCCESS success
+ * @retval         WM_FAILED  failed
+ *
+ * @note           For example, call this like this "pwm_demo(0,20,99,1,0);".
+ */
 int pwm_demo(u8 channel, u16 freq, u8 duty, u8 mode, u8 num)
 {
     int  ret=-1;
 
+	printf("\r\nchannel:%d, freq:%d, duty:%d, mode:%d, num:%d\r\n", channel, freq, duty, mode, num);
     if(channel < 5)
     {
         pwm_demo_multiplex_config(channel);
