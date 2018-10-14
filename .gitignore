@@ -20,3 +20,4 @@ Bin/*
 *.output/
 *.out
 *.map
+*.lst
