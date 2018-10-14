@@ -25,6 +25,9 @@ OBINS := $(GEN_BINS:%=$(BINODIR)/%)
 
 CFLAGS = $(CCFLAGS) $(DEFINES) $(EXTRA_CCFLAGS) $(INCLUDES)
 
+UNAME_O:=$(shell uname -o)
+UNAME_S:=$(shell uname -s)
+	
 define ShortcutRule
 $(1): .subdirs $(2)/$(1)
 endef
@@ -61,11 +64,27 @@ ifeq ($(COMPILE), gcc)
 else
 	@$(FROMELF) --bin -o  $(FIRMWAREDIR)/$(TARGET).bin $(IMAGEODIR)/$(TARGET).out  
 endif
+ifeq ($(UNAME_S),Linux)
+	@echo "linux platform"
+	@cp $(FIRMWAREDIR)/$(TARGET).bin $(FIRMWAREDIR)/$(TARGET).bin.bk
+	@gzip -fv $(FIRMWAREDIR)/$(TARGET).bin
+	@mv $(FIRMWAREDIR)/$(TARGET).bin.bk $(FIRMWAREDIR)/$(TARGET).bin
+	@$(SDK_TOOLS)/makeimg  $(FIRMWAREDIR)/$(TARGET).bin "$(FIRMWAREDIR)/$(TARGET).img" 0 0 "$(FIRMWAREDIR)/version.txt" 90000 10100
+	@$(SDK_TOOLS)/makeimg  $(FIRMWAREDIR)/$(TARGET).bin.gz "$(FIRMWAREDIR)/$(TARGET)_gz.img" 0 1 "$(FIRMWAREDIR)/version.txt" 90000 10100 $(FIRMWAREDIR)/$(TARGET).bin
+	@$(SDK_TOOLS)/makeimg  $(FIRMWAREDIR)/$(TARGET).bin "$(FIRMWAREDIR)/$(TARGET)_sec.img" 0 0 "$(FIRMWAREDIR)/version.txt" 90000 10100
+	@$(SDK_TOOLS)/makeimg_all "$(FIRMWAREDIR)/secboot.img" "$(FIRMWAREDIR)/$(TARGET).img" "$(FIRMWAREDIR)/$(TARGET).fls"
+else
+ifeq ($(UNAME_O),Darwin)
+	@echo "don't support mac"
+else
+	@echo "windows platform"
 	@$(SDK_TOOLS)/wm_gzip.exe  $(FIRMWAREDIR)/$(TARGET).bin
 	@$(SDK_TOOLS)/makeimg.exe  $(FIRMWAREDIR)/$(TARGET).bin "$(FIRMWAREDIR)/$(TARGET).img" 0 0 "$(FIRMWAREDIR)/version.txt" 90000 10100
 	@$(SDK_TOOLS)/makeimg.exe  $(FIRMWAREDIR)/$(TARGET).bin.gz "$(FIRMWAREDIR)/$(TARGET)_gz.img" 0 1 "$(FIRMWAREDIR)/version.txt" 90000 10100 $(FIRMWAREDIR)/$(TARGET).bin
 	@$(SDK_TOOLS)/makeimg.exe  $(FIRMWAREDIR)/$(TARGET).bin "$(FIRMWAREDIR)/$(TARGET)_sec.img" 0 0 "$(FIRMWAREDIR)/version.txt" 90000 10100
 	@$(SDK_TOOLS)/makeimg_all.exe "$(FIRMWAREDIR)/secboot.img" "$(FIRMWAREDIR)/$(TARGET).img" "$(FIRMWAREDIR)/$(TARGET).fls"
+endif
+endif
 	@cp $(IMAGEODIR)/$(TARGET).map $(FIRMWAREDIR)/$(TARGET).map
 	@rm ./test.bin
 	@echo ""
