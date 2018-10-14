@@ -98,7 +98,13 @@ clean:
 	$(RM) -r $(ODIR)
 
 flash:all
-	@$(DL_TOOL) $(FIRMWAREDIR)/$(TARGET)_sec.img  $(DL_PORT) $(DL_BAUD) 
+	@$(DL_TOOL) -p $(DL_PORT) -b $(DL_BAUD) write_flash $(FIRMWAREDIR)/$(TARGET)_gz.img 
+
+flash_all:all
+	@$(DL_TOOL) -p $(DL_PORT) -b $(DL_BAUD) write_flash $(FIRMWAREDIR)/$(TARGET).fls 
+
+erase:
+	@$(DL_TOOL) -p $(DL_PORT) erase_flash
 
 clobber: $(SPECIAL_CLOBBER)
 	$(foreach d, $(SUBDIRS), $(MAKE) -C $(d) clobber;)

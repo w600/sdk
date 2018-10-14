@@ -9,7 +9,7 @@ BINODIR := $(ODIR)/$(TARGET)/bin
 FIRMWAREDIR := $(TOP_DIR)/bin
 SDK_TOOLS := $(TOP_DIR)/tools
 
-DL_TOOL ?= $(SDK_TOOLS)/flashimg.exe
+DL_TOOL ?= $(SDK_TOOLS)/wm_tools.exe
 DL_PORT ?= COM1
 DL_BAUD ?= 2000000
 
