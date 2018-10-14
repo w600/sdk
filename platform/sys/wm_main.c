@@ -280,7 +280,17 @@ void task_start (void *data)
 #endif
 
 #endif
-
+    /* open low power mode */
+    unsigned char power_mode = 0;
+    tls_param_get(TLS_PARAM_ID_PSM, (void *)&power_mode, (bool)1);
+//    TLS_DBGPRT_INFO("power_mode: %d\r\n", power_mode);
+    if(power_mode == 0)
+    {
+//        TLS_DBGPRT_INFO("open low power mode\r\n");
+        power_mode = 1;
+        tls_param_set(TLS_PARAM_ID_PSM, (void *)&power_mode, (bool)1);
+    }
+    /* call user main function */
 	UserMain();
 	tls_sys_auto_mode_run();
 
