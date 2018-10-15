@@ -14,6 +14,8 @@
 
 ## 3. 使用控制台编译
 
+`使用linux平台编译时，需更新tools/makeimg 和 tools/makeimg_all 的执行权限，如 chmod 755 makeimg `
+
 ### 常用指令
 
 make	// 执行编译
@@ -50,11 +52,11 @@ make flash_all	//编译并烧录 w600.fls 固件
 
 * 使用 armcc 进行固件编译
 
-  make TARGET=w600_armcc	 //生成 w600_armcc.bin
+  make COMPILE=armcc 	//使用armcc编译
 
 * 使用 gcc 进行固件编译
 
-  make COMPILE=gcc	 		//生成 w600.bin
+  make COMPILE=gcc	 		//使用gcc编译
 
 * 使用 gcc 进行固件编译并烧录，端口 COM8，下载波特率 1Mbps
 
