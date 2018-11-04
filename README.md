@@ -1,8 +1,12 @@
-# 编译说明
-
-`1. 当前 sdk 版本 v3.0.0 rc1，首次从 v2.2.8 升级需先擦除 Flash 或下载 FLS 文件,`
+`1. 当前 sdk 版本 v3.0.0 final，首次从 v2.2.8 升级需先擦除 Flash 或下载 FLS 文件,`
 
 `2. 重点优化了低功耗模式，目前功耗有明显改善。`
+
+# 更新说明
+
+请查看 [ChangeLog](./doc/ChangeLog.txt)
+    
+# 编译说明
 
 ## 1. 使用 Keil 编译
 
@@ -61,6 +65,10 @@ make flash_all	//编译并烧录 w600.fls 固件
 * 使用 gcc 进行固件编译并烧录，端口 COM8，下载波特率 1Mbps
 
   make flash COMPILE=gcc DL_PORT=COM8 DL_BAUD=1000000
+
+# Example 编译说明
+
+请查看 [README](./example/README.md)
 
 # 其它
 

@@ -35,6 +35,7 @@ static const int ciphers[] =
 
 static int urandom_bytes(void *ctx, unsigned char *dest, size_t len)
 {
+	extern int random_get_bytes(void *buf, size_t len);
 
 	random_get_bytes(dest, len);
 

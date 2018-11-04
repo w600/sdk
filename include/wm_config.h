@@ -13,6 +13,8 @@
 #define	CFG_ON											1
 #define CFG_OFF											0
 
+#define WM_CONFIG_DEBUG_UART1							CFG_OFF   /*PRINTF PORT USE UART1*/
+
 /**Driver Support**/
 #define TLS_CONFIG_HS_SPI          						CFG_ON /*High Speed SPI*/
 #define TLS_CONFIG_LS_SPI          						CFG_ON /*Low Speed SPI*/
@@ -75,6 +77,7 @@ CRYPTO
 #define  VERC_LWIP_OPT                                  CFG_ON
 #include "wm_os_config.h"  //if you want to use source code,please open
 #include "wm_wifi_config.h"
+
 #include "wm_ram_config.h"
 #endif /*__WM_CONFIG_H__*/
 

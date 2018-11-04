@@ -19,7 +19,7 @@ struct gpio_irq_context{
 };
 
 
-static struct gpio_irq_context gpio_context[WM_IO_PB_30 - WM_IO_PA_00 + 1] = {0};
+static struct gpio_irq_context gpio_context[WM_IO_PB_30 - WM_IO_PA_00 + 1] = {{0,0}};
 
 
 void GPIOA_IRQHandler(void)

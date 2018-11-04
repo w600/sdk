@@ -1,36 +1,36 @@
 #if GCC_COMPILE
 #include <stdio.h>
 #include <stdlib.h>
+#include "wm_config.h"
+#include "wm_regs.h"
 #include <reent.h>
 #include <string.h>
 #include <stdarg.h>
-#define HR_UART0_INT_MASK           (0x40010800 + 0x14)
-#define HR_UART0_FIFO_STATUS        (0x40010800 + 0x1C)
-#define HR_UART0_TX_WIN             (0x40010800 + 0x20)
-typedef volatile unsigned int TLS_REG; 
 
-static inline void wm_reg_write32(unsigned int reg, unsigned int val)
-{
-    *(TLS_REG *)reg = val;
-}
-
-static inline unsigned int wm_reg_read32(unsigned int reg)
-{
-    unsigned int val = *(TLS_REG *)reg;
-    return val;
-}
 
 int sendchar(int ch)
 {
-	wm_reg_write32(HR_UART0_INT_MASK, 0x3);
+#if WM_CONFIG_DEBUG_UART1
+	tls_reg_write32(HR_UART1_INT_MASK, 0x3);
+	if(ch == '\n')	
+	{
+		while (tls_reg_read32(HR_UART1_FIFO_STATUS) & 0x3F);
+		tls_reg_write32(HR_UART1_TX_WIN, '\r');
+	}
+	while(tls_reg_read32(HR_UART1_FIFO_STATUS) & 0x3F);
+	tls_reg_write32(HR_UART1_TX_WIN, (char)ch);
+	tls_reg_write32(HR_UART1_INT_MASK, 0x0);
+#else
+	tls_reg_write32(HR_UART0_INT_MASK, 0x3);
     if(ch == '\n')  
 	{
-		while (wm_reg_read32(HR_UART0_FIFO_STATUS) & 0x3F);
-		wm_reg_write32(HR_UART0_TX_WIN, '\r');
+		while (tls_reg_read32(HR_UART0_FIFO_STATUS) & 0x3F);
+		tls_reg_write32(HR_UART0_TX_WIN, '\r');
     }
-    while(wm_reg_read32(HR_UART0_FIFO_STATUS) & 0x3F);
-    wm_reg_write32(HR_UART0_TX_WIN, (char)ch);
-    wm_reg_write32(HR_UART0_INT_MASK, 0x0);
+    while(tls_reg_read32(HR_UART0_FIFO_STATUS) & 0x3F);
+    tls_reg_write32(HR_UART0_TX_WIN, (char)ch);
+    tls_reg_write32(HR_UART0_INT_MASK, 0x0);
+#endif	
     return ch;
 }
 
@@ -125,7 +125,7 @@ int Int2Str(char *str,int num,char base,char width,int opflag)
 	k--; 
  	if(0 == (opflag&P_ALIGN_BIT))	//右对齐
  	{
-		//倒序
+		//倒序 
 		while(k>0) 
 		{
 			temp = *str; 
@@ -138,12 +138,36 @@ int Int2Str(char *str,int num,char base,char width,int opflag)
 	return len; 
 }  
 
+static void Mac2Str(unsigned char *inchar, char *outtxt)
+{
+    unsigned char hbit,lbit;
+    unsigned int i;
+
+    for(i = 0; i < 6; i++)
+    {
+        hbit = (*(inchar + i) & 0xf0) >> 4;
+        lbit = *(inchar + i ) & 0x0f;
+        if (hbit > 9)
+            outtxt[3 * i] = 'A' + hbit - 10;
+        else 
+            outtxt[3 * i]= '0' + hbit;
+        if (lbit > 9)
+            outtxt[3 * i + 1] = 'A' + lbit - 10;
+        else
+            outtxt[3 * i + 1] = '0' + lbit;
+        outtxt[3 * i + 2] = '-';
+    }
+
+    outtxt[3 * (i - 1) + 2] = 0;
+
+    return;
+}
 
 int wm_vprintf(const char *fmt, va_list arg_ptr)
 {
 	unsigned char width=0; 	//保留宽度
 	unsigned int len; 			//数据宽度
-	char *fp = fmt;  
+	char *fp = (char *)fmt;  
 	//va_list arg_ptr; 
 	char *pval;
 	int opflag = 0;
@@ -189,7 +213,7 @@ int wm_vprintf(const char *fmt, va_list arg_ptr)
 				}
 			}
 
-			while('l' == *fp)
+			while('l' == *fp || 'h' == *fp)
 			{
 				fp ++;
 			}			
@@ -249,6 +273,27 @@ int wm_vprintf(const char *fmt, va_list arg_ptr)
 						}
 					}
 					break; 
+                case 'M':
+                    pval=va_arg(arg_ptr,char*);
+                    len = 17;/* xx-xx-xx-xx-xx-xx */
+					if((width > len) && (0 == (opflag&P_ALIGN_BIT)))		//右对齐
+					{
+						for(i = 0;i < (width - len);i ++)	//左边补空格
+						{
+							sendchar(' ');
+						}
+					}
+                    Mac2Str((unsigned char *)pval, store);/* mac length */
+                    str = store;
+                    while( *str != '\0') sendchar(*str++);
+					if((width > len) && (opflag&P_ALIGN_BIT))		//左对齐
+					{
+						for(i = 0;i < (width - len);i ++)	//右边补空格
+						{
+							sendchar(' ');
+						}
+					}
+                    break;
 				case '%':  
 					sendchar('%');
 					break; 
@@ -270,6 +315,8 @@ int wm_printf(const char *fmt,...)
 	va_start(ap, fmt);
 	wm_vprintf(fmt,ap);
 	va_end(ap);
+
+	return 0;
 }
 
 
@@ -278,7 +325,7 @@ int wm_sprintf(char *str, const char *fmt,...)
 	unsigned int num = 0; 	//最后返回的长度
 	unsigned char width=0; 	//保留宽度
 	unsigned int len; 			//数据宽度
-	char *fp = fmt;  
+	char *fp = (char *)fmt;  
 	va_list arg_ptr; 
 	int arg_num; 
 	char *pval;
@@ -451,12 +498,18 @@ void abort(void)
 }
 
 extern char end[];
-//extern char __StackLimit[];
 extern char __HeapLimit[];
 static char *heap_ptr = end;
-//static char *heap_end = __StackLimit;
 static char *heap_end = __HeapLimit;
-
+/**
+ * @brief          This function is used to extend current heap size, Limit is __HeapLimit
+ *
+ * @param[in]    None  
+ *
+ * @return         None
+ *
+ * @note           Normally, it is just used in gcc mode.
+ */
 void * _sbrk_r(struct _reent *_s_r, ptrdiff_t nbytes)
 {
 	char *base;
@@ -465,10 +518,9 @@ void * _sbrk_r(struct _reent *_s_r, ptrdiff_t nbytes)
 
 	if(base + nbytes > heap_end)
     {
-    	wm_printf("kevin debug heap err = %x, %x\r\n", (int)heap_ptr, (int)nbytes);
 		return (void *)-1;
     }
-	
+
 	heap_ptr += nbytes;	
 	return base;
 }
@@ -488,8 +540,4 @@ void tls_reserve_mem_unlock(void)
 	heap_end = __HeapLimit;
 }
 
-void print_heap_status(void)
-{
-	wm_printf("kevin debug heap %d KB\r\n", (int)(heap_end - heap_ptr)/1024);
-}
 #endif

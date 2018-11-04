@@ -19,8 +19,11 @@
 #include "list.h"
 #include "wm_internal_flash.h"
 #include "wm_crypto_hard.h"
+#include "wm_timer.h"
+#include "wm_cpu.h"
+#include "wm_irq.h"
 
-
+extern void flashSRRW(unsigned long offset,unsigned char *buf,unsigned long sz, unsigned char *backbuf, unsigned int backlen, unsigned int rd);
 
 #define FLASH_BASE_ADDR			0x8000000UL
 #define FT_MAGICNUM_ADDR		(FLASH_BASE_ADDR)
@@ -50,6 +53,22 @@
 	+ RX_IQ_PHASE_LEN)
 #define SIGNATURE_WORD       0xA0FFFF9F
 
+/* key paramater area -- begin -- */
+/** PHY parameter area **/
+#define PHY_BASE_ADDR						(FLASH_BASE_ADDR)
+#define PHY_AREA_LEN						(0x1000)
+
+/** QFlash parameter area **/
+#define QFLASH_BASE_ADDR					(PHY_BASE_ADDR + PHY_AREA_LEN)
+#define QFLASH_AREA_LEN						(0x1000)
+#define QFLASH_HDR_BASE_ADDR				(QFLASH_BASE_ADDR)
+#define QFLASH_HDR_LEN						(12)
+#define QFLASH_Sec_Level_BASE_ADDR			(QFLASH_HDR_BASE_ADDR + QFLASH_HDR_LEN)
+#define QFLASH_Sec_Level_LEN				(4)
+#define QFLASH_CHIP_ID_BASE_ADDR			(QFLASH_Sec_Level_BASE_ADDR + QFLASH_Sec_Level_LEN)
+#define QFLASH_CHIP_ID_LEN					(16)
+
+/* key parameter area -- end -- */
 
 typedef struct FT_PARAM
 {
@@ -100,7 +119,7 @@ int tls_ft_param_init(void)
 		{
 			tls_fls_read(FT_MAGICNUM_ADDR, (unsigned char *)pft, sizeof(FT_PARAM_ST));
 		}else{
-			flashSRRW(0, pft, sizeof(FT_PARAM_ST), pmem, 512, 1);
+			flashSRRW(0, (unsigned char *)pft, sizeof(FT_PARAM_ST), pmem, 512, 1);
 		}
 		if (pft->magic_no == SIGNATURE_WORD)
 		{
@@ -108,7 +127,10 @@ int tls_ft_param_init(void)
 			tls_crypto_crc_init(&ctx, 0xFFFFFFFF, CRYPTO_CRC_TYPE_32, INPUT_REFLECT | OUTPUT_REFLECT);
 			tls_crypto_crc_update(&ctx, (unsigned char *)pft + 12, sizeof(FT_PARAM_ST) - 12);
 			tls_crypto_crc_final(&ctx, &crcvalue);		
-			if (pft->checksum != crcvalue)
+			if ((pft->checksum != crcvalue)
+				/*
+				||(pft->mac_addr[0]&0x1)
+				||(0 == (pft->mac_addr[0]|pft->mac_addr[1]|pft->mac_addr[2]|pft->mac_addr[3]|pft->mac_addr[4]|pft->mac_addr[5]))*/)
 			{
 				usedcnt[i] = -1;
 				continue;
@@ -121,23 +143,28 @@ int tls_ft_param_init(void)
 		}
 	}
 
-	if (i == 2)
+	if ((usedcnt[0] + usedcnt[1]) == -2)
 	{
 		/*Use default ft param*/
-	}else{
-		for (i  = 0; i < 2; i++)
+	}
+	else if (usedcnt[0] < 0) /*flash param destroyed*/
+	{
+		tls_flash_unlock();
+		tls_fls_write(FT_MAGICNUM_ADDR, (unsigned char *)&gftParam, sizeof(gftParam));
+		tls_flash_lock();
+	}
+	else if (usedcnt[1] < 0) /*SR param destroyed*/
+	{
+		flashSRRW(0, (unsigned char *)&gftParam, sizeof(FT_PARAM_ST), pmem, 512, 0);		
+	}
+	else
+	{
+		if (gftParam.checksum != pft->checksum)
 		{
-			if (usedcnt[i] < 0)
-			{
-				flashSRRW(0, &gftParam, sizeof(FT_PARAM_ST), pmem, 512, 1);
-			}
-		}
-
-		if ((gftParam.checksum != pft->checksum) && (usedcnt[0] + usedcnt[1] == 0))
-		{
-			flashSRRW(0, &gftParam, sizeof(FT_PARAM_ST), pmem, 512, 1);
+			flashSRRW(0, (unsigned char *)&gftParam, sizeof(FT_PARAM_ST), pmem, 512, 0);
 		}
 	}
+
 	tls_mem_free(pmem);
 	tls_mem_free(pft);
 
@@ -266,7 +293,7 @@ int tls_ft_param_set(unsigned int opnum, void *data, unsigned int len)
 	pmem = tls_mem_alloc(512);
 	if (pmem)
 	{
-		flashSRRW(0, (unsigned char *)&gftParam, sizeof(gftParam), pmem, 512, 1);
+		flashSRRW(0, (unsigned char *)&gftParam, sizeof(gftParam), pmem, 512, 0);
 		tls_mem_free(pmem);
 	}
 	return 0;
@@ -491,6 +518,48 @@ int tls_set_tx_gain(u8 *txgain)
 	return TLS_EFUSE_STATUS_OK;	
 }
 
+#define FF_n16	0xff, 0xff, 0xff, 0xff, \
+		0xff, 0xff, 0xff, 0xff, \
+		0xff, 0xff, 0xff, 0xff, \
+		0xff, 0xff, 0xff, 0xff
+		
+int tls_get_chipid(u8 chip_id[QFLASH_CHIP_ID_LEN])
+{
+	int ret = 0;
+	static u8 _chip_id[QFLASH_CHIP_ID_LEN] = { FF_n16 };
+	u8 zero[QFLASH_CHIP_ID_LEN] = { FF_n16 };
+
+	if (!memcmp(_chip_id, zero, QFLASH_CHIP_ID_LEN))
+	{
+		ret = tls_fls_read(QFLASH_CHIP_ID_BASE_ADDR, _chip_id, QFLASH_CHIP_ID_LEN);
+	}
+	if (0 == ret)
+	{
+		memcpy(chip_id, _chip_id, QFLASH_CHIP_ID_LEN);
+	}
+	return ret;
+}
+
+#undef FF_n16
+
+unsigned int tls_sleep(unsigned int seconds)
+{
+	int ret = 0;
+	ret = tls_msleep(seconds * 1000);
+	return ret;
+}
 
 
+int tls_msleep(unsigned int msec)
+{
+	int ret = 0;
+	ret = tls_delay_via_timer(msec, TIMER_MS_UNIT_FLAG);
+	return ret;
+}
 
+int tls_usleep(unsigned int /*useconds_t*/ usec)
+{
+	int ret = 0;
+	ret = tls_delay_via_timer(usec, TIMER_US_UNIT_FLAG);
+	return ret;
+}

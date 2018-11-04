@@ -20,6 +20,7 @@
  */
 
 #include "private-libwebsockets.h"
+#undef assert
 #define assert(n)
 
 int lws_client_rx_sm(struct lws *wsi, unsigned char c)

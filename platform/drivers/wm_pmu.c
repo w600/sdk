@@ -308,7 +308,7 @@ void tls_pmu_standby_start(void)
  */
 void tls_close_peripheral_clock(tls_peripheral_type_s devices)
 {
-    tls_reg_write32(HR_CLK_BASE_ADDR, tls_reg_read32(HR_CLK_BASE_ADDR) | devices);
+    tls_reg_write32(HR_CLK_BASE_ADDR, tls_reg_read32(HR_CLK_BASE_ADDR) & ~(devices));
 
     return;
 }
@@ -324,7 +324,7 @@ void tls_close_peripheral_clock(tls_peripheral_type_s devices)
  */
 void tls_open_peripheral_clock(tls_peripheral_type_s devices)
 {
-    tls_reg_write32(HR_CLK_BASE_ADDR, tls_reg_read32(HR_CLK_BASE_ADDR) & ~(devices));
+    tls_reg_write32(HR_CLK_BASE_ADDR, tls_reg_read32(HR_CLK_BASE_ADDR) | devices);
 
     return;
 }

@@ -11,8 +11,6 @@
 #     subdir/lib to be extracted and rolled up into
 #     a generated lib/image xxx.a ()
 #
-ifeq ($(COMPILE), gcc)
-else
 TOP_DIR = ../../../
 sinclude $(TOP_DIR)/tools/tool_chain.def
 
@@ -45,4 +43,3 @@ sinclude $(TOP_DIR)/tools/rules.mk
 INCLUDES := $(INCLUDES) -I $(PDIR)include
 PDIR := ../$(PDIR)
 sinclude $(PDIR)Makefile
-endif

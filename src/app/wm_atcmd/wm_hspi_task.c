@@ -189,7 +189,7 @@ static int hspi_tx(struct hspi_tx_data *tx_data)
     struct tls_hspi *hspi = tx_data->hspi;
     struct tls_hspi_tx_desc *tx_desc;
     struct tls_hostif_tx_msg *tx_msg = tx_data->tx_msg;
-    struct tls_hostif *hif = tls_get_hostif();
+//    struct tls_hostif *hif = tls_get_hostif();
 //    u32 cpu_sr;
     int err = 0;
 //    int offset;

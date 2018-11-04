@@ -25,7 +25,7 @@
 #if NTP_DEBUG
 #define ntp_debug printf
 #else
-#define ntp_debug
+#define ntp_debug(...)
 #endif
 
 #define UTC_NTP 2208988800U     /* 1970 - 1900 ;年 换算成秒 */
@@ -59,7 +59,7 @@ int open_connect(u8 * buf)
     int ret = 0;
 	int retval = WM_FAILED;
 	int i;
-    int servernum;
+    int servernum = 0;
     fd_set readfd;
     struct timeval timeout;
     socklen_t addrlen = sizeof(struct sockaddr);
@@ -69,7 +69,7 @@ int open_connect(u8 * buf)
 	for(i = 0; i < NTP_SERVER_MAX_NUM; i++)
 	{
 		tls_param_get(TLS_PARAM_ID_SNTP_SERVER1 + i, serverip[i], 1);
-		s[servernum] = -1;
+		s[i] = -1;
 	}	
 
 	for(i = 0; i < NTP_SERVER_MAX_NUM; i++)

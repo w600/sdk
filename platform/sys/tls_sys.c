@@ -30,7 +30,11 @@
 #endif
 #include "wm_wl_task.h"
 #if TLS_CONFIG_RMMS
+#if (GCC_COMPILE==1)
+#include "wm_cmdp_hostif_gcc.h"
+#else
 #include "wm_cmdp_hostif.h"
+#endif
 #endif
 #include "misc.h"
 

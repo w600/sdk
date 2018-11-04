@@ -137,7 +137,7 @@ struct demo_console_info_t  console_tbl[] =
 #endif
 
 #if DEMO_SLAVE_SPI
-    {"t-sspi", 	slave_spi_demo, 0x1, 1,   "Test slave SPI function(Note: need another module support as a master device)"},
+    {"t-sspi", 	slave_spi_demo, 0x1, 1,   "Test slave HSPI,t-sspi=(0),(Note: need another module support as a master device)"},
 #endif
 
 #if DEMO_FLASH

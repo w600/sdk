@@ -16,7 +16,7 @@
 #include "tls_common.h"
 
 enum tls_timer_id{
-    TLS_TIMER_ID_0 = 0,
+    TLS_TIMER_ID_0 = 0,	// used by delay (sleep, msleep, usleep)
     TLS_TIMER_ID_1,
     TLS_TIMER_ID_2,
     TLS_TIMER_ID_3,
@@ -25,12 +25,14 @@ enum tls_timer_id{
     TLS_TIMER_ID_MAX
 };
 
+#define TIM0_USED_BY_DELAY		0
+
 struct timer_irq_context {
     tls_timer_irq_callback callback;
     void *arg;
 };
 
-static struct timer_irq_context timer_context[TLS_TIMER_ID_MAX] = {0};
+static struct timer_irq_context timer_context[TLS_TIMER_ID_MAX] = {{0,0}};
 static u8 wm_timer_bitmap = 0;
 
 static void timer_clear_irq(int timer_id)
@@ -96,7 +98,7 @@ u8 tls_timer_create(struct tls_timer_cfg *cfg)
     u8 i;
     int timer_csr;
 
-    for (i = 0; i < TLS_TIMER_ID_MAX; i++)
+    for (i = TLS_TIMER_ID_1; i < TLS_TIMER_ID_MAX; i++)
     {
         if (!(wm_timer_bitmap & BIT(i)))
             break;
@@ -218,5 +220,63 @@ void tls_timer_destroy(u8 timer_id)
     wm_timer_bitmap &= ~BIT(timer_id);
 
     return;
+}
+
+/**
+ * @brief          This function is create a delay to elapse
+ *
+ * @param[in]      timeout the value writed into TMR0_PRD
+ * @param[in]      m_flag millisecond flag in TIMER0
+ *
+ * @return         None
+ *
+ * @note           None
+ */
+int tls_delay_via_timer(unsigned int timeout, unsigned int m_flag)
+{
+	int ret = 0;
+	tls_sys_clk sysclk;
+	int timer_csr = 0;
+	
+	if (0 == timeout)
+		return ret;
+
+	/*
+	 * no lock
+	 * 
+	 */
+	tls_irq_disable(TIMER0_INT + TIM0_USED_BY_DELAY);
+	tls_reg_write32(HR_TIMER0_PRD + 0x04 * TIM0_USED_BY_DELAY,
+		timeout);
+	
+	tls_sys_clk_get(&sysclk);
+	tls_reg_write32(HR_TIMER_CFG, sysclk.apbclk-1);
+	
+	timer_csr = tls_reg_read32(HR_TIMER0_5_CSR);
+	
+	if (TIMER_MS_UNIT_FLAG == m_flag)
+		timer_csr |= TLS_TIMER_MS_UNIT(TIM0_USED_BY_DELAY);
+	else if (TIMER_US_UNIT_FLAG == m_flag)
+		timer_csr &= ~(TLS_TIMER_MS_UNIT(TIM0_USED_BY_DELAY));
+	
+	timer_csr |= TLS_TIMER_ONE_TIME(TIM0_USED_BY_DELAY);
+	timer_csr |= TLS_TIMER_INT_CLR(TIM0_USED_BY_DELAY);
+	timer_csr |= (TLS_TIMER_INT_EN(TIM0_USED_BY_DELAY));
+	timer_csr |= TLS_TIMER_EN(TIM0_USED_BY_DELAY);
+	tls_reg_write32(HR_TIMER0_5_CSR, timer_csr);
+
+	while (!(tls_reg_read32(HR_TIMER0_5_CSR)
+			& (TLS_TIMER_INT_CLR(TIM0_USED_BY_DELAY))))
+			;
+	
+	timer_csr |= TLS_TIMER_INT_CLR(TIM0_USED_BY_DELAY);
+	tls_reg_write32(HR_TIMER0_5_CSR, timer_csr);
+	tls_irq_enable(TIMER0_INT + TIM0_USED_BY_DELAY);
+	/*
+	 * no unlock
+	 * 
+	 */
+	
+	return ret;
 }
 

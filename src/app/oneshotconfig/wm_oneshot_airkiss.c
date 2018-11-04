@@ -14,7 +14,7 @@
 #define AIRKISS_BSSID_CONNECT_ENABLE      1/* 该功能需要使用带log的库 */
 
 /* 局域网发现 */
-#define TLS_CONFIG_AIRKISS_LAN            1
+#define TLS_CONFIG_AIRKISS_LAN            0
 
 /* airkiss debug switcher */
 #define AIRKISS_DEBUG                     0

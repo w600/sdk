@@ -35,10 +35,12 @@ static inline void _psError(char* msg)
 }
 #endif
 
+#undef psAssert
 #define psAssert(C)  if (C) ; else \
 {_psTraceStr("psAssert %s", __FILE__);_psTraceInt(":%d ", __LINE__);\
 _psError(#C);} 
 
+#undef psError
 #define psError(a) \
  _psTraceStr("psError %s", __FILE__);_psTraceInt(":%d ", __LINE__); \
  _psError(a);

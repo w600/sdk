@@ -15,6 +15,7 @@
 #include "wm_debug.h"
 #include "wm_efuse.h"
 #include "wm_flash.h"
+#include "wm_internal_flash.h"
 #include "wm_params.h"
 #include "wm_param.h"
 #include "wm_mem.h"

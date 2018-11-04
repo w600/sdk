@@ -20,6 +20,7 @@
  */
 
 #include "private-libwebsockets.h"
+#undef assert
 #define assert(n)
 
 int

@@ -43,6 +43,17 @@
 void tls_webserver_init(void);
 
 /**
+ * @brief          This function is used to deinit WEB SERVER service
+ *
+ * @param[in]      None
+ *
+ * @return         None
+ *
+ * @note           None
+ */
+void httpd_deinit(void);
+
+/**
  * @}
  */
 

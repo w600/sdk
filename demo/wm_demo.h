@@ -35,7 +35,7 @@
 #define DEMO_FLASH					(DEMO_OFF && DEMO_CONSOLE)
 
 //master spi demo
-//#define DEMO_MASTER_SPI			    (DEMO_OFF && DEMO_CONSOLE)
+#define DEMO_MASTER_SPI			    (DEMO_OFF && DEMO_CONSOLE)
 
 //加解密demo
 #define DEMO_ENCRYPT				(DEMO_OFF && DEMO_CONSOLE)

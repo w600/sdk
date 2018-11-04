@@ -143,7 +143,6 @@ void wm_i2s_set_freq_exclk(uint32_t freq, uint32_t exclk)
 void I2S_IRQHandler(void)
 {
 	uint8_t rx_fifocnt;
-	uint32_t data32;
 
 	/** LZC */
 	if (tls_bitband_read(HR_I2S_INT_SRC, I2S_FLAG_LZC_Pos) && !tls_bitband_read(HR_I2S_INT_MASK, I2S_FLAG_LZC_Pos))
@@ -186,26 +185,24 @@ void I2S_IRQHandler(void)
 	{
 		tls_reg_write32(HR_I2S_INT_SRC, I2S_FLAG_RXTH);
 		rx_fifocnt = tls_i2s_port.regs->INT_STATUS & I2S_RX_FIFO_CNT_MASK;
-		
-		while(rx_fifocnt-- > 0)
-		{
-			data32 = tls_i2s_port.regs->RX;
-			if (tls_i2s_port.rx_buf.buf != NULL)
-			{
-				tls_i2s_port.rx_buf.buf[tls_i2s_port.rx_buf.index] = data32;
+		if (tls_i2s_port.rx_buf.buf != NULL)
+        {      
+    		while(rx_fifocnt-- > 0)
+    		{
+				tls_i2s_port.rx_buf.buf[tls_i2s_port.rx_buf.index] = tls_i2s_port.regs->RX;
 	            tls_i2s_port.rx_buf.index++;
-			}
-			if (tls_i2s_port.rx_buf.index >= (tls_i2s_port.rx_buf.len))
+    		}
+            if (tls_i2s_port.rx_buf.index >= (tls_i2s_port.rx_buf.len))
 			{
 				tls_i2s_port.rx_buf.buf = NULL;
 				tls_i2s_int_config(I2S_INT_MASK_RXTH, 0);
 				if (tls_i2s_port.rx_callback != NULL)
 				{
-					tls_i2s_port.rx_callback(tls_i2s_port.rx_buf.index);
+					tls_i2s_port.rx_callback(tls_i2s_port.rx_buf.len);
 				}
 				tls_i2s_port.rx_buf.index = 0;
 			}
-		}		
+        }
 
 	}
 	/** RXOV*/
@@ -262,23 +259,21 @@ static void tls_i2s_fill_txfifo()
         {
         	tls_i2s_port.regs->TX = *(uint32_t *)(tls_i2s_port.tx_buf.buf + tls_i2s_port.tx_buf.index);
             tls_i2s_port.tx_buf.index ++;
-
-            if(tls_i2s_port.tx_buf.index >= tls_i2s_port.tx_buf.len)
-            {
-                if(tls_i2s_port.tx_sem)
-                {
-        			I2S->TX = 0;		
-        			while(!tls_bitband_read(HR_I2S_INT_SRC, 7));					
-        		    memset(&tls_i2s_port.tx_buf, 0, sizeof(tls_i2s_buf));
-        		    tls_os_sem_release(tls_i2s_port.tx_sem);
-        		    return;
-                }
-                if (tls_i2s_port.tx_callback)
-                {
-                    tls_i2s_port.tx_callback(tls_i2s_port.tx_buf.len);
-                }
-        	}
         }
+        if(tls_i2s_port.tx_buf.index >= tls_i2s_port.tx_buf.len)
+        {
+            while((tls_i2s_port.regs->INT_STATUS & I2S_TX_FIFO_CNT_MASK)>>4);
+            if(tls_i2s_port.tx_sem)
+            {			
+    		    memset(&tls_i2s_port.tx_buf, 0, sizeof(tls_i2s_buf));
+    		    tls_os_sem_release(tls_i2s_port.tx_sem);
+    		    return;
+            }
+            if (tls_i2s_port.tx_callback)
+            {
+                tls_i2s_port.tx_callback(tls_i2s_port.tx_buf.len);
+            }
+    	}
     }
 }
 

@@ -36,6 +36,7 @@
 
 int32		psGetEntropy(unsigned char *bytes, uint32 size)
 {
+	extern int random_get_bytes(void *buf, size_t len);
 	random_get_bytes(bytes, size);
 	return 0;
 }

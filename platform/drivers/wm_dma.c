@@ -16,6 +16,7 @@
 #include "wm_dma.h"
 #include "wm_regs.h"
 #include "wm_irq.h"
+#include "wm_osal.h"
 
 
 struct tls_dma_channels {

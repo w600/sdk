@@ -14,5 +14,6 @@
 #define OS_CFG_OFF 0
 
 #define TLS_OS_UCOS                         OS_CFG_OFF  /*UCOSII  need to modify wm_config.inc*/
+#undef TLS_OS_FREERTOS
 #define TLS_OS_FREERTOS                     OS_CFG_ON   /*FreeRTOS need to modify wm_config.inc*/
 #endif

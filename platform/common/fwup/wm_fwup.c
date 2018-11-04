@@ -89,7 +89,7 @@ static int img_header_check(T_BOOTER *img_param)
 
 static void img_update_header(T_BOOTER* img_param)
 {
-	char current_img;	
+	unsigned char current_img;	
 	psCrcContext_t	crcContext;
 	
 	tls_fls_read(CODE_RUN_HEADER_ADDR, (unsigned char *)&imgheader[0], sizeof(T_BOOTER));

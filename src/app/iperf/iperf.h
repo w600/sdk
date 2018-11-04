@@ -20,8 +20,9 @@
 
 #include "iperf_queue.h"
 #include "wm_sockets.h"
-//typedef u64 iperf_size_t;
-typedef int iperf_size_t;
+
+typedef u64 iperf_size_t;
+//typedef int iperf_size_t;
 
 struct tht_param_1{
 	char role;//'s', 'c'
@@ -126,7 +127,7 @@ struct iperf_stream
      * stream can have a pointer to this
      */
     int       packet_count;
-    //double    jitter;
+//    double    jitter;
     float	  jitter;
     double    prev_transit;
     int       outoforder_packets;

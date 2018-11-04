@@ -23,7 +23,7 @@
 #include "wm_cmdp_hostif.h"
 #endif
 #include "wm_irq.h"
-#include "wm_uart_timer.h"
+//#include "wm_uart_timer.h"
 #include "utils.h"
 #include "wm_config.h"
 #include "wm_socket.h"
@@ -904,7 +904,7 @@ static int cache_tcp_recv(struct tls_hostif_tx_msg *tx_msg)
 {
     struct tls_uart_circ_buf *precvmit =
         tls_hostif_get_recvmit(tx_msg->u.msg_tcp.sock);
-    struct tls_hostif *hif = tls_get_hostif();
+//    struct tls_hostif *hif = tls_get_hostif();
     struct pbuf *p;
     u16 buflen;
     u16 copylen;

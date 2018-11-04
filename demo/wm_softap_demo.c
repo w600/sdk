@@ -17,7 +17,7 @@
 
 #if DEMO_SOFT_AP
 /*1)Add sta add callback function
-    2)Add sta list monitor task*/
+  2)Add sta list monitor task*/
 static tls_os_timer_t *sta_monitor_tim = NULL;
 static u32 totalstanum = 0;
 static void demo_monitor_stalist_tim(void *ptmr, void *parg)
@@ -48,6 +48,7 @@ int demo_create_softap(u8 *ssid, u8 *key, int chan, int encrypt, int format)
 	struct tls_ip_info_t *ipinfo;
 	u8 ret=0;
 	u8 ssid_set = 0;
+	u8 wireless_protocol = 0;
 
 	u8 ssid_len = 0;
 	if (!ssid)
@@ -65,6 +66,13 @@ int demo_create_softap(u8 *ssid, u8 *key, int chan, int encrypt, int format)
 	{
 		tls_mem_free(ipinfo);
 		return WM_FAILED;
+	}
+
+	tls_param_get(TLS_PARAM_ID_WPROTOCOL, (void*) &wireless_protocol, TRUE);
+	if (TLS_PARAM_IEEE80211_SOFTAP != wireless_protocol)
+	{
+	    wireless_protocol = TLS_PARAM_IEEE80211_SOFTAP;
+        tls_param_set(TLS_PARAM_ID_WPROTOCOL, (void*) &wireless_protocol, FALSE);
 	}
 
 	tls_wifi_set_oneshot_flag(0);          /*清除一键配置标志*/
@@ -103,7 +111,7 @@ int demo_create_softap(u8 *ssid, u8 *key, int chan, int encrypt, int format)
 	ret = tls_wifi_softap_create(apinfo, ipinfo);
 	printf("\n ap create %s ! \n", (ret == WM_SUCCESS)? "Successfully" : "Error");
 
-	if (ret == WM_SUCCESS)
+	if (WM_SUCCESS == ret)
 	{
 		if (sta_monitor_tim)
 		{

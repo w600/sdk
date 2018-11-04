@@ -58,35 +58,36 @@ endef
 
 $(BINODIR)/%.bin: $(IMAGEODIR)/%.out
 	@mkdir -p $(FIRMWAREDIR)
-	@echo "Generate  $(FIRMWAREDIR)/$(TARGET).bin successully"
+	@mkdir -p $(FIRMWAREDIR)/$(TARGET)
 ifeq ($(COMPILE), gcc)
-	$(OBJCOPY) --output-target=binary -S -g -x -X -R .sbss -R .bss -R .reginfo -R .stack $(IMAGEODIR)/$(TARGET).out $(FIRMWAREDIR)/$(TARGET).bin	
+	@$(OBJCOPY) --output-target=binary -S -g -x -X -R .sbss -R .bss -R .reginfo -R .stack $(IMAGEODIR)/$(TARGET).out $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin	
 else
-	@$(FROMELF) --bin -o  $(FIRMWAREDIR)/$(TARGET).bin $(IMAGEODIR)/$(TARGET).out  
+	@$(FROMELF) --bin -o  $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin $(IMAGEODIR)/$(TARGET).out  
 endif
+	@echo "Generate  $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin successully"
 ifeq ($(UNAME_S),Linux)
 	@echo "linux platform"
-	@cp $(FIRMWAREDIR)/$(TARGET).bin $(FIRMWAREDIR)/$(TARGET).bin.bk
-	@gzip -fv $(FIRMWAREDIR)/$(TARGET).bin
-	@mv $(FIRMWAREDIR)/$(TARGET).bin.bk $(FIRMWAREDIR)/$(TARGET).bin
-	@$(SDK_TOOLS)/makeimg  $(FIRMWAREDIR)/$(TARGET).bin "$(FIRMWAREDIR)/$(TARGET).img" 0 0 "$(FIRMWAREDIR)/version.txt" 90000 10100
-	@$(SDK_TOOLS)/makeimg  $(FIRMWAREDIR)/$(TARGET).bin.gz "$(FIRMWAREDIR)/$(TARGET)_gz.img" 0 1 "$(FIRMWAREDIR)/version.txt" 90000 10100 $(FIRMWAREDIR)/$(TARGET).bin
-	@$(SDK_TOOLS)/makeimg  $(FIRMWAREDIR)/$(TARGET).bin "$(FIRMWAREDIR)/$(TARGET)_sec.img" 0 0 "$(FIRMWAREDIR)/version.txt" 90000 10100
-	@$(SDK_TOOLS)/makeimg_all "$(FIRMWAREDIR)/secboot.img" "$(FIRMWAREDIR)/$(TARGET).img" "$(FIRMWAREDIR)/$(TARGET).fls"
+	@cp $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin.bk
+	@gzip -fv $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin
+	@mv $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin.bk $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin
+	@$(SDK_TOOLS)/makeimg  $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin "$(FIRMWAREDIR)/$(TARGET)/$(TARGET).img" 0 0 "$(FIRMWAREDIR)/version.txt" 90000 10100
+	@$(SDK_TOOLS)/makeimg  $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin.gz "$(FIRMWAREDIR)/$(TARGET)/$(TARGET)_gz.img" 0 1 "$(FIRMWAREDIR)/version.txt" 90000 10100 $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin
+	@$(SDK_TOOLS)/makeimg_all "$(FIRMWAREDIR)/secboot.img" "$(FIRMWAREDIR)/$(TARGET)/$(TARGET).img" "$(FIRMWAREDIR)/$(TARGET)/$(TARGET).fls"
 else
 ifeq ($(UNAME_O),Darwin)
 	@echo "don't support mac"
 else
 	@echo "windows platform"
-	@$(SDK_TOOLS)/wm_gzip.exe  $(FIRMWAREDIR)/$(TARGET).bin
-	@$(SDK_TOOLS)/makeimg.exe  $(FIRMWAREDIR)/$(TARGET).bin "$(FIRMWAREDIR)/$(TARGET).img" 0 0 "$(FIRMWAREDIR)/version.txt" 90000 10100
-	@$(SDK_TOOLS)/makeimg.exe  $(FIRMWAREDIR)/$(TARGET).bin.gz "$(FIRMWAREDIR)/$(TARGET)_gz.img" 0 1 "$(FIRMWAREDIR)/version.txt" 90000 10100 $(FIRMWAREDIR)/$(TARGET).bin
-	@$(SDK_TOOLS)/makeimg.exe  $(FIRMWAREDIR)/$(TARGET).bin "$(FIRMWAREDIR)/$(TARGET)_sec.img" 0 0 "$(FIRMWAREDIR)/version.txt" 90000 10100
-	@$(SDK_TOOLS)/makeimg_all.exe "$(FIRMWAREDIR)/secboot.img" "$(FIRMWAREDIR)/$(TARGET).img" "$(FIRMWAREDIR)/$(TARGET).fls"
+	@$(SDK_TOOLS)/wm_gzip.exe  $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin
+	@$(SDK_TOOLS)/makeimg.exe  $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin "$(FIRMWAREDIR)/$(TARGET)/$(TARGET).img" 0 0 "$(FIRMWAREDIR)/version.txt" 90000 10100
+	@$(SDK_TOOLS)/makeimg.exe  $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin.gz "$(FIRMWAREDIR)/$(TARGET)/$(TARGET)_gz.img" 0 1 "$(FIRMWAREDIR)/version.txt" 90000 10100 $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin
+	@$(SDK_TOOLS)/makeimg_all.exe "$(FIRMWAREDIR)/secboot.img" "$(FIRMWAREDIR)/$(TARGET)/$(TARGET).img" "$(FIRMWAREDIR)/$(TARGET)/$(TARGET).fls"
 endif
 endif
-	@cp $(IMAGEODIR)/$(TARGET).map $(FIRMWAREDIR)/$(TARGET).map
+	@cp $(IMAGEODIR)/$(TARGET).map $(FIRMWAREDIR)/$(TARGET)/$(TARGET).map
 	@rm ./test.bin
+	@rm $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin.gz
+	@rm $(FIRMWAREDIR)/$(TARGET)/$(TARGET).img
 	@echo ""
 	@echo "Build finish !!!"
 
@@ -98,10 +99,10 @@ clean:
 	$(RM) -r $(ODIR)
 
 flash:all
-	@$(DL_TOOL) -p $(DL_PORT) -b $(DL_BAUD) write_flash $(FIRMWAREDIR)/$(TARGET)_gz.img 
+	@$(DL_TOOL) -p $(DL_PORT) -b $(DL_BAUD) write_flash $(FIRMWAREDIR)/$(TARGET)/$(TARGET)_gz.img 
 
 flash_all:all
-	@$(DL_TOOL) -p $(DL_PORT) -b $(DL_BAUD) write_flash $(FIRMWAREDIR)/$(TARGET).fls 
+	@$(DL_TOOL) -p $(DL_PORT) -b $(DL_BAUD) write_flash $(FIRMWAREDIR)/$(TARGET)/$(TARGET).fls 
 
 erase:
 	@$(DL_TOOL) -p $(DL_PORT) erase_flash
@@ -125,9 +126,15 @@ $(OBJODIR)/%.o: %.c
 	@mkdir -p $(OBJODIR);
 	$(CC) $(if $(findstring $<,$(DSRCS)),$(DFLAGS),$(CFLAGS)) $(COPTS_$(*F)) $(INCLUDES) $(CMACRO) -c -o $@  $<
 
+ifeq ($(COMPILE), gcc)
 $(OBJODIR)/%.o: %.s
 	@mkdir -p $(OBJODIR);
 	$(ASM) $(ASMFLAGS) $(INCLUDES) $(CMACRO) -c -o $@ $<
+else
+$(OBJODIR)/%.o: %.s
+	@mkdir -p $(OBJODIR);
+	$(ASM) $(ASMFLAGS) $(INCLUDES) $(CMACRO) -o $@ $<
+endif
 
 $(foreach lib,$(GEN_LIBS),$(eval $(call ShortcutRule,$(lib),$(LIBODIR))))
 

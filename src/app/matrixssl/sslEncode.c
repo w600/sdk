@@ -2992,10 +2992,10 @@ int32 matrixSslEncodeHelloRequest(ssl_t *ssl, sslBuf_t *out,
 static int32 writeMultiRecordCertificate(ssl_t *ssl, sslBuf_t *out,
 				int32 notEmpty, int32 totalClen, int32 lsize)
 {
-	psX509Cert_t	*cert, *future;
+	psX509Cert_t	*cert = NULL, *future = NULL;
 	unsigned char	*c, *end, *encryptStart;
 	char			padLen;
-	int32			messageSize, rc, certLen;
+	int32			messageSize, rc, certLen =0;
 	int32			midWrite, midSizeWrite, countDown, firstOne = 1;
 	
 	c = out->end;

@@ -20,6 +20,7 @@
 #include "wm_dma.h"
 #include "misc.h"
 #include "wm_io.h"
+#include "wm_irq.h"
 
 
 static u16 adc_offset = 0;
@@ -58,7 +59,7 @@ static void adc_dma_isr_callbk(void)
 void tls_adc_init(u8 ifusedma,u8 dmachannel)
 {
 	tls_reg_write32(HR_SD_ADC_CONFIG_REG, 0x0);
-	NVIC_Configration(ADC_IRQn, ENABLE);
+	tls_irq_enable(ADC_IRQn);
 
 //注册中断和channel有关，所以需要先请求
 	if(ifusedma)

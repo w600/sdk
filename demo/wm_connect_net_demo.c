@@ -7,6 +7,15 @@ static void con_net_status_changed_event(u8 status )
 {
 	switch(status)
 	{
+	    case NETIF_WIFI_JOIN_SUCCESS:
+	        printf("NETIF_WIFI_JOIN_SUCCESS\n");
+            break;
+        case NETIF_WIFI_JOIN_FAILED:
+            printf("NETIF_WIFI_JOIN_FAILED\n");
+            break;
+        case NETIF_WIFI_DISCONNECTED:
+            printf("NETIF_WIFI_DISCONNECTED\n");
+            break;
 		case NETIF_IP_NET_UP:
 		{
 			struct tls_ethif * tmpethif = tls_netif_get_ethif();
@@ -23,8 +32,9 @@ static void con_net_status_changed_event(u8 status )
 #endif
 		}
 			break;
-		default:
-			break;
+        default:
+            printf("UNKONWN STATE:%d\n", status);
+            break;
 	}
 }
 
@@ -60,6 +70,7 @@ int demo_webserver_config(void)
 int demo_connect_net(char *ssid, char *pwd)
 {
 	struct tls_param_ip *ip_param = NULL;
+	u8 wireless_protocol = 0;
 
 	if (!ssid)
 	{
@@ -69,6 +80,14 @@ int demo_connect_net(char *ssid, char *pwd)
 	printf("\nssid:%s\n", ssid);
 	printf("password=%s\n",pwd);
 	tls_wifi_disconnect();
+
+	tls_param_get(TLS_PARAM_ID_WPROTOCOL, (void*) &wireless_protocol, TRUE);
+	if (TLS_PARAM_IEEE80211_INFRA != wireless_protocol)
+	{
+	    tls_wifi_softap_destroy();
+	    wireless_protocol = TLS_PARAM_IEEE80211_INFRA;
+        tls_param_set(TLS_PARAM_ID_WPROTOCOL, (void*) &wireless_protocol, FALSE);
+	}
 
 	tls_wifi_set_oneshot_flag(0);
 
@@ -80,6 +99,14 @@ int demo_connect_net(char *ssid, char *pwd)
 		tls_param_set(TLS_PARAM_ID_IP, ip_param, FALSE);
 		tls_mem_free(ip_param);
 	}
+
+    u8 autoconnect = WIFI_AUTO_CNT_ON;
+    tls_wifi_auto_connect_flag(WIFI_AUTO_CNT_FLAG_GET, &autoconnect);
+    if(WIFI_AUTO_CNT_OFF == autoconnect)
+    {
+        autoconnect = WIFI_AUTO_CNT_ON;
+        tls_wifi_auto_connect_flag(WIFI_AUTO_CNT_FLAG_SET, &autoconnect);
+    }
 
 	tls_netif_add_status_event(con_net_status_changed_event);
 	tls_wifi_connect((u8 *)ssid, strlen(ssid), (u8 *)pwd, strlen(pwd));

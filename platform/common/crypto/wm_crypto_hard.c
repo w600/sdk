@@ -4,6 +4,7 @@
 #include "wm_regs.h"
 #include "wm_irq.h"
 #include "wm_crypto_hard.h"
+#include "wm_internal_flash.h"
 
 //#define TEST_ALL_CRYPTO
 #undef	DIGIT_BIT

@@ -229,5 +229,41 @@ int tls_freq_err_op(u8 *freqerr, u8 flag);
 */
 int tls_rf_vcg_ctrl_op(u8 *vcg, u8 flag);
 
+/**
+* @brief 	This function is used to get chip ID
+*
+* @param[out]	chip_id
+*
+* @retval	 	TLS_EFUSE_STATUS_OK			get success
+* @retval		TLS_FLS_STATUS_EPERM		flash driver module not beed installed
+*/
+int tls_get_chipid(u8 chip_id[16]);
+
+/**
+* @brief 	This function is used to get chip ID
+*
+* @param[in]	seconds
+*
+* @retval	 	TLS_EFUSE_STATUS_OK			success
+*/
+unsigned int tls_sleep(unsigned int seconds);
+
+/**
+* @brief 	This function is used to get chip ID
+*
+* @param[in]	msec
+*
+* @retval	 	TLS_EFUSE_STATUS_OK			success
+*/
+int tls_msleep(unsigned int msec);
+/**
+* @brief 	This function is used to get chip ID
+*
+* @param[in]	usec
+*
+* @retval	 	TLS_EFUSE_STATUS_OK			success
+*/
+int tls_usleep(unsigned int usec);
+
 #endif /* WM_EFUSE_H */
 

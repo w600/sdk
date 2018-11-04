@@ -1099,7 +1099,7 @@ int tls_spi_write_with_cmd(const u8 * cmd, u32 n_cmd, const u8 * txbuf,
         tls_os_sem_acquire(spi_port->lock, 0);
         MEMCPY((u8 *) SPI_DMA_BUF_ADDR, (u8 *) cmd, n_cmd);
         MEMCPY((u8 *) (SPI_DMA_BUF_ADDR + n_cmd), txbuf, n_tx);
-        SpiDmaBlockWrite((u8 *) SPI_DMA_BUF_ADDR, (n_cmd + n_tx), 0, NULL);
+        SpiDmaBlockWrite((u8 *) SPI_DMA_BUF_ADDR, (n_cmd + n_tx), 0, 0);
         tls_os_sem_release(spi_port->lock);
         return TLS_SPI_STATUS_OK;
     }

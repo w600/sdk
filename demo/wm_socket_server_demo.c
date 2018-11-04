@@ -135,6 +135,7 @@ static void sock_server_recv_task(void *sdata)
             }
             if (FD_ISSET(sock_s->client_fd_queue[i], &fdsr))
             {
+				memset(sock_s->sock_rx, 0, DEMO_SOCK_BUF_SIZE);
                 ret = recv(sock_s->client_fd_queue[i], sock_s->sock_rx, DEMO_SOCK_BUF_SIZE, 0);
                 if (ret <= 0)
                 {      // client close
@@ -151,12 +152,11 @@ static void sock_server_recv_task(void *sdata)
                 else
                 {     // receive data
                     sock_s->rcv_data_len[i] += ret;
-					if(sock_s->uart_trans)
+					if(sock_s->uart_trans
+						&& sock_s->if_snd[i])
 					{
 						tls_uart_write(TLS_UART_1, sock_s->sock_rx, ret);	
-					}
-					else
-					{
+					} else {
 						printf("\nsock[%d] rcv len==%d\n", sock_s->client_fd_queue[i], sock_s->rcv_data_len[i]);
 					}				
                 }
@@ -344,7 +344,9 @@ int sck_s_send_data_demo(int skt_no, int len, int uart_trans)
                 {
                     demo_sock_s->if_snd[i] = 1;
                     demo_sock_s->snd_data_len[i] = len;
-                }
+                } else {
+                    demo_sock_s->if_snd[i] = 0;
+				}
             }
         }
     }

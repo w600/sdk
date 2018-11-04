@@ -59,7 +59,7 @@ static psMutex_t			g_sessTicketLock;
 
 static sslSessionEntry_t	sessionTable[SSL_SESSION_TABLE_SIZE];
 static DLListEntry          sessionChronList;
-static void initSessionEntryChronList();
+static void initSessionEntryChronList(void);
 #endif /* USE_SERVER_SIDE_SSL */
 
 #if defined(USE_RSA) || defined(USE_ECC)
@@ -1692,7 +1692,7 @@ void matrixSslSetCertValidator(ssl_t *ssl,
 #endif /* USE_CLIENT_SIDE_SSL || USE_CLIENT_AUTH */
 
 #ifdef USE_SERVER_SIDE_SSL
-static void initSessionEntryChronList()
+static void initSessionEntryChronList(void)
 {
 	uint32	i;
 	DLListInit(&sessionChronList);
@@ -2210,8 +2210,8 @@ int32 matrixCreateSessionTicket(ssl_t *ssl, unsigned char *out, int32 *outLen)
 	len += pad;
 	
 	/* out + 6 + 16 (name) is pointing at IV */
-	psAesInit(&ctx, out + 6 + 16, keys->symkey, keys->symkeyLen);
-	psAesEncrypt(&ctx, enc, enc, len);
+	psAesInit((psAesCipherContext_t *)&ctx, out + 6 + 16, keys->symkey, keys->symkeyLen);
+	psAesEncrypt((psAesCipherContext_t *)&ctx, enc, enc, len);
 
 	/* HMAC starting from the Name */
 	psHmacSha2Init(&dgst, keys->hashkey, keys->hashkeyLen,
@@ -2332,8 +2332,8 @@ int32 matrixUnlockSessionTicket(ssl_t *ssl, unsigned char *in, int32 inLen)
 	c += 16;
 	
 	/* out is pointing at IV */
-	psAesInit(&ctx, c, keys->symkey, keys->symkeyLen);
-	psAesDecrypt(&ctx, c + 16, c + 16, len - 16 - 16 - SHA256_HASH_SIZE);
+	psAesInit((psAesCipherContext_t *)&ctx, c, keys->symkey, keys->symkeyLen);
+	psAesDecrypt((psAesCipherContext_t *)&ctx, c + 16, c + 16, len - 16 - 16 - SHA256_HASH_SIZE);
 	keys->inUse = 0;
 #ifdef USE_MULTITHREADING
 	psUnlockMutex(&g_sessTicketLock);

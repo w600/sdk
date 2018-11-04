@@ -88,7 +88,7 @@ tls_os_status_t tls_os_task_create(tls_os_task_t *task,
     if (((u32)stk_start >= TASK_STACK_USING_MEM_UPPER_RANGE) 
 		||(((u32)stk_start + stk_size) >= TASK_STACK_USING_MEM_UPPER_RANGE))
     {
-    	printf("\nCurrent Stack [0x%8x, 0x%8x) is NOT in VALID STACK range [0x20000000,0x20028000)\n", stk_start, stk_start + stk_size);
+    	printf("\nCurrent Stack [0x%8x, 0x%8x) is NOT in VALID STACK range [0x20000000,0x20028000)\n", (u32)stk_start, (u32)(stk_start + stk_size));
     	printf("Please refer to APIs' manul and modify task stack position!!!\n");
     	return TLS_OS_ERROR;
     }
@@ -556,7 +556,7 @@ extern u32 __heap_base;
  tls_os_status_t tls_os_queue_delete(tls_os_queue_t *queue)
 {
 
-	if ((((xQUEUE *)queue)->pcHead) >= &__heap_base)		//如果没有从堆申请，不用释放)
+	if ((u32 *)(((xQUEUE *)queue)->pcHead) >= &__heap_base)		//如果没有从堆申请，不用释放)
 	{
 		tls_mem_free(((xQUEUE *)queue)->pcHead);
 	}

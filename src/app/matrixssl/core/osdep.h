@@ -209,10 +209,12 @@ PSPUBLIC void _psErrorStr(char *msg, char *val);
 	HALT_ON_PS_ERROR define at compile-time determines whether to halt on
 	psAssert and psError calls
 */ 
+#undef psAssert
 #define psAssert(C)  if (C) ; else \
 {halAlert();_psTraceStr("psAssert %s", __FILE__);_psTraceInt(":%d ", __LINE__);\
 _psError(#C);} 
 
+#undef psError
 #define psError(a) \
  halAlert();_psTraceStr("psError %s", __FILE__);_psTraceInt(":%d ", __LINE__); \
  _psError(a);

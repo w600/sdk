@@ -601,6 +601,7 @@ char * Key_Index[]={"checked=\"checked\" />\n",
 #define BSS_INFO_SIZE 2048
 
 static u8 scan_done = 0;
+u8 gwebcfgmode = 0;
 
 
 void scan_result_cb(void)
@@ -787,51 +788,54 @@ u16  Web_parse_line(char * id_char,u16 * after_id_len,char * idvalue,u16 * Value
         case Web_Encry_Id:
         
 	    {
-    		char str[100];
-            struct tls_scan_bss_t *scan_res = NULL;
-            struct tls_bss_info_t *bss_info;
+			if (gwebcfgmode == 0)
+			{
+	    		char str[100];
+	            struct tls_scan_bss_t *scan_res = NULL;
+	            struct tls_bss_info_t *bss_info;
 
-            u8 *bssBuff = NULL;
-            bssBuff = tls_mem_alloc(BSS_INFO_SIZE);
-            memset(bssBuff, 0, sizeof(BSS_INFO_SIZE));
-                
-            tls_wifi_scan_result_cb_register(scan_result_cb);
-        	while (WM_SUCCESS !=tls_wifi_scan()) {
-        		tls_os_time_delay(HZ/5);
-        	}
-            while( scan_done == 0 ) {
-                tls_os_time_delay(HZ/5);
-            }
-            scan_done = 0;
-            tls_wifi_get_scan_rslt(bssBuff, BSS_INFO_SIZE);
-    
-            scan_res = (struct tls_scan_bss_t *)bssBuff;
-            bss_info = scan_res->bss;
-            DEBUG_PRINT("scan: %d\r\n", scan_res->count);
-            strcpy(idvalue, "arentNode.previousSibling.value=this.value\">\n");
-            sprintf(str, "<option value=\"\"></option>\n");
-            strcat(idvalue, str);
-            for(u8 i=0; i<scan_res->count && i<40; i++)
-            {
-                if( bss_info->ssid != NULL && bss_info->ssid_len != 0 ){
-                    *(bss_info->ssid + bss_info->ssid_len) = '\0';
-                    sprintf(str, "<option value=\"%s\">%s</option>\n", bss_info->ssid,  bss_info->ssid);
-        			strcat(idvalue, str);
-		            bss_info->ssid[bss_info->ssid_len] = '\0';
-                    DEBUG_PRINT("legal: %s\r\n", bss_info->ssid);
-                }
-                else
-                {
-	           bss_info->ssid[bss_info->ssid_len] = '\0';
-                    DEBUG_PRINT("illegal: %d, %s\r\n", bss_info->ssid_len, bss_info->ssid);
-                }
-                bss_info ++;				
-            }
+	            u8 *bssBuff = NULL;
+	            bssBuff = tls_mem_alloc(BSS_INFO_SIZE);
+	            memset(bssBuff, 0, sizeof(BSS_INFO_SIZE));
+	                
+	            tls_wifi_scan_result_cb_register(scan_result_cb);
+	        	while (WM_SUCCESS !=tls_wifi_scan()) {
+	        		tls_os_time_delay(HZ/5);
+	        	}
+	            while( scan_done == 0 ) {
+	                tls_os_time_delay(HZ/5);
+	            }
+	            scan_done = 0;
+	            tls_wifi_get_scan_rslt(bssBuff, BSS_INFO_SIZE);
+	    
+	            scan_res = (struct tls_scan_bss_t *)bssBuff;
+	            bss_info = scan_res->bss;
+	            DEBUG_PRINT("scan: %d\r\n", scan_res->count);
+	            strcpy(idvalue, "arentNode.previousSibling.value=this.value\">\n");
+	            sprintf(str, "<option value=\"\"></option>\n");
+	            strcat(idvalue, str);
+	            for(u8 i=0; i<scan_res->count && i<40; i++)
+	            {
+	                if( bss_info->ssid != NULL && bss_info->ssid_len != 0 ){
+	                    *(bss_info->ssid + bss_info->ssid_len) = '\0';
+	                    sprintf(str, "<option value=\"%s\">%s</option>\n", bss_info->ssid,  bss_info->ssid);
+	        			strcat(idvalue, str);
+			            bss_info->ssid[bss_info->ssid_len] = '\0';
+	                    DEBUG_PRINT("legal: %s\r\n", bss_info->ssid);
+	                }
+	                else
+	                {
+		           bss_info->ssid[bss_info->ssid_len] = '\0';
+	                    DEBUG_PRINT("illegal: %d, %s\r\n", bss_info->ssid_len, bss_info->ssid);
+	                }
+	                bss_info ++;				
+	            }
 
-            if( bssBuff != NULL ) {
-                tls_mem_free(bssBuff);
-                bssBuff = NULL;
-            }
+	            if( bssBuff != NULL ) {
+	                tls_mem_free(bssBuff);
+	                bssBuff = NULL;
+	            }
+			}
             
     		*after_id_len = idtble->Idlen-4;
     		*Value_Offset = idtble->Value_Offset;		
@@ -2184,7 +2188,7 @@ static void set_default_socket(struct tls_param_socket *remote_socket_cfg)
 
 extern u8 gucssidData[33];
 extern u8 gucpwdData[65];
-u8 gwebcfgmode = 0;
+
 char * do_cgi_config(int iIndex, int iNumParams, char *pcParam[], char *pcValue[],u8 *  NeedRestart)
 {
     /*
@@ -2513,7 +2517,7 @@ char * do_cgi_config(int iIndex, int iNumParams, char *pcParam[], char *pcValue[
 			KeyLen = strlen((char *)param_key.psk);
 			param_key.key_length = KeyLen;
 			DEBUG_PRINT("### kevin debug web key = %s\n\r",param_key.psk);
-            strcpy(gucpwdData, param_key.psk);
+            strcpy((char *)gucpwdData, (char *)param_key.psk);
 			tls_param_set(TLS_PARAM_ID_KEY, (void *)&param_key, FALSE);
 
 			orig_key = (struct tls_param_original_key*)&param_key;
@@ -2526,13 +2530,14 @@ char * do_cgi_config(int iIndex, int iNumParams, char *pcParam[], char *pcValue[
             tls_param_set(TLS_PARAM_ID_SHA1, (void *)sha1_key, FALSE);		
 		}
 	}
-
+	if (gwebcfgmode == 0)
+	{
     //set sta mode and reset the system.
-    tls_param_to_flash(TLS_PARAM_ID_ALL);
+    	tls_param_to_flash(TLS_PARAM_ID_ALL);
 #if TLS_CONFIG_WEB_SERVER_MODE
-	gwebcfgmode = 1;    
+		gwebcfgmode = 1;    
 #endif
-
+	}
     /*
     httpd_deinit();
     tls_wifi_oneshot_connect(ssid.ssid, param_key.psk);

@@ -190,6 +190,7 @@ void vPortStartFirstTask( void )
 int ulSetInterruptMaskFromISR( void )
 {
     portDISABLE_INTERRUPTS();
+    return 0;
 }
 
 void vClearInterruptMaskFromISR( int ulMask )

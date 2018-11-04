@@ -33,7 +33,7 @@
 #include "litepoint.h"
 #include "wm_irq.h"
 #include "wm_config.h"
-#include "wm_uart_timer.h"
+//#include "wm_uart_timer.h"
 #include "wm_http_client.h"
 #include "wm_rmms.h"
 #include "ping.h"
@@ -1006,8 +1006,10 @@ void tls_hostif_tx_timeout(void *ptmr, void *parg)
     struct tls_hostif *hif = (struct tls_hostif *)parg;
 
     if (hif->hostif_mode == HOSTIF_MODE_HSPI)
+    {
         if(hif->uart_send_tx_msg_callback != NULL)
             hif->uart_send_tx_msg_callback(HOSTIF_MODE_HSPI, NULL, FALSE);
+    }
     else if (hif->hostif_mode == HOSTIF_MODE_UART0) {
         if(hif->uart_send_tx_msg_callback != NULL)
             hif->uart_send_tx_msg_callback(HOSTIF_MODE_UART0, NULL, FALSE);
@@ -1126,7 +1128,7 @@ int tls_hostif_init(void)
     err = tls_hostif_task_init();
 #endif
 
-    temAtStartUp = adc_temp();
+    //temAtStartUp = adc_temp();
     return err; 
 }
 
@@ -1252,6 +1254,7 @@ int tls_hostif_send_data(struct tls_hostif_socket_info *skt_info,
 
 static void hostif_default_socket_setup(void *ptmr, void *parg)
 {
+    tls_hostif_close_default_socket();
 	default_socket = 0;
 	tls_hostif_create_default_socket();
 }
@@ -1543,7 +1546,7 @@ static void  hostif_socket_state_changed_ATCMD(u8 skt_num, u8 event, u8 state)
 
 static void  hostif_socket_state_changed_RICMD(u8 skt_num, u8 event, u8 state)
 {
-    struct tls_hostif *hif = tls_get_hostif();
+
 	TLS_DBGPRT_INFO("event=%d, state=%d\n", event, state);
     switch (event) {
         case NET_EVENT_TCP_JOINED:
@@ -1666,8 +1669,8 @@ int tls_cmd_create_socket(struct tls_cmd_socket_t *skt,
 	int sock;
 	struct sockaddr_in *sock_addr = NULL;
 	struct sockaddr_in local_addr;
-	int optval;
-    int optlen = sizeof(int);
+//	int optval;
+//  int optlen = sizeof(int);
 #endif
     TLS_DBGPRT_INFO("=====>\n");
     TLS_DBGPRT_INFO("skt proto = %d\n", skt->proto);
@@ -2407,9 +2410,11 @@ int entm_proc(u8 set_opt, u8 update_flash, union HOSTIF_CMD_PARAMS_UNION *cmd, u
 int skct_proc(u8 set_opt, u8 update_flash, union HOSTIF_CMD_PARAMS_UNION *cmd, union HOSTIF_CMDRSP_PARAMS_UNION * cmdrsp){
 
     int socket_num;
+#if TLS_CONFIG_CMD_USE_RAW_SOCKET
     int err = 0;
     u8 state;
 	u32 time, offset = 0;
+#endif
 	struct tls_hostif *hif = tls_get_hostif();
     struct tls_cmd_socket_t socket;
     
@@ -3255,7 +3260,7 @@ int qmac_proc(u8 set_opt, u8 update_flash, union HOSTIF_CMD_PARAMS_UNION *cmd, u
 
 #if TLS_CONFIG_AP
 int slist_proc(u8 set_opt, u8 update_flash, union HOSTIF_CMD_PARAMS_UNION *cmd, union HOSTIF_CMDRSP_PARAMS_UNION * cmdrsp){
-#define STA_DETAIL_BUF_LEN  164
+#define STA_DETAIL_BUF_LEN  320
     u32 sta_num = 0;
     u8 *sta_detail;
     int ret = -1;
@@ -4374,7 +4379,7 @@ int custdata_proc(u8 set_opt, u8 update_flash, union HOSTIF_CMD_PARAMS_UNION *cm
 static struct tls_cmd_t  at_ri_cmd_tbl[] = {
 #if 1
     { "Z", HOSTIF_CMD_RESET, 0x11, 0, 0,z_proc},
-    { "E", NULL, 0x1, 0, 0,e_proc},
+    { "E", HOSTIF_CMD_NOP, 0x1, 0, 0,e_proc},
     { "ENTS", HOSTIF_CMD_PS, 0x22, 4, 4,ents_proc},
     { "RSTF", HOSTIF_CMD_RESET_FLASH, 0x11, 0, 0,rstf_proc},
     { "PMTF", HOSTIF_CMD_PMTF, 0x11, 0, 0,pmtf_proc},
@@ -4384,14 +4389,14 @@ static struct tls_cmd_t  at_ri_cmd_tbl[] = {
     { "WSCAN", HOSTIF_CMD_WSCAN, 0x11, 0, 0,wscan_proc},
     { "LKSTT", HOSTIF_CMD_LINK_STATUS, 0x19, 0, 0,lkstt_proc},
 #if 1 //TLS_CONFIG_SOCKET_RAW
-    { "ENTM", NULL, 0x1, 0, 0, entm_proc},
+    { "ENTM", HOSTIF_CMD_NOP, 0x1, 0, 0, entm_proc},
     { "SKCT", HOSTIF_CMD_SKCT, 0x22, 4, 6, skct_proc},
     { "SKSTT", HOSTIF_CMD_SKSTT, 0x22, 1, 1, skstt_proc},
     { "SKCLS", HOSTIF_CMD_SKCLOSE, 0x22, 1, 1, skcls_proc},
     { "SKSDF", HOSTIF_CMD_SKSDF, 0x22, 1, 1, sksdf_proc},
-    { "SKSND", NULL, 0x02, 2, 0, sksnd_proc},
-    { "SKRCV", NULL, 0x02, 2, 0, skrcv_proc},
-    { "SKRPTM", NULL, 0xA, 1, 0, skrptm_proc},
+    { "SKSND", HOSTIF_CMD_NOP, 0x02, 2, 0, sksnd_proc},
+    { "SKRCV", HOSTIF_CMD_NOP, 0x02, 2, 0, skrcv_proc},
+    { "SKRPTM", HOSTIF_CMD_NOP, 0xA, 1, 0, skrptm_proc},
     { "SKSRCIP", HOSTIF_CMD_SKSRCIP, 0x18, 0, 0, sksrcip_proc},
     { "SKGHBN", HOSTIF_CMD_SKGHBN, 0x22, 1, 1, skghbn_proc},
 #endif
@@ -4423,14 +4428,14 @@ static struct tls_cmd_t  at_ri_cmd_tbl[] = {
     { "DNAME", HOSTIF_CMD_DNAME, 0x7F, 0, 0, dname_proc},
     { "ATPT", HOSTIF_CMD_ATPT, 0x7F, 1, 2, atpt_proc},
     { "&DBG", HOSTIF_CMD_DBG, 0x22, 1, 4, dbg_proc},
-    { "ESPC", NULL, 0xF, 1, 0, espc_proc},
-    { "ESPT", NULL, 0xF, 1, 0, espt_proc},
+    { "ESPC", HOSTIF_CMD_NOP, 0xF, 1, 0, espc_proc},
+    { "ESPT", HOSTIF_CMD_NOP, 0xF, 1, 0, espt_proc},
     { "WEBS", HOSTIF_CMD_WEBS, 0x7F, 1, 1, webs_proc},
     { "IOM", HOSTIF_CMD_IOM, 0x7F, 1, 1, iom_proc},
     { "CMDM", HOSTIF_CMD_CMDM, 0x7F, 1, 1, cmdm_proc},
     { "PASS", HOSTIF_CMD_PASS, 0x7F, 1, 7, pass_proc},
     { "ONESHOT", HOSTIF_CMD_ONESHOT, 0x7F, 1, 1, oneshot_proc},
-    { "ONEMODE", NULL, 0x7F, 1, 1, oneshotmode_proc},
+    { "ONEMODE", HOSTIF_CMD_NOP, 0x7F, 1, 1, oneshotmode_proc},
     { "&UPDP", HOSTIF_CMD_UPDP, 0x22, 1, 1, updp_proc},
 #if TLS_CONFIG_HTTP_CLIENT_TASK
     { "HTTPC", HOSTIF_CMD_HTTPC, 0x22, 2, 3, httpc_proc},
@@ -4448,29 +4453,29 @@ static struct tls_cmd_t  at_ri_cmd_tbl[] = {
 	{ "&RFW", HOSTIF_CMD_RFW, 0x22, 2, 3, rfw_proc},
 	{ "&FLSR", HOSTIF_CMD_FLSR, 0x22, 2, 5, flsr_proc},
 	{ "&FLSW", HOSTIF_CMD_FLSW, 0x22, 2, 5, flsw_proc},
-    { "&TXG", NULL, 0xF, 1, 0, txg_proc},
-    { "&TXGS", NULL, 0xF, 1, 0, txg_rate_set_proc},
-    { "&TXGG", NULL, 0xF, 1, 0, txg_rate_get_proc},
-	{ "&MAC", NULL, 0xF, 1, 0, mac_proc},
-	{ "&HWV", NULL, 0x9, 0, 0, hwv_proc},
-	{ "&SPIF", NULL, 0x2, 1, 0, spif_proc},
-    { "&LPCHL", NULL, 0xB, 1, 0, lpchl_proc},
-    { "&LPTSTR", NULL, 0x2, 5, 0, lptstr_proc},
-    { "&LPTSTP", NULL, 0x1, 0, 0, lptstp_proc},
-    { "&LPTSTT", NULL, 0xF, 0, 0, lptstt_proc},
-    { "&LPRSTR", NULL, 0x2, 1, 0, lprstr_proc},
-    { "&LPRSTP", NULL, 0x1, 0, 0, lprstp_proc},
-    { "&LPRSTT", NULL, 0x1, 0, 0, lprstt_proc},
-    { "&LPPSTR", NULL, 0x3, 2, 0, lppstr_proc},
-    { "&LPPSTP", NULL, 0x2, 1, 0, lppstp_proc},
-    { "&LPRFPS", NULL, 0x1, 0, 0, lprfps_proc},
-    { "&LPCHRS", NULL, 0x2, 1, 0, lpchrs_proc},
-    { "&LPTBD", NULL, 0x2, 7, 0, lptbd_proc},
-    { "&LPSTPT", NULL, 0x1, 0, 0, lpstpt_proc},
-    { "&LPCHLR", NULL, 0x2, 1, 0, lpchlr_proc},
-    { "&LPSTPR", NULL, 0x1, 0, 0, lpstpr_proc},
-    { "&LPRAGC", NULL, 0x1, 0, 0, lpragc_proc},
-    { "&LPRSR", NULL, 0x9, 0, 0, lprsr_proc},
+    { "&TXG", HOSTIF_CMD_NOP, 0xF, 1, 0, txg_proc},
+    { "&TXGS", HOSTIF_CMD_NOP, 0xF, 1, 0, txg_rate_set_proc},
+    { "&TXGG", HOSTIF_CMD_NOP, 0xF, 1, 0, txg_rate_get_proc},
+	{ "&MAC", HOSTIF_CMD_NOP, 0xF, 1, 0, mac_proc},
+	{ "&HWV", HOSTIF_CMD_NOP, 0x9, 0, 0, hwv_proc},
+	{ "&SPIF", HOSTIF_CMD_NOP, 0x2, 1, 0, spif_proc},
+    { "&LPCHL", HOSTIF_CMD_NOP, 0xB, 1, 0, lpchl_proc},
+    { "&LPTSTR", HOSTIF_CMD_NOP, 0x2, 5, 0, lptstr_proc},
+    { "&LPTSTP", HOSTIF_CMD_NOP, 0x1, 0, 0, lptstp_proc},
+    { "&LPTSTT", HOSTIF_CMD_NOP, 0xF, 0, 0, lptstt_proc},
+    { "&LPRSTR", HOSTIF_CMD_NOP, 0x2, 1, 0, lprstr_proc},
+    { "&LPRSTP", HOSTIF_CMD_NOP, 0x1, 0, 0, lprstp_proc},
+    { "&LPRSTT", HOSTIF_CMD_NOP, 0x1, 0, 0, lprstt_proc},
+    { "&LPPSTR", HOSTIF_CMD_NOP, 0x3, 2, 0, lppstr_proc},
+    { "&LPPSTP", HOSTIF_CMD_NOP, 0x2, 1, 0, lppstp_proc},
+    { "&LPRFPS", HOSTIF_CMD_NOP, 0x1, 0, 0, lprfps_proc},
+    { "&LPCHRS", HOSTIF_CMD_NOP, 0x2, 1, 0, lpchrs_proc},
+    { "&LPTBD", HOSTIF_CMD_NOP, 0x2, 7, 0, lptbd_proc},
+    { "&LPSTPT", HOSTIF_CMD_NOP, 0x1, 0, 0, lpstpt_proc},
+    { "&LPCHLR", HOSTIF_CMD_NOP, 0x2, 1, 0, lpchlr_proc},
+    { "&LPSTPR", HOSTIF_CMD_NOP, 0x1, 0, 0, lpstpr_proc},
+    { "&LPRAGC", HOSTIF_CMD_NOP, 0x1, 0, 0, lpragc_proc},
+    { "&LPRSR", HOSTIF_CMD_NOP, 0x9, 0, 0, lprsr_proc},
 #if TLS_CONFIG_AP
     { "SLIST", HOSTIF_CMD_STA_LIST, 0x19, 0, 0, slist_proc},
     { "APLKSTT", HOSTIF_CMD_AP_LINK_STATUS, 0x19, 0, 0,softap_lkstt_proc},
@@ -4483,24 +4488,24 @@ static struct tls_cmd_t  at_ri_cmd_tbl[] = {
     { "APNIP", HOSTIF_CMD_AP_NIP, 0x7F, 1, 17, softap_nip_proc },            
 #endif
 #if TLS_CONFIG_WIFI_PERF_TEST
-	{ "THT", NULL, 0x2, 0, 0, tht_proc},
+	{ "THT", HOSTIF_CMD_NOP, 0x2, 0, 0, tht_proc},
 #endif
 #if TLS_CONFIG_WIFI_PING_TEST
-	{ "PING", NULL, 0x2, 4, 0, ping_proc},
+	{ "PING", HOSTIF_CMD_NOP, 0x2, 4, 0, ping_proc},
 #endif
 #if TLS_CONFIG_WPS    
     { "WWPS", HOSTIF_CMD_WPS, 0x7F, 1, 1, wwps_proc},
 #endif
 	{ "CUSTDATA", HOSTIF_CMD_CUSTDATA, 0x19, 0, 0, custdata_proc},	
 #if 1
-	{ "WIDTH", NULL, 0x2, 2, 0, tls_tx_sin},
-	{ "&RXSIN", NULL, 0x2, 2, 0, tls_rx_wave},
+	{ "WIDTH", HOSTIF_CMD_NOP, 0x2, 2, 0, tls_tx_sin},
+	{ "&RXSIN", HOSTIF_CMD_NOP, 0x2, 2, 0, tls_rx_wave},
 #endif
-	{ "TXLO", NULL, 0x7F, 1,  0,  tls_tx_lo_proc},
-	{ "TXIQ", NULL, 0x7F, 2,  0,  tls_tx_iq_mismatch_proc},
-	{ "FREQ", NULL, 0x7F, 1,  0,  tls_freq_error_proc},
-	{ "VCG",    NULL, 0x7F, 1, 0 , tls_rf_vcg_ctrl_proc},
-	{ NULL, NULL, 0, 0 , 0, NULL},
+	{ "TXLO", HOSTIF_CMD_NOP, 0x7F, 1,  0,  tls_tx_lo_proc},
+	{ "TXIQ", HOSTIF_CMD_NOP, 0x7F, 2,  0,  tls_tx_iq_mismatch_proc},
+	{ "FREQ", HOSTIF_CMD_NOP, 0x7F, 1,  0,  tls_freq_error_proc},
+	{ "VCG",    HOSTIF_CMD_NOP, 0x7F, 1, 0 , tls_rf_vcg_ctrl_proc},
+	{ NULL, HOSTIF_CMD_NOP, 0, 0 , 0, NULL},
 };
 
 int at_parse_func(char *at_name, struct tls_atcmd_token_t *tok, union HOSTIF_CMD_PARAMS_UNION *cmd){
@@ -6167,7 +6172,7 @@ int at_format_func(char *at_name, u8 set_opt, u8 update_flash, union HOSTIF_CMDR
         }
         else
         {
-            *res_len = sprintf(res_resp, "+OK=%hhu,%s", cmdrsp->stalist.sta_num, cmdrsp->stalist.data);
+            *res_len = sprintf(res_resp, "+OK=%hhu%s", cmdrsp->stalist.sta_num, cmdrsp->stalist.data);
         }
     }
 #endif

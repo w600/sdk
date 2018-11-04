@@ -89,43 +89,5 @@
 #define TLS_DBGPRT_DMA_ERR(f, a...)
 #endif
 
-
-#if (TLS_WL_DBG && TLS_DBG_LEVEL_INFO)
-#define TLS_DBGPRT_WL_INFO(f, a...)          __TLS_DBGPRT_INFO(f, ##a)
-#else
-#define TLS_DBGPRT_WL_INFO(f, a...)
-#endif
-
-#if (TLS_WL_DBG && TLS_DBG_LEVEL_WARNING)
-#define TLS_DBGPRT_WL_WARNING(f, a...)       __TLS_DBGPRT_WARNING(f, ##a)
-#else
-#define TLS_DBGPRT_WL_WARNING(f, a...)
-#endif
-
-#if (TLS_WL_DBG && TLS_DBG_LEVEL_ERR)
-#define TLS_DBGPRT_WL_ERR(f, a...)           __TLS_DBGPRT_ERR(f, ##a)
-#else
-#define TLS_DBGPRT_WL_ERR(f, a...)
-#endif
-
-
-#if (TLS_WPA_DBG && TLS_DBG_LEVEL_INFO)
-#define TLS_DBGPRT_WPA_INFO(f, a...)          __TLS_DBGPRT_INFO(f, ##a)
-#else
-#define TLS_DBGPRT_WPA_INFO(f, a...)
-#endif
-
-#if (TLS_WPA_DBG && TLS_DBG_LEVEL_WARNING)
-#define TLS_DBGPRT_WPA_WARNING(f, a...)       __TLS_DBGPRT_WARNING(f, ##a)
-#else
-#define TLS_DBGPRT_WPA_WARNING(f, a...)
-#endif
-
-#if (TLS_WPA_DBG && TLS_DBG_LEVEL_ERR)
-#define TLS_DBGPRT_WPA_ERR(f, a...)           __TLS_DBGPRT_ERR(f, ##a)
-#else
-#define TLS_DBGPRT_WPA_ERR(f, a...)
-#endif
-
 #endif /* __DBG_H__ */
 

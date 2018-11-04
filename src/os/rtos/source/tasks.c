@@ -71,6 +71,7 @@ task.h is included from an application file. */
 #undef MPU_WRAPPERS_INCLUDED_FROM_API_FILE
 
 #if TLS_OS_FREERTOS
+const unsigned int HZ = 500;
 
 /*
  * Macro to define the amount of stack available to the idle task.
@@ -2295,7 +2296,7 @@ tskTCB *pxNewTCB;
 			#endif			
 			
 			//sprintf( pcStatusString, ( char * ) "%s\t\t%c\t%u\t%u\t%u\r\n", pxNextTCB->pcTaskName, cStatus, ( unsigned int ) pxNextTCB->uxPriority, usStackRemaining, ( unsigned int ) pxNextTCB->uxTCBNumber );
-			sprintf( pcStatusString, ( char * ) "%u\t\t%c\t\t%u\t\t%u\t\t%u\t\r\n", ( unsigned int ) (configMAX_PRIORITIES - pxNextTCB->uxPriority), cStatus, pxNextTCB->stacksize, usCurStack,usStackRemaining );
+			sprintf( pcStatusString, ( char * ) "%u\t\t%c\t\t%u\t\t%u\t\t%u\t\r\n", ( unsigned int ) (configMAX_PRIORITIES - pxNextTCB->uxPriority),  cStatus, ( unsigned int )pxNextTCB->stacksize, ( unsigned int )usCurStack,( unsigned int )usStackRemaining );
 			strcat( ( char * ) pcWriteBuffer, ( char * ) pcStatusString );
 
 		} while( pxNextTCB != pxFirstTCB );

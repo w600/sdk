@@ -3,7 +3,11 @@
 
 #include "wm_mem.h"
 #include "lwip/tcpip.h"
+#if (GCC_COMPILE==1)
+#include "wm_cmdp_hostif_gcc.h"
+#else
 #include "wm_cmdp_hostif.h"
+#endif
 #include "wm_wl_task.h"
 #include "wm_rmms.h"
 

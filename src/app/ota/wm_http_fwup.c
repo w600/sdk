@@ -113,7 +113,7 @@ int http_fwup(HTTPParameters ClientParams)
                     nRetCode = HTTPClientReadData(pHTTP,Buffer+3,nSize,RECV_TIMEOUT,&nSize);
                     if( recvLen == 0 ){
                         //fileSize = headerSize(fixed: 56) + appCodeSize                   
-                        booter = (Buffer+3);
+                        booter =(T_BOOTER *) (Buffer+3);
                         totalLen = booter->upd_img_len + sizeof(T_BOOTER);
                     }
                     
@@ -135,8 +135,10 @@ int http_fwup(HTTPParameters ClientParams)
                     }
 #endif
 
-                    while( !(p = pbuf_alloc(PBUF_TRANSPORT, nSize + 3, PBUF_REF))){
+                    p = pbuf_alloc(PBUF_TRANSPORT, nSize + 3, PBUF_REF);
+                    while( !p){
                         tls_os_time_delay(1);
+                        p = pbuf_alloc(PBUF_TRANSPORT, nSize + 3, PBUF_REF);
                     }
                     
                     if(recvLen == 0)

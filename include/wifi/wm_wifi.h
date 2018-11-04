@@ -19,7 +19,8 @@
 #define WM_WIFI_WPS_BUSY		   -3
 /** scan is busing */
 #define WM_WIFI_SCANNING_BUSY	   -4
-
+/** station is connecting */
+#define WM_WIFI_STA_BUSY	       -5
 
 /* error number definition */
 /** no error */
@@ -273,7 +274,9 @@ struct tls_wifi_hdr_mac_t {
 /** transport rate and gain */
 struct tls_wifi_tx_rate_t {
     enum tls_wifi_tx_rate tx_rate;    /**< Wi-Fi ransport rate */
-    u8 tx_gain;                       /**< Wi-Fi ransport gain */
+    u8 tx_gain;                       /**< Wi-Fi ransport gain, 
+                                           The caller can get the maximum gain 
+                                           by using the tls_wifi_get_tx_gain_max function. */
 };
 
 /** callback function of receive Wi-Fi data */
@@ -511,6 +514,7 @@ int tls_wifi_get_scan_rslt(u8* buf, u32 buffer_size);
  * @retval         WM_WIFI_ERR_SSID     SSID is NULL
  * @retval         WM_WIFI_ERR_KEY      key info not correct
  * @retval         WM_SUCCESS       	soft ap create OK
+ * @retval         WM_WIFI_STA_BUSY     station is connecting
  *
  * @note           None
  */
@@ -859,17 +863,20 @@ u8 tls_wifi_get_tx_gain_max(enum tls_wifi_tx_rate tx_rate);
 int tls_wifi_send_mgmt(enum tls_wifi_mgmt_type type, struct tls_wifi_hdr_mac_t *mac, u8 *ie, u16 ie_len, struct tls_wifi_tx_rate_t *tx);
 
 /**
- * @brief          This function is used to send 802.11 data packet
+ * @brief          This function is used to send an 802.11 frame
  *
- * @param[in]      *mac       mac address
- * @param[in]      *data      data packet buffer
- * @param[in]      data_len   data packet length
- * @param[in]      *tx        rate and gain
+ * @param[in]      *mac         mac address, it can be NULL
+ * @param[in]      *data        data packet buffer
+ * @param[in]       data_len    data packet length
+ * @param[in]      *tx          rate and gain, it can be NULL
  *
- * @retval         0     success
- * @retval         other failed
+ * @retval         0            success
+ * @retval         other        failed
  *
- * @note           None
+ * @note     If the @*mac is NULL, @*data should be an entire 802.11 frame.
+ *           If the @*mac is not NULL, this function will build an 802.11 frame 
+ *           with @*mac as destination mac address and @*data as the data body.
+ *           If the @*tx is NULL, the packet will be sent at 11B 1Mbps.
  */
 int tls_wifi_send_data(struct tls_wifi_hdr_mac_t *mac, u8 *data, u16 data_len, struct tls_wifi_tx_rate_t *tx);
 

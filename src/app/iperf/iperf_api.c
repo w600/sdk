@@ -1278,8 +1278,8 @@ parse_results(struct iperf_test *test, char *results)
     float jitter;
     char *strp;
     char *tok;
-    //iperf_size_t bytes_transferred;
-    int bytes_transferred;
+    iperf_size_t bytes_transferred;
+//    int bytes_transferred;
 //	double temp;
     struct iperf_stream *sp;
 
@@ -1298,7 +1298,7 @@ parse_results(struct iperf_test *test, char *results)
 
     for (strp; *strp; strp = strchr(strp, '\n')+1) {
        // sscanf(strp, "%d:%llu,%lf,%d,%d\n", &sid, &bytes_transferred, &jitter, &cerror, &pcount);
-		 sscanf(strp, "%d:%d,%f,%d,%d\n", &sid, &bytes_transferred, &jitter, &cerror, &pcount);
+		 sscanf(strp, "%d:%llu,%f,%d,%d\n", &sid, &bytes_transferred, &jitter, &cerror, &pcount);
 		
 		IPF_DBG("sid = %d, bytes_transferred=%d, jitter=%f, cerror=%d, pcount=%d\n ",sid,bytes_transferred,
 			jitter, cerror, pcount);
@@ -1320,6 +1320,7 @@ parse_results(struct iperf_test *test, char *results)
         } else
             sp->result->bytes_sent = bytes_transferred;
     }
+//	printf("bytes_transferred:%llu\n", bytes_transferred);
 	if(bytes_transferred > 1024 * 1024 * 8)
 	{
 		printf("[BandWidth:]%.4f Mbits/sec\r\n", (bytes_transferred * 8.0)/1024.0/1024.0/test->duration);
@@ -1646,8 +1647,8 @@ iperf_print_intermediate(struct iperf_test *test)
         sp = SLIST_FIRST(&test->streams); /* reset back to 1st stream */
         ip = sp->result->last_interval_results;    /* use 1st stream for timing info */
 
-        unit_snprintf(ubuf, UNIT_LEN, (double) (bytes), 'A');
-        unit_snprintf(nbuf, UNIT_LEN, (double) (bytes / ip->interval_duration),
+        unit_snprintf(ubuf, UNIT_LEN,  (bytes), 'A');
+        unit_snprintf(nbuf, UNIT_LEN,  (double)(bytes / ip->interval_duration),
             test->settings->unit_format);
 
         start_time = timeval_diff(&sp->result->start_time,&ip->interval_start_time);
@@ -1706,7 +1707,7 @@ iperf_print_results (struct iperf_test *test)
     char nbuf[UNIT_LEN];
     struct iperf_stream *sp = NULL;
     //iperf_size_t bytes = 0;
-	  iperf_size_t bytes_sent = 0, bytes_received = 0;
+	iperf_size_t bytes_sent = 0, bytes_received = 0;
     iperf_size_t total_sent = 0, total_received = 0;
     int start_time, end_time; 
 	//	double avg_jitter;
@@ -1778,8 +1779,8 @@ iperf_print_results (struct iperf_test *test)
         if (test->protocol->id == Ptcp) {
             printf("      Total sent\n");
             printf(report_sum_bw_format, start_time, end_time, ubuf, nbuf);
-            unit_snprintf(ubuf, UNIT_LEN, (double) total_received, 'A');
-            unit_snprintf(nbuf, UNIT_LEN, (double) (total_received / end_time), test->settings->unit_format);
+            unit_snprintf(ubuf, UNIT_LEN,  (double)total_received, 'A');
+            unit_snprintf(nbuf, UNIT_LEN,  (double)(total_received / end_time), test->settings->unit_format);
             printf("      Total received\n");
             printf(report_sum_bw_format, start_time, end_time, ubuf, nbuf);
         } else {

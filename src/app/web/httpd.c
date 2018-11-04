@@ -280,10 +280,10 @@ close_conn(struct tcp_pcb *pcb, struct http_state *hs)
   if (pcb)
   	tcp_close(pcb);
 #if TLS_CONFIG_WEB_SERVER_MODE
-    if (gwebcfgmode)
+    if (gwebcfgmode == 1)
     {
         tls_oneshot_send_web_connect_msg();
-        gwebcfgmode = 0;
+        gwebcfgmode = 2;
     }
 #endif  
 }
@@ -1319,16 +1319,16 @@ static void resethandler()
 
 	 #if 0  /* d Deactivated  2010-08-17,  */
 	 else {
-//        data = html_data;
+        data = html_data;
         memset(PlainBuf, 0, PLAIN_FLAG_LEN * 2);
         memset(FwEndBuf, 0, FWEND_FLAG_LEN * 2);
         DEBUG_PRINT("\nhere here Post:\n\r");
-//        for (j = pNext->tot_len; j >= pNext->len; \
-   //            j -= pNext->len, pNext = pNext->next, data = pNext->payload)
+        for (j = pNext->tot_len; j >= pNext->len; \
+               j -= pNext->len, pNext = pNext->next, data = pNext->payload)
         {       
  
         }		
-  //      pbuf_free(p);
+        pbuf_free(p);
         close_conn(pcb, hs);	   
       }
 	 #endif
@@ -1492,7 +1492,7 @@ http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
 				hs->http_recive_request.charlen=0;
 				hs->http_recive_request.Valid=0;
 				hs->http_recive_request.PreBuf=NULL;
-				printf("http_recv 00pbuf:0x%x\r\n", p);
+				printf("http_recv 00pbuf:0x%x\r\n", (u32)p);
 				pbuf_free(p);
 		    	close_conn(pcb, hs);
 		  		return ERR_OK;	
@@ -1679,7 +1679,6 @@ void httpd_deinit(void)
     err_t err;
     if (web_pcb)
     {
-	    gwebcfgmode = 0;
 	    g_pCGIs = NULL;
 	    g_iNumCGIs = 0;
 	    

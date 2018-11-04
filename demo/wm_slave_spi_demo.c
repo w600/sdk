@@ -12,37 +12,106 @@
 #include "wm_include.h"
 #include "wm_demo.h"
 #include "wm_mem.h"
+#include "wm_gpio_afsel.h"
 
 
 #if DEMO_SLAVE_SPI
 #if (TLS_CONFIG_HOSTIF && TLS_CONFIG_HS_SPI)
-static void demo_sspi_task(void *sdata);
 
-#define DEMO_SSPI_RX_BUF_SIZE    	1024
-#define DEMO_SSPI_TAST_STK_SIZE		512
-#define DEMO_MSG_SPI_RECV			1
+#define USER_DEBUG		1
+#if USER_DEBUG
+#define USER_PRINT printf
+#else
+#define USER_PRINT(fmt, ...)
+#endif
+#define HSPI_BUF_SIZE   1024
 
+u32 count = 0;
 
-/**
- * @typedef struct DEMO_SSPI
- */
-typedef struct DEMO_SSPI{
-    tls_os_queue_t *demo_sspi_q;
-    char *rx_buf;
-}DEMO_SSPI_ST;
-
-static DEMO_SSPI_ST  *demo_sspi = NULL;
-static OS_STK  demo_sspi_task_stk[DEMO_SSPI_TAST_STK_SIZE];
-
-
-s16 test_hspi_rx_data(char *buf)
+static u8 GetCrc(u8 *buf, u16 len)
 {
-    MEMCPY(demo_sspi->rx_buf, buf, DEMO_SSPI_RX_BUF_SIZE);
-    tls_os_queue_send(demo_sspi->demo_sspi_q,(void *)DEMO_MSG_SPI_RECV, 0);
+    u8 crc = 0;
+    int i = 0;
 
-    return WM_SUCCESS;
+    if(buf != NULL && len > 0)
+    {
+        for(i=0; i<len; i++)
+            crc += buf[i];
+    }
+
+    return crc;
 }
 
+static s16 HspiRxDataCb(char *buf)
+{
+    int i = 0, err_num = 0;
+
+    for(i=0; i<HSPI_BUF_SIZE; i++)
+    {
+        if(buf[i] != ((i + 1)%255))
+            err_num++;
+    }
+
+    if(err_num != 0)
+    {
+        USER_PRINT("err_num = %d\n", err_num);
+        return;
+    }
+    else
+    {
+        count++;
+        if(count%100 == 0)
+            USER_PRINT("RX ok %d\n", count);
+    }
+
+    tls_hspi_tx_data(buf, HSPI_BUF_SIZE);
+
+}
+
+static s16 HspiRxCmdCb(char *buf)
+{
+    u16 len = 0;
+    u8 *tx_buf = NULL;
+    int i = 0;
+printf("%s\n", __func__);
+    if(buf[0] != 0x5A)
+        return;
+    
+    len = buf[1] << 8 | buf[2];
+    USER_PRINT("rx[%d] :", len);
+    for(i=0; i<len; i++)
+        USER_PRINT("%02x ", buf[i]);
+    USER_PRINT("\n");
+
+    if(buf[len - 1] != GetCrc(buf, len - 1))
+        return;
+
+    if(buf[3] == 0x01)
+    {
+        tx_buf = tls_mem_alloc(HSPI_BUF_SIZE);
+        if(tx_buf == NULL)
+            return;
+        for(i=0; i<HSPI_BUF_SIZE; i++)
+            tx_buf[i] = (i + 1)%255;
+        
+        tls_hspi_tx_data(tx_buf, HSPI_BUF_SIZE);
+        tls_mem_free(tx_buf);
+    }
+}
+
+static void HspiInit(int type)
+{
+    int ret=0;
+    
+    wm_hspi_gpio_config(0);
+
+    tls_slave_spi_init();
+    tls_set_high_speed_interface_type(type);
+    tls_set_hspi_user_mode(1);
+    tls_hspi_rx_data_callback_register(HspiRxDataCb);
+    tls_hspi_rx_cmd_callback_register(HspiRxCmdCb);
+
+}
 
 int slave_spi_demo(int type)
 {
@@ -54,70 +123,11 @@ int slave_spi_demo(int type)
     {
         type = HSPI_INTERFACE_SDIO;
     }
+    printf("\r\ntype:%d\r\n", type);
 
-    if (NULL == demo_sspi)
-    {
-        demo_sspi = tls_mem_alloc(sizeof(DEMO_SSPI_ST));
-        if (NULL == demo_sspi)
-        {
-            goto _error;
-        }
-        memset(demo_sspi, 0, sizeof(DEMO_SSPI_ST));
-
-        tls_os_queue_create(&(demo_sspi->demo_sspi_q), DEMO_QUEUE_SIZE);
-
-        demo_sspi->rx_buf = tls_mem_alloc(DEMO_SSPI_RX_BUF_SIZE + 1);
-        if(NULL == demo_sspi->rx_buf)
-        {
-            goto _error1;
-        }
-
-        tls_os_task_create(NULL, NULL,
-			demo_sspi_task,
-                    (void *)demo_sspi,
-                    (void *)&demo_sspi_task_stk[0],        /** 任务栈的起始地址 */
-                    DEMO_SSPI_TAST_STK_SIZE, 				/** 任务栈的大小     */
-                    DEMO_SSPI_TASK_PRIO,
-                    0);
-    }
-
-
-    tls_slave_spi_init();
-    tls_set_high_speed_interface_type(type);
-    tls_set_hspi_user_mode(1);
-	/*注册函数需要放在tls_set_hspi_user_mode之后*/
-    tls_hspi_rx_data_callback_register(test_hspi_rx_data);
-    //tls_hspi_rx_cmd_callback_register(NULL);
-    tls_hspi_tx_data_callback_register(NULL);
+    HspiInit(type);
 
     return WM_SUCCESS;
-
-_error1:
-    tls_mem_free(demo_sspi);
-    demo_sspi = NULL;
-
-_error:
-    return WM_FAILED;
-}
-
-static void demo_sspi_task(void *sdata)
-{
-    DEMO_SSPI_ST *sspi = (DEMO_SSPI_ST *)sdata;
-    void *msg;
-
-    for (;;)
-    {
-        tls_os_queue_receive(sspi->demo_sspi_q, (void **)&msg, 0, 0);
-        printf("\n msg =%d\n",(int)msg);
-        switch ((u32)msg)
-       {
-            case DEMO_MSG_SPI_RECV:
-                tls_hspi_tx_data(sspi->rx_buf, DEMO_SSPI_RX_BUF_SIZE);
-                break;
-            default:
-                break;
-        }
-    }
 }
 
 

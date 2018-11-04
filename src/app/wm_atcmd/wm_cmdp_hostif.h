@@ -310,10 +310,10 @@ typedef struct _HOSTIF_CMD_PARAMS_PS {
     u8      mode;
  }	HOSTIF_CMD_PARAMS_ATM;
 
- typedef struct _HOSTIF_CMDRSP_PARAMS_TEM {
+ typedef __packed struct _HOSTIF_CMDRSP_PARAMS_TEM {
      u8      offsetLen;
      u8      offset[8];
- }__attribute__((packed))HOSTIF_CMDRSP_PARAMS_TEM;
+ } HOSTIF_CMDRSP_PARAMS_TEM;
 
  typedef __packed struct _HOSTIF_CMD_PARAMS_ATRM {
     u32 timeout; 
@@ -1040,7 +1040,7 @@ typedef __packed struct _HOSTIF_CMDRSP_PARAMS_CNTPARAM_BSSID_EN {
 #if TLS_CONFIG_AP
  typedef __packed struct _HOSTIF_CMDRSP_PARAMS_STALIST {
     u8      sta_num;
-    u8      data[163];
+    u8      data[320];
  }	HOSTIF_CMDRSP_PARAMS_STALIST;
 #endif
 

@@ -941,7 +941,7 @@ static void demo_ssl_server_task(void *sdata)
 				break;
 				
 			case DEMO_MSG_SOCKET_CREATE:
-				server_idle(0);
+				server_idle(3);
 				break;
 				
 			case DEMO_MSG_WJOIN_FAILD:

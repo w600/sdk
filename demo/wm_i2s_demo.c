@@ -28,12 +28,6 @@
 
 #define DEMO_DATA_SIZE        (1024)
 
-/*
- * User need to send additional DUMMY_DATA_SIZE words at the end to ensure a complete transmission.
- * Notice that only at the end of the user data, such as at the end of a music file.
-*/
-#define DUMMY_DATA_SIZE       (16)
-
 
 enum 
 {
@@ -48,6 +42,7 @@ enum
 };
 
 uint32_t i2s_demo_buff[DEMO_DATA_SIZE] = { 0 };
+volatile u8 dmaSendDone = 0;
 
 /** @} */
 
@@ -67,9 +62,7 @@ uint32_t i2s_demo_buff[DEMO_DATA_SIZE] = { 0 };
  */
 void tls_i2s_demo_tx_dma_callback()
 {
-    TLS_I2S_TX_DISABLE();
-    DMA_CHNLCTRL_REG(WM_I2S_TX_DMA_CHANNEL) |= DMA_CHNL_CTRL_CHNL_ON;
-    tls_dma_free(WM_I2S_TX_DMA_CHANNEL);
+    dmaSendDone = 1;
 }
 
 /**
@@ -90,6 +83,8 @@ void tls_i2s_demo_rx_dma_callback()
     {
         printf("%X ", i2s_demo_buff[i]);
     }
+    //This line is needed if the compiler is gcc
+    printf("\r\n");
 }
 
 
@@ -102,6 +97,8 @@ void tls_i2s_rx_demo_callback(u16 len)
     {
         printf("%X ", i2s_demo_buff[i]);
     }
+    //This line is needed if the compiler is gcc
+    printf("\r\n");
 }
 
 
@@ -113,9 +110,18 @@ void tls_i2s_tx_dma_demo()
     {
         i2s_demo_buff[len] = 0xA55A55A0+len;
     }
-
-    tls_i2s_tx_dma(i2s_demo_buff, (DEMO_DATA_SIZE+DUMMY_DATA_SIZE)*sizeof(i2s_demo_buff[0]), tls_i2s_demo_tx_dma_callback);
+    dmaSendDone = 0;
+    tls_i2s_tx_dma(i2s_demo_buff, (DEMO_DATA_SIZE)*sizeof(i2s_demo_buff[0]), tls_i2s_demo_tx_dma_callback);
     printf("send %d\r\n", DEMO_DATA_SIZE);
+    do {
+        tls_os_time_delay(HZ/100);
+    }
+    while(dmaSendDone == 0);
+
+    while((tls_reg_read32(HR_I2S_STATUS) & I2S_TX_FIFO_CNT_MASK)>>4);
+    DMA_CHNLCTRL_REG(WM_I2S_TX_DMA_CHANNEL) |= DMA_CHNL_CTRL_CHNL_ON;
+    tls_dma_free(WM_I2S_TX_DMA_CHANNEL);
+    TLS_I2S_TX_DISABLE();
 }
 
 void tls_i2s_rx_dma_demo()

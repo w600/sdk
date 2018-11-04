@@ -17,12 +17,15 @@
 #include "tls_wireless.h"
 #include "wm_socket.h"
 #include "wm_netif.h"
+#include "wm_efuse.h"
 #include "wm_cmdp.h"
 #include "wm_uart.h"
 #if TLS_CONFIG_HTTP_CLIENT_TASK
 #include "wm_http_client.h"
 #endif
-#include "wm_efuse.h"
+#if TLS_CONFIG_RMMS
+#include "wm_config.h"
+#endif
 
 /* host interface hardware mode, indicate which port used */
 #define HOSTIF_MODE_HSPI       (0)
@@ -118,12 +121,15 @@
 #define HOSTIF_CMD_DDNS                0x68
 #define HOSTIF_CMD_UPNP                0x69
 #define HOSTIF_CMD_DNAME               0x6A
+
 #define HOSTIF_CMD_AP_ENCRYPT    0x6B
 #define HOSTIF_CMD_AP_KEY              0x6C
 #define HOSTIF_CMD_AP_CHL              0x6D
 #define HOSTIF_CMD_AP_NIP               0x6E
 #define HOSTIF_CMD_AP_WBGR          0x6F
 #define HOSTIF_CMD_STA_LIST          0x70
+
+
 #define HOSTIF_CMD_DBG                 0xF0
 #define HOSTIF_CMD_REGR                0xF1
 #define HOSTIF_CMD_REGW                0xF2
@@ -303,6 +309,11 @@ typedef struct _HOSTIF_CMD_PARAMS_NIP {
 typedef struct _HOSTIF_CMD_PARAMS_ATM {
     u8      mode;
 }__attribute__((packed))HOSTIF_CMD_PARAMS_ATM;
+
+ typedef struct _HOSTIF_CMDRSP_PARAMS_TEM {
+     u8      offsetLen;
+     u8      offset[8];
+ }__attribute__((packed))HOSTIF_CMDRSP_PARAMS_TEM;
 
 typedef struct _HOSTIF_CMD_PARAMS_ATRM {
     u32 timeout; 
@@ -565,10 +576,7 @@ typedef struct HOSTIF_CMD_PARAMS_TXGR{
     int vcg;
  }__attribute__((packed))HOSTIF_CMD_PARAMS_VCGCTRL;
 
- typedef struct _HOSTIF_CMDRSP_PARAMS_TEM {
-    u8      offsetLen;
-    u8      offset[8];
-}__attribute__((packed))HOSTIF_CMDRSP_PARAMS_TEM; 
+
 
  union HOSTIF_CMD_PARAMS_UNION{
 
@@ -1022,7 +1030,7 @@ typedef struct _HOSTIF_CMDRSP_PARAMS_CUSTDATA {
 #if TLS_CONFIG_AP
  typedef struct _HOSTIF_CMDRSP_PARAMS_STALIST {
     u8      sta_num;
-    u8      data[163];
+    u8      data[320];
  }	__attribute__((packed))HOSTIF_CMDRSP_PARAMS_STALIST;
 #endif
  typedef  struct _HOSTIF_CMDRSP_PARAMS_TXLO{
@@ -1384,8 +1392,8 @@ int tls_cmd_get_socket_state(u8 socket, u8 * state, struct tls_skt_status_ext_t 
 int tls_cmd_set_default_socket(u8 socket);
 u8 tls_cmd_get_default_socket(void);
 #if TLS_CONFIG_HTTP_CLIENT_TASK
-void tls_hostif_http_client_recv_callback(HTTP_SESSION_HANDLE pSession, CHAR * data, u32 totallen, u32 datalen);
-void tls_hostif_http_client_err_callback(HTTP_SESSION_HANDLE pSession, int err);
+void tls_hostif_http_client_recv_callback(HTTP_SESSION_HANDLE session, CHAR *data, u32 total_len, u32 data_len);
+void tls_hostif_http_client_err_callback(HTTP_SESSION_HANDLE session, int err);
 #endif
 int atcmd_err_resp(char *buf, int err_code);
 int atcmd_ok_resp(char *buf);

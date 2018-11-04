@@ -271,7 +271,7 @@ extern    "C"
  * ------------------------------------------------------------------- */
 
     void      unit_snprintf(char *s, int inLen,
-			              float inNum, char inFormat)
+			              double inNum, char inFormat)
     {
 	int       conv;
 	const char *suffix;
@@ -302,7 +302,7 @@ extern    "C"
 	default:
 	case 'A':
 	    {
-		int    tmpNum = inNum;
+		u64    tmpNum = inNum;
 		conv = UNIT_CONV;
 
 		if (isupper((int) inFormat))

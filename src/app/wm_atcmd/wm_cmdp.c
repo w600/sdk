@@ -751,18 +751,32 @@ int tls_cmd_set_key(struct tls_cmd_key_t *key, u8 update_flash)
 int tls_cmd_get_key(struct tls_cmd_key_t *key)
 {
     struct tls_param_key *param_key;
+	struct tls_param_original_key* orig_key;
 
 	param_key = tls_mem_alloc(sizeof(struct tls_cmd_key_t));
 	if(!param_key)
 		return -1;
+
+	orig_key = tls_mem_alloc(sizeof(struct tls_param_original_key));
+	if(!orig_key)
+	{
+		tls_mem_free(param_key);
+		return -1;
+	}
+	
 	memset(param_key, 0, sizeof(struct tls_cmd_key_t));
+	memset(orig_key, 0, sizeof(struct tls_param_original_key));
+	
     tls_param_get(TLS_PARAM_ID_KEY, (void *)param_key, 1);
     key->index = param_key->key_index;
-    key->key_len = param_key->key_length;
     key->format = param_key->key_format;
-    MEMCPY(key->key, param_key->psk, 64);
+	
+	tls_param_get(TLS_PARAM_ID_ORIGIN_KEY, (void *)orig_key, 1);
+    MEMCPY(key->key, orig_key->psk, 64);
+	key->key_len = orig_key->key_length;
 
 	tls_mem_free(param_key);
+	tls_mem_free(orig_key);
     return 0;
 }
 #if 0
@@ -1298,7 +1312,7 @@ int tls_cmd_set_uart_params(
 	TLS_UART_CHSIZE_T charsize;
     struct tls_uart_port *uart1_port = NULL;
 	cmd_get_uart1_port_callback callback;
-	struct tls_hostif *hif = tls_get_hostif();
+
 #if TLS_CONFIG_UART
 	{
 		extern int tls_uart_check_baudrate(u32 baudrate);

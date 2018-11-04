@@ -530,7 +530,7 @@ static err_t net_tcp_recv_cb(void *arg,
 		else if(err_ret == ERR_OK)
 		{
 			if(p_next != NULL)
-				printf("\npbufcat p next=%d\n",p_next);
+				printf("\npbufcat p next=%x\n",(u32)p_next);
 #if (RAW_SOCKET_USE_CUSTOM_PBUF)
 			pcr = raw_sk_alloc_pbuf_custom();
 			if(pcr == NULL)
@@ -740,7 +740,7 @@ static void net_udp_recv_cb(void *arg, struct udp_pcb *pcb,
 		/*if Address is broadcast, update source IP according to source address and source port according to sender*/
 		
 //		if ((conn->addr.addr == IPADDR_BROADCAST)||((conn->addr.addr & 0xFF) == 0xFF))
-                if(ip_addr_get_ip4_u32(&conn->addr) == IPADDR_BROADCAST || ip_addr_get_ip4_u32(&conn->addr) & 0xFF == 0xFF)
+                if((ip_addr_get_ip4_u32(&conn->addr) == IPADDR_BROADCAST) || ((ip_addr_get_ip4_u32(&conn->addr) & 0xFF) == 0xFF))
 		{
 			tls_net_set_sourceip(ip_addr_get_ip4_u32(srcaddr));
 			conn->port = port;

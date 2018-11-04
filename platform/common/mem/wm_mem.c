@@ -17,6 +17,7 @@
 #include "list.h"
 #include <string.h>
 
+extern u8 tls_get_isr_count(void);
 /**
  * This variable is set if the memory mananger has been initialized.
  * This is available only for debug version of the driver
@@ -503,7 +504,7 @@ u32 alloc_heap_mem_max_size = 0;
 
 void * mem_alloc_debug(u32 size)
 {
-    u32 cpu_sr;
+    u32 cpu_sr = 0;
     u32 *buffer = NULL;
 
 #if TLS_OS_FREERTOS
@@ -527,6 +528,7 @@ void * mem_alloc_debug(u32 size)
     size += 8;
     if(tls_get_isr_count() > 0)
     {
+        extern void *pvPortMalloc( size_t xWantedSize );
         buffer = pvPortMalloc(size);
         flag = OS_MEM_FLAG;
     }
@@ -555,17 +557,17 @@ void * mem_alloc_debug(u32 size)
     buffer = (u32*)malloc(size);
     tls_os_release_critical(cpu_sr);  
 #endif
-	if(buffer == NULL)
-	{
-		printf("malloc error \n");
-	}
+//	if(buffer == NULL)
+//	{
+//		printf("malloc error \n");
+//	}
 	return buffer;
 
 }
 
 void mem_free_debug(void *p)
 {
-    u32 cpu_sr;
+    u32 cpu_sr = 0;
 #if TLS_OS_FREERTOS
     u32* intMemPtr = (void*)p;
 
@@ -587,6 +589,7 @@ void mem_free_debug(void *p)
             intMemPtr++;
             if(*intMemPtr == OS_MEM_FLAG)
             {
+                extern void vPortFree( void *pv );
                 intMemPtr -= 1;
                 vPortFree(intMemPtr);
             }
@@ -613,13 +616,14 @@ void mem_free_debug(void *p)
 
 void * mem_realloc_debug(void *mem_address, u32 size)
 {
-	u32 * mem_re_addr = NULL;
-	u32 cpu_sr;
+    u32 * mem_re_addr = NULL;
+    u32 cpu_sr = 0;
 #if TLS_OS_FREERTOS
     u32 flag = 0;
-	u32 length = size + 8;
+    u32 length = size + 8;
     if(tls_get_isr_count() > 0)
     {
+		extern void *pvPortMalloc( size_t xWantedSize );
 		mem_re_addr = pvPortMalloc(length);
 		flag = OS_MEM_FLAG;	
 		if (mem_re_addr)
@@ -669,7 +673,7 @@ void * mem_realloc_debug(void *mem_address, u32 size)
 
 void *mem_calloc_debug(u32 n, u32 size)
 {
-    u32 cpu_sr;
+    u32 cpu_sr = 0;
     u32 *buffer = NULL;
 	u32 length = 0;
 #if TLS_OS_FREERTOS
@@ -678,6 +682,7 @@ void *mem_calloc_debug(u32 n, u32 size)
     length += 8;
     if(tls_get_isr_count() > 0)
     {
+        extern void *pvPortMalloc( size_t xWantedSize );
         buffer = pvPortMalloc(length);
         flag = OS_MEM_FLAG;
     }
@@ -704,12 +709,55 @@ void *mem_calloc_debug(u32 n, u32 size)
     buffer = (u32*)calloc(n,size);
     tls_os_release_critical(cpu_sr);  
 #endif
-	if(buffer == NULL)
-	{
-		printf("calloc error \n");
-	}
+//	if(buffer == NULL)
+//	{
+	//	printf("calloc error \n");
+//	}
 	return buffer;
 }
+
+/**
+ * @brief          This function is used to get available memory
+ *
+ * @param[in]    None  
+ *
+ * @return         None
+ *
+ * @note           None.
+ */
+#if !defined(__CC_ARM)
+extern unsigned int __HeapLimit;
+#else
+extern unsigned int __heap_limit;
+#endif
+unsigned int tls_mem_get_avail_heapsize(void)
+{
+	unsigned int heap_size;
+	int *p = NULL;
+	unsigned int cpu_sr = 0;
+
+	tls_os_sem_acquire(mem_sem, 0);
+	cpu_sr = tls_os_set_critical();
+
+	p = malloc(4);
+	if (p)
+	{
+#if !defined(__CC_ARM)
+		heap_size = (unsigned int)&__HeapLimit - (unsigned int)p;
+#else
+		heap_size = (unsigned int)&__heap_limit - (unsigned int)p;
+#endif
+		free(p);
+		p = NULL;
+	}else{
+		heap_size = 0;
+	}
+	tls_os_release_critical(cpu_sr);	
+	tls_os_sem_release(mem_sem);
+	
+	return heap_size;
+}
+
 #endif /* WM_MEM_DEBUG */
 
 

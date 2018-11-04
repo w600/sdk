@@ -73,6 +73,8 @@ int gettimeofday(struct timeval *tv, void *tz)
 
 static int gethostname(char * hostname, int len)
 {
+	extern int random_get_bytes(void *buf, size_t len);
+
 	return random_get_bytes(hostname, len);
 }
 

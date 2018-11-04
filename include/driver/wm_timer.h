@@ -12,6 +12,8 @@
 
 /** invalid timer id */
 #define WM_TIMER_ID_INVALID              0xFF
+#define TIMER_MS_UNIT_FLAG		1
+#define TIMER_US_UNIT_FLAG		0
 
 /** timer interrupt callback */
 typedef void (*tls_timer_irq_callback)(void *arg);
@@ -112,6 +114,18 @@ void tls_timer_change(u8 timer_id, u32 newtime);
  * @note           None
  */
 void tls_timer_destroy(u8 timer_id);
+
+/**
+ * @brief          This function is create a delay to elapse
+ *
+ * @param[timeout] timeout the value writed into TMR0_PRD
+ * @param[in]      m_flag millisecond flag in TIMER0
+ *
+ * @return         None
+ *
+ * @note           None
+ */
+int tls_delay_via_timer(unsigned int timeout, unsigned int m_flag);
 
 /**
  * @}

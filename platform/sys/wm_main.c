@@ -164,7 +164,7 @@ int main(void)
 {
 	SystemInit();
 
-	tls_sys_clk_set(CPU_CLK_40M);
+	tls_sys_clk_set(CPU_CLK_80M);
 
 	tls_os_init(NULL);
 
@@ -222,7 +222,7 @@ void disp_version_info(void)
 void task_start (void *data)
 {
     u8 mac_addr[6] = {0x00,0x25,0x08,0x09,0x01,0x0F};
-
+	bool enable = FALSE;
 	/* must call first to configure gpio Alternate functions according the hardware design */
 	wm_gpio_config();
 
@@ -281,16 +281,13 @@ void task_start (void *data)
 
 #endif
     /* open low power mode */
-    unsigned char power_mode = 0;
-    tls_param_get(TLS_PARAM_ID_PSM, (void *)&power_mode, (bool)1);
-//    TLS_DBGPRT_INFO("power_mode: %d\r\n", power_mode);
-    if(power_mode == 0)
-    {
-//        TLS_DBGPRT_INFO("open low power mode\r\n");
-        power_mode = 1;
-        tls_param_set(TLS_PARAM_ID_PSM, (void *)&power_mode, (bool)1);
-    }
-    /* call user main function */
+	tls_param_get(TLS_PARAM_ID_PSM, &enable, TRUE);	
+	if (enable != TRUE)
+	{
+	    enable = TRUE;
+	    tls_param_set(TLS_PARAM_ID_PSM, &enable, TRUE);	  
+	}
+
 	UserMain();
 	tls_sys_auto_mode_run();
 

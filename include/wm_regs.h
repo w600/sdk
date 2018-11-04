@@ -466,7 +466,7 @@ typedef volatile unsigned int TLS_REG;    /* Hardware register definition */
 #define SPI_INT_TX_FIFO_RDY      (1U << 0)
 
 /* Bits Definitions of "SPI_STATUS" */
-#define SPI_IS_BUSY(value)      (((value) & (1 << 12) != 0) ? 1 : 0)
+#define SPI_IS_BUSY(value)      ((((value) & (1 << 12)) != 0) ? 1 : 0)
 #define SPI_GET_RX_FIFO_CNT(value)      (((value) & 0xFC0) >> 6)
 #define SPI_GET_TX_FIFO_CNT(value)      ((value) & 0x3F)
 
