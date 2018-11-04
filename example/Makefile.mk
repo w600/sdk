@@ -34,7 +34,14 @@ COMPONENTS_$(TARGET) =	\
 
 ifeq ($(COMPILE), gcc)
 LINKFLAGS_$(TARGET) =  \
-	$(TOP_DIR)/lib/wlan$(LIB_EXT)	\
+	$(TOP_DIR)/lib/wlan$(LIB_EXT) \
+	$(TOP_DIR)/lib/libcommon$(LIB_EXT) \
+	$(TOP_DIR)/lib/libdrivers$(LIB_EXT)	\
+	$(TOP_DIR)/lib/libsys$(LIB_EXT)	\
+	$(TOP_DIR)/lib/libairkiss_log$(LIB_EXT)	\
+	$(TOP_DIR)/lib/libapp$(LIB_EXT)	\
+	$(TOP_DIR)/lib/libnetwork$(LIB_EXT)	\
+	$(TOP_DIR)/lib/libos$(LIB_EXT)  \
 	-T$(LD_FILE)	\
 	-Wl,-warn-common 	
 

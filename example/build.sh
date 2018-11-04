@@ -2,7 +2,7 @@
 
 DL_PORT=COM1
 DL_BAUD=2000000
-
+COMPILE=gcc
 #./build_app_new.sh test_prj debug
 
 if [ -z "$1" ];then
@@ -18,7 +18,7 @@ echo ""
 if [ -z "$2" ];then
 		set -e
 		make -f Makefile.mk clean APP_BIN_NAME=$APP_BIN_NAME;
-		make -f Makefile.mk COMPILE=armcc APP_BIN_NAME=$APP_BIN_NAME TARGET=$APP_BIN_NAME
+		make -f Makefile.mk COMPILE=$COMPILE APP_BIN_NAME=$APP_BIN_NAME TARGET=$APP_BIN_NAME
         exit 1
 else
 		if [ $2 == "clean" ]; then
@@ -28,13 +28,13 @@ else
 			if [ -z "$4" ];then
 				set -e
 				make -f Makefile.mk clean APP_BIN_NAME=$APP_BIN_NAME;
-				make -f Makefile.mk flash COMPILE=armcc \
+				make -f Makefile.mk flash COMPILE=$COMPILE \
 					APP_BIN_NAME=$APP_BIN_NAME TARGET=$APP_BIN_NAME\
 					DL_PORT=$DL_PORT DL_BAUD=$DL_BAUD
 			else
 				set -e
 				make -f Makefile.mk clean APP_BIN_NAME=$APP_BIN_NAME;
-				make -f Makefile.mk flash COMPILE=armcc \
+				make -f Makefile.mk flash COMPILE=$COMPILE \
 					APP_BIN_NAME=$APP_BIN_NAME TARGET=$APP_BIN_NAME\
 					DL_PORT=$4 DL_BAUD=$DL_BAUD
 			fi
