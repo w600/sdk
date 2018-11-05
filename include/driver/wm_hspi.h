@@ -26,7 +26,7 @@
 #define HSPI_RX_CMD_MSG     1
 #define HSPI_RX_DATA_MSG    2
 
-/**spi/sdio buffer，Wraper controller can only access the address after the 0x60000*/
+/**spi/sdio buffer, Wraper controller can only access the address after the 0x60000*/
 #define HSPI_TXBUF_NUM              2
 #define HSPI_TX_DESC_NUM            HSPI_TXBUF_NUM
 #define HSPI_RXBUF_NUM              3//10
