@@ -51,7 +51,7 @@
     licensing and training services.
 */
 
-
+#if GCC_COMPILE
 /* Standard includes. */
 #include <stdlib.h>
 #include <stdio.h>
@@ -349,5 +349,5 @@ void vApplicationStackOverflowHook( xTaskHandle *pxTask, signed char *pcTaskame,
 
 #endif
 
-
+#endif
 
