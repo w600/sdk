@@ -51,7 +51,7 @@
     licensing and training services.
 */
 
-#if GCC_COMPILE
+
 /* Standard includes. */
 #include <stdlib.h>
 #include <stdio.h>
@@ -152,7 +152,7 @@ portSTACK_TYPE *pxPortInitialiseStack( portSTACK_TYPE *pxTopOfStack, pdTASK_CODE
 /*-----------------------------------------------------------*/
 
 
-void SVC_Handler( void )
+__attribute__ ((naked)) void SVC_Handler( void )
 {	
 	__asm volatile (
 					" ldr	r3, =pxCurrentTCB	\n"				/* Restore the context. */
@@ -169,7 +169,7 @@ void SVC_Handler( void )
 }
 /*-----------------------------------------------------------*/
 
-void vPortStartFirstTask( void )
+__attribute__ ((naked)) void vPortStartFirstTask( void )
 {	
 	__asm volatile (			
 					" ldr r0, =0xE000ED08	 \n"					/* Use the NVIC offset register to locate the stack. */
@@ -255,7 +255,7 @@ void vPortExitCritical( void )
 }
 /*-----------------------------------------------------------*/
 
-void PendSV_Handler( void )
+__attribute__ ((naked)) void PendSV_Handler( void )
 {
 	__asm volatile(				
 					" CPSID   I								\n"
@@ -309,7 +309,7 @@ void prvSetupTimerInterrupt( void )
 #endif
 /*-----------------------------------------------------------*/
 
-void portDISABLE_INTERRUPTS( void )
+__attribute__ ((naked)) void portDISABLE_INTERRUPTS( void )
 {
 	__asm volatile(
 					"push { r0 }				 \n"
@@ -322,7 +322,7 @@ void portDISABLE_INTERRUPTS( void )
 
 /*-----------------------------------------------------------*/
 
-void portENABLE_INTERRUPTS( void )
+__attribute__ ((naked)) void portENABLE_INTERRUPTS( void )
 {
 	__asm volatile (
 					" push { r0 }			\n"
@@ -349,6 +349,5 @@ void vApplicationStackOverflowHook( xTaskHandle *pxTask, signed char *pcTaskame,
 
 #endif
 
-#endif
 
 
