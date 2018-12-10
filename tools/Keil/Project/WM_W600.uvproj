@@ -616,11 +616,6 @@
               <FilePath>..\..\..\platform\common\crypto\keyformat\asn1.c</FilePath>
             </File>
             <File>
-              <FileName>base64.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\platform\common\crypto\keyformat\base64.c</FilePath>
-            </File>
-            <File>
               <FileName>x509.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\platform\common\crypto\keyformat\x509.c</FilePath>
@@ -659,11 +654,6 @@
               <FileName>pubkey.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\platform\common\crypto\pubkey\pubkey.c</FilePath>
-            </File>
-            <File>
-              <FileName>rsa.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\platform\common\crypto\pubkey\rsa.c</FilePath>
             </File>
             <File>
               <FileName>aesGCM.c</FileName>
@@ -729,6 +719,16 @@
               <FileName>utils.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\platform\common\utils\utils.c</FilePath>
+            </File>
+            <File>
+              <FileName>keyformat_base64.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\platform\common\crypto\keyformat\keyformat_base64.c</FilePath>
+            </File>
+            <File>
+              <FileName>pubkey_rsa.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\platform\common\crypto\pubkey\pubkey_rsa.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1675,9 +1675,9 @@
           <GroupName>wlan_lib</GroupName>
           <Files>
             <File>
-              <FileName>wlan.lib</FileName>
+              <FileName>libwlan.lib</FileName>
               <FileType>4</FileType>
-              <FilePath>..\..\..\lib\wlan.lib</FilePath>
+              <FilePath>..\..\..\lib\libwlan.lib</FilePath>
             </File>
           </Files>
         </Group>

@@ -60,7 +60,7 @@ endif
 
 
 LINKLIB = 	\
-	$(TOP_DIR)/lib/wlan$(LIB_EXT)			\
+	$(TOP_DIR)/lib/libwlan$(LIB_EXT)			\
 	$(TOP_DIR)/lib/libairkiss_log$(LIB_EXT)
 
 
