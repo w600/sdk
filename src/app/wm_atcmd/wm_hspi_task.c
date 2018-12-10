@@ -714,6 +714,7 @@ int tls_hspi_init(void)
 
     tls_param_get(TLS_PARAM_ID_USRINTF, &mode, TRUE);
 
+    wm_hspi_gpio_config(0);
     tls_slave_spi_init();
     tls_set_high_speed_interface_type(mode);
     hspi->tls_slave_hspi = &g_slave_hspi;
