@@ -17,14 +17,28 @@ sinclude $(TOP_DIR)/tools/tool_chain.def
 
 APP_BIN_NAME?=at
 
+USE_LIB=1
+
 #EXTRA_CCFLAGS += -u
-ifndef PDIR # {
+ifndef PDIR
 GEN_IMAGES= $(TARGET).out
 GEN_BINS = $(TARGET).bin
-SUBDIRS += 	\
+SUBDIRS = 	\
 	$(TOP_DIR)/example/$(APP_BIN_NAME)/user	\
 	$(TOP_DIR)/platform/boot/$(COMPILE)
-endif # } PDIR
+endif
+
+ifndef PDIR
+ifeq ($(USE_LIB), 0)
+SUBDIRS += \
+	$(TOP_DIR)/platform/common 		\
+	$(TOP_DIR)/platform/drivers		\
+	$(TOP_DIR)/platform/sys			\
+	$(TOP_DIR)/src/os				\
+	$(TOP_DIR)/src/app				\
+	$(TOP_DIR)/src/network
+endif
+endif
 
 COMPONENTS_$(TARGET) =	\
 	$(TOP_DIR)/platform/boot/$(COMPILE)/startup.o	\
@@ -32,30 +46,40 @@ COMPONENTS_$(TARGET) =	\
 	$(TOP_DIR)/platform/boot/$(COMPILE)/retarget.o	\
 	$(TOP_DIR)/example/$(APP_BIN_NAME)/user/libuser$(LIB_EXT)
 
+ifeq ($(USE_LIB), 0)
+COMPONENTS_$(TARGET) += \
+	$(TOP_DIR)/platform/common/libcommon$(LIB_EXT)		\
+	$(TOP_DIR)/platform/drivers/libdrivers$(LIB_EXT)		\
+	$(TOP_DIR)/platform/sys/libsys$(LIB_EXT)			\
+	$(TOP_DIR)/src/os/libos$(LIB_EXT)					\
+	$(TOP_DIR)/src/network/libnetwork$(LIB_EXT)					\
+	$(TOP_DIR)/src/app/libapp$(LIB_EXT)
+endif
+
+ifeq ($(USE_LIB), 1)
+LINKLIB = \
+	$(TOP_DIR)/lib/libcommon$(LIB_EXT) 		\
+	$(TOP_DIR)/lib/libdrivers$(LIB_EXT)		\
+	$(TOP_DIR)/lib/libsys$(LIB_EXT)			\
+	$(TOP_DIR)/lib/libos$(LIB_EXT)			\
+	$(TOP_DIR)/lib/libnetwork$(LIB_EXT)		\
+	$(TOP_DIR)/lib/libapp$(LIB_EXT)
+endif
+
+LINKLIB += 	\
+	$(TOP_DIR)/lib/libairkiss_log$(LIB_EXT)	\
+	$(TOP_DIR)/lib/libwlan$(LIB_EXT) 
+	
 ifeq ($(COMPILE), gcc)
 LINKFLAGS_$(TARGET) =  \
-	$(TOP_DIR)/lib/wlan$(LIB_EXT) \
-	$(TOP_DIR)/lib/libcommon$(LIB_EXT) \
-	$(TOP_DIR)/lib/libdrivers$(LIB_EXT)	\
-	$(TOP_DIR)/lib/libsys$(LIB_EXT)	\
-	$(TOP_DIR)/lib/libairkiss_log$(LIB_EXT)	\
-	$(TOP_DIR)/lib/libapp$(LIB_EXT)	\
-	$(TOP_DIR)/lib/libnetwork$(LIB_EXT)	\
-	$(TOP_DIR)/lib/libos$(LIB_EXT)  \
+	$(LINKLIB)	\
 	-T$(LD_FILE)	\
 	-Wl,-warn-common 	
 
 else
 LINKFLAGS_$(TARGET) = 	\
 	--library_type=microlib	\
-	$(TOP_DIR)/lib/wlan$(LIB_EXT) \
-	$(TOP_DIR)/lib/libcommon$(LIB_EXT) \
-	$(TOP_DIR)/lib/libdrivers$(LIB_EXT)	\
-	$(TOP_DIR)/lib/libsys$(LIB_EXT)	\
-	$(TOP_DIR)/lib/libairkiss_log$(LIB_EXT)	\
-	$(TOP_DIR)/lib/libapp$(LIB_EXT)	\
-	$(TOP_DIR)/lib/libnetwork$(LIB_EXT)	\
-	$(TOP_DIR)/lib/libos$(LIB_EXT)  \
+	$(LINKLIB)	\
 	--strict --scatter $(LD_FILE)
 endif
 
