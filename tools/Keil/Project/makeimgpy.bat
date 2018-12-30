@@ -21,4 +21,5 @@ python makeimg.py "..\Bin\WM_W600.bin" "..\Bin\WM_W600.img" 0 0 "..\Bin\version.
 python makeimg.py "..\Bin\WM_W600.bin.gz" "..\Bin\WM_W600_GZ.img" 0 1 "..\Bin\version.txt" 90000 10100 "..\Bin\WM_W600.bin" 
 python makeimg.py "..\Bin\WM_W600.bin" "..\Bin\WM_W600_SEC.img" 0 0 "..\Bin\version.txt" 90000 10100
 python makeimg_fls.py "..\Bin\secboot.img" "..\Bin\WM_W600.img" "..\Bin\WM_W600.FLS"
+python makeimg_dbg.py "..\Bin\WM_W600_SEC.img" "..\Bin\WM_W600_DBG.img"
 @del "..\Bin\WM_W600.img"

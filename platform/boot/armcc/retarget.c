@@ -1,14 +1,14 @@
 /******************************************************************************/
 /* RETARGET.C: 'Retarget' layer for target-dependent low level functions      */
 /******************************************************************************/
-#if (GCC_COMPILE!=1)
+
 #include <stdio.h>
 #include <rt_misc.h>
 #include "wm_config.h"
 #include "wm_regs.h"
 #include <string.h>
 #include <stdarg.h>
-
+#if (GCC_COMPILE!=1)
 //#pragma import(__use_no_semihosting_swi)
 
 static unsigned int std_libspace[__USER_LIBSPACE_SIZE];
@@ -45,17 +45,17 @@ int sendchar(int ch)
 }
 #else
 
-//function:	½«Êı¾İ×ª»»³É×Ö·û´®
+//function:	å°†æ•°æ®è½¬æ¢æˆå­—ç¬¦ä¸²
 //paramter:
-//str	:	×ª»»Ö®ºó´æÔÚ´Ëbuffer
-//num	:	Òª×ª»»µÄÊı¾İ
-//base	:	Ê®½øÖÆ£¬Ê®Áù½øÖÆ
-//width	:	¶ÔÆë¿í¶È
-//opflag :	²Ù×÷·û£¬bit¶¨ÒåÈçÏÂ
+//str	:	è½¬æ¢ä¹‹åå­˜åœ¨æ­¤buffer
+//num	:	è¦è½¬æ¢çš„æ•°æ®
+//base	:	åè¿›åˆ¶ï¼Œåå…­è¿›åˆ¶
+//width	:	å¯¹é½å®½åº¦
+//opflag :	æ“ä½œç¬¦ï¼Œbitå®šä¹‰å¦‚ä¸‹
 
-#define	P_ALIGN_BIT	(0x01<<0)	// bit=1 ×ó¶ÔÆë bit=0ÓÒ¶ÔÆë
-#define  P_FILL_BIT		(0x01<<1)	//bit = 1Ìî³ä'0'£¬·ñÔòÌî³ä' '
-#define  P_BIG_BIT		(0x01<<2)	//bit=1£¬´óĞ´£¬·ñÔòĞ¡Ğ´
+#define	P_ALIGN_BIT	(0x01<<0)	// bit=1 å·¦å¯¹é½ bit=0å³å¯¹é½
+#define  P_FILL_BIT		(0x01<<1)	//bit = 1å¡«å……'0'ï¼Œå¦åˆ™å¡«å……' '
+#define  P_BIG_BIT		(0x01<<2)	//bit=1ï¼Œå¤§å†™ï¼Œå¦åˆ™å°å†™
 
 int Int2Str(char *str,int num,char base,char width,int opflag) 
 {   
@@ -98,10 +98,10 @@ int Int2Str(char *str,int num,char base,char width,int opflag)
 		k++; 
 	}  
 
-	if(opflag&P_ALIGN_BIT)	//×ó¶ÔÆë
+	if(opflag&P_ALIGN_BIT)	//å·¦å¯¹é½
 	{
 		str_bk = str;
-		k_bk = k;		//ÏÈ±¸·İÖ¸ÕëºÍ³¤¶È£¬µ¹ĞòÖ®ºó¼ÌĞø
+		k_bk = k;		//å…ˆå¤‡ä»½æŒ‡é’ˆå’Œé•¿åº¦ï¼Œå€’åºä¹‹åç»§ç»­
 		str --;
 		k --;
 		while(k>0) 
@@ -116,7 +116,7 @@ int Int2Str(char *str,int num,char base,char width,int opflag)
 		str = str_bk;
 	}	
  
-	//²»×ã¿í¶ÈµÄÓÃ' '²¹Æë
+	//ä¸è¶³å®½åº¦çš„ç”¨' 'è¡¥é½
 	while(width>k) 
 	{  
 		if(opflag&P_FILL_BIT)
@@ -133,9 +133,9 @@ int Int2Str(char *str,int num,char base,char width,int opflag)
 	len=len+k; 
 	*str-- = '\0'; 
 	k--; 
- 	if(0 == (opflag&P_ALIGN_BIT))	//ÓÒ¶ÔÆë
+ 	if(0 == (opflag&P_ALIGN_BIT))	//å³å¯¹é½
  	{
-		//µ¹Ğò 
+		//å€’åº 
 		while(k>0) 
 		{
 			temp = *str; 
@@ -148,12 +148,73 @@ int Int2Str(char *str,int num,char base,char width,int opflag)
 	return len; 
 }  
 
-static void Mac2Str(unsigned char *inchar, char *outtxt)
+static int IP2Str(unsigned char v4v6, unsigned int *inuint, char *outtxt)
+{
+    unsigned char i;
+    unsigned char j = 0;
+    unsigned char k;
+    unsigned char h;
+    unsigned char m;
+    unsigned char l;
+    unsigned char bit;
+
+    if (4 == v4v6)
+    {
+        for(i = 0; i < 4; i++)
+        {
+            bit = (*inuint >> (8 * i)) & 0xff;
+            h = bit / 100;
+            if (h)
+                outtxt[j++] = '0' + h;
+            m = (bit % 100) / 10;
+            if (m)
+            {
+                outtxt[j++] = '0' + m;
+            }
+            else
+            {
+                if (h)
+                    outtxt[j++] = '0';
+            }
+            l = (bit % 100) % 10;
+            outtxt[j++] = '0' + l;
+            outtxt[j++] = '.';
+        }
+    }
+    else
+    {
+        for (k = 0; k < 4; k++)
+        {
+            for(i = 0; i < 4; i++)
+            {
+                m = (*inuint >> (8 * i)) & 0xff;
+                h = m >> 4;
+                l = m & 0xf;
+                if (h > 9)
+                    outtxt[j++] = 'A' + h - 10;
+                else 
+                    outtxt[j++]= '0' + h;
+                if (l > 9)
+                    outtxt[j++] = 'A' + l - 10;
+                else
+                    outtxt[j++] = '0' + l;
+                if (0 != (i % 2))
+                    outtxt[j++] = ':';
+            }
+            inuint++;
+        }
+    }
+
+    outtxt[j - 1] = 0;
+    return j - 1;
+}
+
+static int Mac2Str(unsigned char *inchar, char *outtxt)
 {
     unsigned char hbit,lbit;
     unsigned int i;
 
-    for(i = 0; i < 6; i++)
+    for(i = 0; i < 6; i++)/* mac length */
     {
         hbit = (*(inchar + i) & 0xf0) >> 4;
         lbit = *(inchar + i ) & 0x0f;
@@ -170,23 +231,23 @@ static void Mac2Str(unsigned char *inchar, char *outtxt)
 
     outtxt[3 * (i - 1) + 2] = 0;
 
-    return;
+    return 3 * (i - 1) + 2;
 }
 
 int wm_vprintf(const char *fmt, va_list arg_ptr)
 {
-	unsigned char width=0; 	//±£Áô¿í¶È
-	unsigned int len; 			//Êı¾İ¿í¶È
+	unsigned char width=0; 	//ä¿ç•™å®½åº¦
+	unsigned int len; 			//æ•°æ®å®½åº¦
 	char *fp = (char *)fmt;  
 	//va_list arg_ptr; 
 	char *pval;
 	int opflag = 0;
-	char store[20];
+	char store[40];
 	char c;
 	int i;
 	char* str;
 	
-	//va_start(arg_ptr, fmt); //arg_ptr Ö¸ÏòµÚÒ»¸ö²ÎÊı
+	//va_start(arg_ptr, fmt); //arg_ptr æŒ‡å‘ç¬¬ä¸€ä¸ªå‚æ•°
 	while (*fp !='\0') 
 	{
 		c = *fp++; 
@@ -196,16 +257,16 @@ int wm_vprintf(const char *fmt, va_list arg_ptr)
 		} 
 		else 
 		{ 
-			width = 0;  //»ñÈ¡Êı¾İ¿í¶È
+			width = 0;  //è·å–æ•°æ®å®½åº¦
 			opflag = 0;
 			if('-' == *fp)
 			{
-				opflag |= P_ALIGN_BIT;//×ó¶ÔÆë
+				opflag |= P_ALIGN_BIT;//å·¦å¯¹é½
 				fp ++;
 			}
-			if('0' == *fp)	//Ç°Ãæ²¹Áã
+			if('0' == *fp)	//å‰é¢è¡¥é›¶
 			{
-				opflag |= P_FILL_BIT;	//²¹Áã
+				opflag |= P_FILL_BIT;	//è¡¥é›¶
 				fp ++;
 			}
 
@@ -214,7 +275,7 @@ int wm_vprintf(const char *fmt, va_list arg_ptr)
 				width = width * 10 + (*fp) - '0'; 
 				fp++; 
 			} 
-			if('.' == *fp)	//¸¡µãÔËËãÔİÊ±Ã»ÓÃ£¬²»´¦Àí
+			if('.' == *fp)	//æµ®ç‚¹è¿ç®—æš‚æ—¶æ²¡ç”¨ï¼Œä¸å¤„ç†
 			{
 				fp ++;
 				while(*fp>='0'&&*fp<='9') 
@@ -264,9 +325,9 @@ int wm_vprintf(const char *fmt, va_list arg_ptr)
 				case 'S':
 					pval=va_arg(arg_ptr,char*);
 					len = strlen(pval);
-					if((width > len) && (0 == (opflag&P_ALIGN_BIT)))		//ÓÒ¶ÔÆë
+					if((width > len) && (0 == (opflag&P_ALIGN_BIT)))		//å³å¯¹é½
 					{
-						for(i = 0;i < (width - len);i ++)	//×ó±ß²¹¿Õ¸ñ
+						for(i = 0;i < (width - len);i ++)	//å·¦è¾¹è¡¥ç©ºæ ¼
 						{
 							sendchar(' ');
 						}
@@ -275,30 +336,69 @@ int wm_vprintf(const char *fmt, va_list arg_ptr)
                                 {
 						sendchar(pval[i]);					
                                 }
-					if((width > len) && (opflag&P_ALIGN_BIT))		//×ó¶ÔÆë
+					if((width > len) && (opflag&P_ALIGN_BIT))		//å·¦å¯¹é½
 					{
-						for(i = 0;i < (width - len);i ++)	//ÓÒ±ß²¹¿Õ¸ñ
+						for(i = 0;i < (width - len);i ++)	//å³è¾¹è¡¥ç©ºæ ¼
 						{
 							sendchar(' ');
 						}
 					}
 					break; 
-				case 'M':
-                    pval=va_arg(arg_ptr,char*);
-                    len = 17;/* xx-xx-xx-xx-xx-xx */
-					if((width > len) && (0 == (opflag&P_ALIGN_BIT)))		//ÓÒ¶ÔÆë
+                case 'v':/* ip v4 address */
+                    i = va_arg(arg_ptr, int);
+                    len = IP2Str(4, (unsigned int *)&i, store);
+					if((width > len) && (0 == (opflag&P_ALIGN_BIT)))		//å³å¯¹é½
 					{
-						for(i = 0;i < (width - len);i ++)	//×ó±ß²¹¿Õ¸ñ
+						for(i = 0;i < (width - len);i ++)	//å·¦è¾¹è¡¥ç©ºæ ¼
 						{
 							sendchar(' ');
 						}
 					}
-                    Mac2Str((unsigned char *)pval, store);/* mac length */
                     str = store;
                     while( *str != '\0') sendchar(*str++);
-					if((width > len) && (opflag&P_ALIGN_BIT))		//×ó¶ÔÆë
+					if((width > len) && (opflag&P_ALIGN_BIT))		//å·¦å¯¹é½
 					{
-						for(i = 0;i < (width - len);i ++)	//ÓÒ±ß²¹¿Õ¸ñ
+						for(i = 0;i < (width - len);i ++)	//å³è¾¹è¡¥ç©ºæ ¼
+						{
+							sendchar(' ');
+						}
+					}
+			        break;
+			    case 'V':/* ip v6 address */
+                    pval=va_arg(arg_ptr,char*);
+                    len = IP2Str(6, (unsigned int *)pval, store);
+					if((width > len) && (0 == (opflag&P_ALIGN_BIT)))		//å³å¯¹é½
+					{
+						for(i = 0;i < (width - len);i ++)	//å·¦è¾¹è¡¥ç©ºæ ¼
+						{
+							sendchar(' ');
+						}
+					}
+                    str = store;
+                    while( *str != '\0') sendchar(*str++);
+					if((width > len) && (opflag&P_ALIGN_BIT))		//å·¦å¯¹é½
+					{
+						for(i = 0;i < (width - len);i ++)	//å³è¾¹è¡¥ç©ºæ ¼
+						{
+							sendchar(' ');
+						}
+					}
+			        break;
+				case 'M':/* mac address */
+                    pval = va_arg(arg_ptr, char*);
+                    len = Mac2Str((unsigned char *)pval, store);
+					if((width > len) && (0 == (opflag&P_ALIGN_BIT)))		//å³å¯¹é½
+					{
+						for(i = 0;i < (width - len);i ++)	//å·¦è¾¹è¡¥ç©ºæ ¼
+						{
+							sendchar(' ');
+						}
+					}
+                    str = store;
+                    while( *str != '\0') sendchar(*str++);
+					if((width > len) && (opflag&P_ALIGN_BIT))		//å·¦å¯¹é½
+					{
+						for(i = 0;i < (width - len);i ++)	//å³è¾¹è¡¥ç©ºæ ¼
 						{
 							sendchar(' ');
 						}

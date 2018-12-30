@@ -62,10 +62,11 @@ static void fwup_update_autoflag(void)
     return;
 }
 
-static int img_header_check(T_BOOTER *img_param)
+int tls_fwup_img_header_check(T_BOOTER *img_param)
 {
 	psCrcContext_t	crcContext;
 	unsigned int value = 0;
+	int i = 0;
 	if (img_param->magic_no != SIGNATURE_WORD)
 	{
 		return FALSE;	
@@ -75,9 +76,15 @@ static int img_header_check(T_BOOTER *img_param)
 		return FALSE;
 	}
 	tls_crypto_crc_init(&crcContext, 0xFFFFFFFF, CRYPTO_CRC_TYPE_32, 3);
-	tls_crypto_crc_update(&crcContext, (unsigned char *)img_param, sizeof(T_BOOTER)-4);
+	for (i = 0; i <  (sizeof(T_BOOTER)-4)/4; i++)
+	{
+		value = *(((int *)img_param)+i);
+		tls_crypto_crc_update(&crcContext, (unsigned char *)&value, 4);
+	}
+	value = 0;
 	tls_crypto_crc_final(&crcContext, &value);
-	if ((img_param->hd_checksum == value) && (((img_param->upd_img_addr|FLASH_BASE_ADDR) + img_param->upd_img_len) <= USER_ADDR_START))
+	if ((img_param->hd_checksum == value) && (((img_param->upd_img_addr|FLASH_BASE_ADDR) + img_param->upd_img_len) <= USER_ADDR_START)
+		&&((img_param->upd_img_addr|FLASH_BASE_ADDR) >= CODE_UPD_START_ADDR))
 	{
 		return TRUE;
 	}
@@ -87,7 +94,7 @@ static int img_header_check(T_BOOTER *img_param)
 	}
 }
 
-static void img_update_header(T_BOOTER* img_param)
+static void tls_fwup_img_update_header(T_BOOTER* img_param)
 {
 	unsigned char current_img;	
 	psCrcContext_t	crcContext;
@@ -96,7 +103,7 @@ static void img_update_header(T_BOOTER* img_param)
 	tls_fls_read(CODE_UPD_HEADER_ADDR, (unsigned char *)&imgheader[1], sizeof(T_BOOTER));
 
 	//将两个upd_no中较大的那个值取出来，再将其加1后赋值给 CODE_UPD_HEADER_ADDR 处的header；
-	if (img_header_check(&imgheader[1]))
+	if (tls_fwup_img_header_check(&imgheader[1]))
 	{
 		current_img = (imgheader[1].upd_no > imgheader[0].upd_no);
 	}
@@ -187,7 +194,7 @@ static void fwup_scheduler(void *data)
 							if(fwup->received_len == sizeof(T_BOOTER))
 							{
 								
-								if (!img_header_check(&booter))
+								if (!tls_fwup_img_header_check(&booter))
 								{
 									request->status = TLS_FWUP_REQ_STATUS_FIO;
 									fwup->current_state |= TLS_FWUP_STATE_ERROR_IO;
@@ -279,7 +286,7 @@ static void fwup_scheduler(void *data)
 							}
 							else  /*CRC MATCH and Update IMAGE HEADER PARAM*/
 							{
-								img_update_header(&booter);
+								tls_fwup_img_update_header(&booter);
 							}
 
 							TLS_DBGPRT_INFO("update the firmware successfully!\n");

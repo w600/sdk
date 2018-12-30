@@ -139,7 +139,7 @@ typedef struct  {
 
 #define pstm_zero(a) mp_zero((mp_int *)a)
 
-#define pstm_init(pool, a) mp_init((mp_int *)a)
+#define pstm_init(pool, a) wpa_mp_init((mp_int *)a)
 
 #define pstm_init_size(pool, a, size) mp_init_size((mp_int *)a, size)
 

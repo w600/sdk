@@ -7,11 +7,37 @@
  *
  * Copyright (c) 2014 Winner Microelectronics Co., Ltd.
  */
+#ifndef WM_IO_MUX_H
+#define WM_IO_MUX_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include "wm_gpio.h"
 #include "wm_regs.h"
 #include "wm_irq.h"
 #include "wm_osal.h"
 #include "tls_common.h"
+
+/**
+ * @defgroup Driver_APIs Driver APIs
+ * @brief Driver APIs
+ */
+
+/**
+ * @addtogroup Driver_APIs
+ * @{
+ */
+
+/**
+ * @defgroup IOMUX_Driver_APIs IOMUX Driver APIs
+ * @brief IOMUX driver APIs
+ */
+
+/**
+ * @addtogroup IOMUX_Driver_APIs
+ * @{
+ */
 
 /**
  * @brief  config the pins used for highspeed spi
@@ -464,3 +490,18 @@ void wm_adc_config(u8 Channel);
  * 		  gpio Alternate functions
  */
 void wm_gpio_af_disable(void);
+/**
+ * @}
+ */
+
+/**
+ * @}
+ */
+
+#ifdef __cplusplus
+}
+#endif
+#endif /* end of WM_IO_MUX_H */
+
+/*** (C) COPYRIGHT 2014 Winner Microelectronics Co., Ltd. ***/
+

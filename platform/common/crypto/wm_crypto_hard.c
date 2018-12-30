@@ -24,7 +24,7 @@ volatile u8 crypto_complete = 0;
 typedef s32 psPool_t;
 #include "libtommath.h"
 #define pstm_set(a, b) mp_set((mp_int *)a, b)
-#define pstm_init(pool, a) mp_init((mp_int *)a)
+#define pstm_init(pool, a) wpa_mp_init((mp_int *)a)
 #define pstm_count_bits(a) mp_count_bits((mp_int *)a)
 #define pstm_init_for_read_unsigned_bin(pool, a, len) mp_init_for_read_unsigned_bin((mp_int *)a, len)
 #define pstm_read_unsigned_bin(a, b, c) mp_read_unsigned_bin((mp_int *)a, b, c)

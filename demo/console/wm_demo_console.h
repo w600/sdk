@@ -68,7 +68,7 @@ extern int CreateSSLServerDemoTask(void *, ...);
 extern int lwsDemoTest(void *, ...);
 extern int tls_i2s_demo(void *, ...); 
 extern int i2c_demo(void *, ...);
-
+extern int scan_demo(void *, ...);
 
 
 
@@ -237,6 +237,11 @@ struct demo_console_info_t  console_tbl[] =
 #if DEMO_WEBSOCKETS
 	{"t-websockets", lwsDemoTest, 0x0,    0, "websockets demo test"},
 #endif
+
+#if DEMO_SCAN
+		{"t-scan",	scan_demo,	0x0,	0,  "Test wifi scan"},
+#endif
+
 
 	//控制台上显示的最后一个命令，如果要让命令显示在控制台上，需要放在该行的上面
 	{"demohelp", 	demo_console_show_help,	0,0,	"Display Help information"},

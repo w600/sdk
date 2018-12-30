@@ -73,7 +73,7 @@ def main(argv):
         f_app=open(argv[2], "rb+")
     except IOError:
         f_sec.close()
-        print("not find %s file" % argv[1])
+        print("not find %s file" % argv[2])
         raise
     else:
         magic_word=f_app.read(4)

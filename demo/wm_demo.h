@@ -62,7 +62,10 @@
 #define DEMO_NTP					(DEMO_OFF && DEMO_CONSOLE)
 
 //i2s demo
-#define DEMO_I2S                    (DEMO_OFF && DEMO_CONSOLE)
+#define DEMO_I2S					(DEMO_OFF && DEMO_CONSOLE)
+
+//adc demo
+#define DEMO_ADC					(DEMO_OFF && DEMO_CONSOLE)
 
 //slave spi demo
 #define DEMO_SLAVE_SPI				(DEMO_OFF && DEMO_CONSOLE)
@@ -76,6 +79,11 @@
 //http demo
 #define DEMO_HTTP				    (DEMO_OFF && DEMO_CONSOLE)
 
+//http demo
+#define DEMO_SCAN					(DEMO_OFF && DEMO_CONSOLE)
+
+//7816 demo
+#define DEMO_7816					(DEMO_OFF && DEMO_CONSOLE)
 
 ////////////////////////////////////////////////////////////////
 

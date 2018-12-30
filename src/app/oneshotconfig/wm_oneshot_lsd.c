@@ -172,7 +172,7 @@ int tls_lsd_recv(u8 *buf, u16 data_len)
 	tods = ieee80211_has_tods(hdr->frame_control);
 	SrcMac = ieee80211_get_SA(hdr);
 	
-	if(memcmp(multicast, lsd_dst_addr, 3))
+	if(memcmp(multicast, lsd_dst_addr, 3) &&  hdr->duration_id)
 	{
 		return LSD_ONESHOT_CONTINUE;
 	}

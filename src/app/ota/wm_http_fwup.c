@@ -114,9 +114,17 @@ int http_fwup(HTTPParameters ClientParams)
                     if( recvLen == 0 ){
                         //fileSize = headerSize(fixed: 56) + appCodeSize                   
                         booter =(T_BOOTER *) (Buffer+3);
-                        totalLen = booter->upd_img_len + sizeof(T_BOOTER);
+                        if (TRUE == tls_fwup_img_header_check(booter))
+                        {
+                            totalLen = booter->upd_img_len + sizeof(T_BOOTER);
+                        }
+                        else
+                        {
+                            now_state = QUIT_OTA;
+                            break;
+                        }
                     }
-                    
+
                     if(nRetCode != HTTP_CLIENT_SUCCESS && nRetCode != HTTP_CLIENT_EOS){
                         now_state = SHUTDOWN_LINK;
                         break;
@@ -155,7 +163,7 @@ int http_fwup(HTTPParameters ClientParams)
                     // Send received data to fwup thread and deal with socket issues.
                     s8 ret = socket_fwup_recv(0, p, ERR_OK);
                     if(ret != ERR_OK){
-                        now_state = QUIT_OTA;
+                        now_state = SHUTDOWN_LINK;
                         break;
                     }
                     else{
@@ -168,6 +176,8 @@ int http_fwup(HTTPParameters ClientParams)
                         }
                     }
                 }
+				if (now_state == QUIT_OTA);
+				else
                 now_state = SHUTDOWN_LINK;
             }
             break;
@@ -188,7 +198,7 @@ int http_fwup(HTTPParameters ClientParams)
         if(now_state == QUIT_OTA)
             break;
     }
-    
+
     tls_mem_free(Buffer);
     if(pHTTP)
         HTTPClientCloseRequest(&pHTTP);

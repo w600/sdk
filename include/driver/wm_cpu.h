@@ -9,6 +9,9 @@
  */
 #ifndef WM_CPU_H
 #define WM_CPU_H
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /** cpu clock: 80Mhz */
 #define CPU_CLK_80M     0
@@ -29,6 +32,25 @@ typedef struct{
 	u32 wlanclk;
 }tls_sys_clk;
 
+/**
+ * @defgroup Driver_APIs Driver APIs
+ * @brief Driver APIs
+ */
+
+/**
+ * @addtogroup Driver_APIs
+ * @{
+ */
+
+/**
+ * @defgroup CPU_CLOCK_Driver_APIs CPU_CLOCK Driver APIs
+ * @brief CPU_CLOCK driver APIs
+ */
+
+/**
+ * @addtogroup CPU_CLOCK_Driver_APIs
+ * @{
+ */
 
 /**
  * @brief          This function is used to set cpu clock
@@ -55,6 +77,18 @@ void tls_sys_clk_set(u32 clk);
  */
 void tls_sys_clk_get(tls_sys_clk *sysclk);
 
+/**
+ * @}
+ */
 
+/**
+ * @}
+ */
 
-#endif /* WM_CPU_H */
+#ifdef __cplusplus
+}
+#endif
+#endif /* end of WM_CPU_H */
+
+/*** (C) COPYRIGHT 2014 Winner Microelectronics Co., Ltd. ***/
+

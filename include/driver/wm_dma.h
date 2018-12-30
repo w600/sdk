@@ -10,6 +10,10 @@
 #ifndef __WM_DMA_H_
 #define __WM_DMA_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define TLS_DMA_SEL_UART_RX       0
 #define TLS_DMA_SEL_UART_TX       1
 #define TLS_DMA_SEL_PWM_CAP0       2
@@ -59,6 +63,25 @@ struct tls_dma_descriptor {
 	struct tls_dma_descriptor *next;    /**< next dms descriptor */
 };
 
+/**
+ * @defgroup Driver_APIs Driver APIs
+ * @brief Driver APIs
+ */
+
+/**
+ * @addtogroup Driver_APIs
+ * @{
+ */
+
+/**
+ * @defgroup DMA_Driver_APIs DMA Driver APIs
+ * @brief DMA driver APIs
+ */
+
+/**
+ * @addtogroup DMA_Driver_APIs
+ * @{
+ */
 
 /**
  * @brief          	This function is used to clear dma interrupt flag.
@@ -204,5 +227,19 @@ void tls_dma_free(unsigned char ch);
  */
 void tls_dma_init(void);
 
-#endif /* __TLS_DMA_H_151606__ */
+
+/**
+ * @}
+ */
+
+/**
+ * @}
+ */
+
+#ifdef __cplusplus
+}
+#endif
+#endif /* end of __WM_DMA_H_ */
+
+/*** (C) COPYRIGHT 2014 Winner Microelectronics Co., Ltd. ***/
 

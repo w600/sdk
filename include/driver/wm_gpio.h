@@ -10,6 +10,10 @@
 #ifndef WM_GPIO_H
 #define WM_GPIO_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "wm_type_def.h"
 #include "wm_io.h"
 
@@ -38,6 +42,25 @@ enum tls_gpio_irq_trig {
     WM_GPIO_IRQ_TRIG_LOW_LEVEL       /**< low power level arises the interrupt */
 };
 
+/**
+ * @defgroup Driver_APIs Driver APIs
+ * @brief Driver APIs
+ */
+
+/**
+ * @addtogroup Driver_APIs
+ * @{
+ */
+
+/**
+ * @defgroup GPIO_Driver_APIs GPIO Driver APIs
+ * @brief GPIO driver APIs
+ */
+
+/**
+ * @addtogroup GPIO_Driver_APIs
+ * @{
+ */
 
 
 /**
@@ -150,5 +173,17 @@ void tls_gpio_isr_register(enum tls_io_name gpio_pin,
                            tls_gpio_irq_callback callback,
                            void *arg);
 
+/**
+ * @}
+ */
+
+/**
+ * @}
+ */
+
+#ifdef __cplusplus
+}
+#endif
 #endif /* end of WM_GPIO_H */
 
+/*** (C) COPYRIGHT 2014 Winner Microelectronics Co., Ltd. ***/

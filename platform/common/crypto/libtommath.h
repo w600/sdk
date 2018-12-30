@@ -167,7 +167,7 @@ int mp_mul_2(mp_int * a, mp_int * b);
  int mp_init_for_read_unsigned_bin(mp_int *a, mp_digit len);
  void mp_clear (mp_int * a);
 int mp_exptmod (mp_int * G, mp_int * X, mp_int * P, mp_int * Y);
-int mp_init (mp_int * a);
+int wpa_mp_init (mp_int * a);
 int mp_read_unsigned_bin (mp_int * a, const unsigned char *b, int c);
 int mp_to_unsigned_bin_nr (mp_int * a, unsigned char *b);
 int mp_to_unsigned_bin (mp_int * a, unsigned char *b);

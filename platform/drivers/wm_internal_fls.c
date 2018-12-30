@@ -683,14 +683,21 @@ static u32 gsSector = 0;
  *
  * @return         	None	    	
  *
- * @note           	None
+ * @note           	The caller should use fls_lock semphore to protect flash operation!
  */
 static void tls_fls_flush_sector(void)
 {
     int i;
+    u32 addr;	
+    if (gsSector >= (getFlashDensity()/INSIDE_FLS_SECTOR_SIZE + INSIDE_FLS_BASE_ADDR/INSIDE_FLS_SECTOR_SIZE))
+    {
+        TLS_DBGPRT_ERR("the sector to be erase overflow!\n");
+        return;
+    }
 
-    tls_fls_erase(gsSector);
+    addr = gsSector*INSIDE_FLS_SECTOR_SIZE;
 
+    eraseSector(addr);
     for (i = 0; i < INSIDE_FLS_SECTOR_SIZE / INSIDE_FLS_PAGE_SIZE; i++)
     {
         programPage(gsSector * INSIDE_FLS_SECTOR_SIZE +
@@ -698,6 +705,7 @@ static void tls_fls_flush_sector(void)
                     &gsflscache[i * INSIDE_FLS_PAGE_SIZE]);
     }
     gsSecOffset = 0;
+
 }
 
 
@@ -746,7 +754,16 @@ void tls_fls_fast_write_destroy(void)
 {
     if (NULL != gsflscache)
     {
-        tls_fls_flush_sector();
+        if (inside_fls == NULL)
+        {
+            TLS_DBGPRT_ERR("flash driver module not beed installed!\n");
+            return;
+        }else{
+            tls_os_sem_acquire(inside_fls->fls_lock, 0);	
+            tls_fls_flush_sector();
+            tls_os_sem_release(inside_fls->fls_lock);	
+        }
+
         tls_mem_free(gsflscache);
         gsflscache = NULL;
     }
@@ -778,6 +795,8 @@ int tls_fls_fast_write(u32 addr, u8 * buf, u32 length)
     {
         return TLS_FLS_STATUS_EINVAL;
     }
+    tls_os_sem_acquire(inside_fls->fls_lock, 0);
+
     sector = addr / INSIDE_FLS_SECTOR_SIZE;
     offset = addr % INSIDE_FLS_SECTOR_SIZE;
     maxlen = INSIDE_FLS_SECTOR_SIZE;
@@ -806,6 +825,9 @@ int tls_fls_fast_write(u32 addr, u8 * buf, u32 length)
         buf += len;
         length -= len;
     }
+
+    tls_os_sem_release(inside_fls->fls_lock);	
+
     return TLS_FLS_STATUS_OK;
 }
 

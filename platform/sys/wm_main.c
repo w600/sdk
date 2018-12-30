@@ -38,6 +38,7 @@
 #include "wm_mem.h"
 #include "wm_wl_task.h"
 #include "wm_wl_timers.h"
+#include "wm_watchdog.h"
 #ifdef TLS_CONFIG_HARD_CRYPTO
 #include "wm_crypto_hard.h"
 #endif
@@ -84,7 +85,7 @@ u32 TaskStartStk[TASK_START_STK_SIZE];
 
 
 #define FW_MAJOR_VER           0x03
-#define FW_MINOR_VER           0x00
+#define FW_MINOR_VER           0x01
 #define FW_PATCH_VER           0x00
 
 const char FirmWareVer[4] = {
@@ -126,6 +127,9 @@ void tls_os_timer_init(void)
 
 void vApplicationIdleHook( void )
 {
+    /* clear watch dog interrupt */
+    tls_watchdog_clr();
+
 #if !defined(__CC_ARM)
         __asm volatile ("wfi");
 #else
@@ -143,7 +147,7 @@ void SystemInit()
 void wm_gpio_config()
 {
 	/* must call first */
-	wm_gpio_af_disable();	
+	wm_gpio_af_disable();
 
 	/* UART0_TX-PA04 UART0_RX-PA05 */
 	wm_uart0_tx_config(WM_IO_PA_04);
@@ -244,8 +248,6 @@ void task_start (void *data)
 	tls_get_tx_gain(&tx_gain_group[0]);
 	TLS_DBGPRT_INFO("tx gain ");
 	TLS_DBGPRT_DUMP((char *)(&tx_gain_group[0]), 12);
-	TLS_DBGPRT_INFO("mac addr ");
-	TLS_DBGPRT_DUMP((char *)(&mac_addr[0]), 6);
 
 	if (tls_wifi_mem_cfg(WIFI_MEM_START_ADDR, 7, 7)) /*wifi tx&rx mem customized interface*/
 	{
@@ -253,6 +255,9 @@ void task_start (void *data)
 	}
 
 	tls_get_mac_addr(&mac_addr[0]);
+	TLS_DBGPRT_INFO("mac addr ");
+	TLS_DBGPRT_DUMP((char *)(&mac_addr[0]), 6);
+
 	if(tls_wl_init(NULL, &mac_addr[0], NULL) == NULL){
 		TLS_DBGPRT_INFO("wl driver initial failured\n");
 	}

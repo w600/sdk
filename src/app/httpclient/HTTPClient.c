@@ -167,12 +167,14 @@ UINT32 HTTPClientCloseRequest (HTTP_SESSION_HANDLE *pSession)
     {
         TLS_DBGPRT_INFO("free pHTTPSession->HttpUrl.Url = %s\n", pHTTPSession->HttpUrl.Url);
         tls_mem_free(pHTTPSession->HttpUrl.Url);
+		pHTTPSession->HttpUrl.Url = NULL;
     }
     // Check for a valid pointer to the HTTP headers
     if(pHTTPSession->HttpHeaders.HeadersBuffer.pParam)
     {
         // Release the used memory
         tls_mem_free(pHTTPSession->HttpHeaders.HeadersBuffer.pParam);
+		pHTTPSession->HttpHeaders.HeadersBuffer.pParam = NULL;
     }
     // Close any active socket connection
     HTTPIntrnConnectionClose(pHTTPSession);

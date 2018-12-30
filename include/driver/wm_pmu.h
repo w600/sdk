@@ -9,13 +9,33 @@
  */
 #ifndef WM_PMU_H
 #define WM_PMU_H
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "wm_type_def.h"
 
-
 typedef void (*tls_pmu_irq_callback)(void *arg);
 
+/**
+ * @defgroup Driver_APIs Driver APIs
+ * @brief Driver APIs
+ */
 
+/**
+ * @addtogroup Driver_APIs
+ * @{
+ */
+
+/**
+ * @defgroup PMU_Driver_APIs PMU Driver APIs
+ * @brief PMU driver APIs
+ */
+
+/**
+ * @addtogroup PMU_Driver_APIs
+ * @{
+ */
 
 /**
  * @brief          	This function is used to register pmu timer1 interrupt
@@ -201,6 +221,19 @@ void tls_close_peripheral_clock(tls_peripheral_type_s devices);
  */
 void tls_open_peripheral_clock(tls_peripheral_type_s devices);
 
+/**
+ * @}
+ */
+
+/**
+ * @}
+ */
+
+#ifdef __cplusplus
+}
 #endif
+#endif /* end of WM_PMU_H */
+
+/*** (C) COPYRIGHT 2014 Winner Microelectronics Co., Ltd. ***/
 
 

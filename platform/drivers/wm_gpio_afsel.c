@@ -959,6 +959,6 @@ void wm_adc_config(u8 Channel)
 void wm_gpio_af_disable(void)
 {
 	tls_reg_write32(HR_GPIOA_AFSEL, 0x0);
-	tls_reg_write32(HR_GPIOB_AFSEL, 0x0);
+	tls_reg_write32(HR_GPIOB_AFSEL, BIT(6) | BIT(7));//only enable swd
 }
 

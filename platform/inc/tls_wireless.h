@@ -98,6 +98,7 @@ struct	iw_scan_req {
 	//struct iw_freq	channel_list[IW_MAX_FREQUENCIES];
 };
 
+#if 0
 struct iw_bssid_ex {
     u32     length;
     u8      bssid[ETH_ALEN];
@@ -133,6 +134,7 @@ struct iw_scan_bss {
     u32     length; /* bss info total length */
     struct iw_bss_info bss[1];
 };
+#endif
 
 /**
  * struct beacon_parameters - beacon parameters

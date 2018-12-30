@@ -7,7 +7,7 @@
 
 
 
-static void demo_rtc_clock_irq(u8 *arg)
+static void demo_rtc_clock_irq(void *arg)
 {
 	struct tm tblock;
 	tls_get_rtc(&tblock);

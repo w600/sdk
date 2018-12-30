@@ -3169,32 +3169,20 @@ int httpc_proc(u8 set_opt, u8 update_flash, union HOSTIF_CMD_PARAMS_UNION *cmd, 
     }*/
 
     if (set_opt) {
-        
-        if(cmd->httpc.verb == VerbFwup)
-        {
-#if TLS_CONFIG_HTTP_CLIENT
-            t_http_fwup((char*)cmd->httpc.url);
-#endif
-        }
-        else
-        {
-            if((cmd->httpc.url_len>255)||(cmd->httpc.data_len>512))
-                return -CMD_ERR_INV_PARAMS;
-	    	memset(&msg, 0, sizeof(http_client_msg));
-	    	msg.param.Uri = (CHAR *)cmd->httpc.url;
-	    	msg.method = (HTTP_VERB)cmd->httpc.verb;
-	    	if(cmd->httpc.verb == VerbPost || cmd->httpc.verb == VerbPut)
-	    	{
-	    		msg.dataLen = cmd->httpc.data_len;
-	    		msg.sendData = (CHAR *)cmd->httpc.data;
-	    	}
-	    	msg.recv_fn = tls_hostif_http_client_recv_callback;
-	    	msg.err_fn = tls_hostif_http_client_err_callback;
-	    	http_client_post(&msg);
-	        cmdrsp->httpc.psession = msg.pSession;
-        }
-        
-        
+		if((cmd->httpc.url_len>255)||(cmd->httpc.data_len>512))
+            return -CMD_ERR_INV_PARAMS;
+    	memset(&msg, 0, sizeof(http_client_msg));
+    	msg.param.Uri = (CHAR *)cmd->httpc.url;
+    	msg.method = (HTTP_VERB)cmd->httpc.verb;
+    	if(cmd->httpc.verb == VerbPost || cmd->httpc.verb == VerbPut)
+    	{
+    		msg.dataLen = cmd->httpc.data_len;
+    		msg.sendData = (CHAR *)cmd->httpc.data;
+    	}
+    	msg.recv_fn = tls_hostif_http_client_recv_callback;
+    	msg.err_fn = tls_hostif_http_client_err_callback;
+    	http_client_post(&msg);
+        cmdrsp->httpc.psession = msg.pSession;       
     }
     
     return 0;

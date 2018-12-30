@@ -8,6 +8,7 @@
 #include "wm_osal.h"
 #include "wm_demo.h"
 
+#include "wm_include.h"
 #if DEMO_7816
 
 struct sc_rx 
@@ -54,21 +55,25 @@ s16 uart2_rx_cb(uint16_t len)
 void wm_sc_atr_test()
 {
 	char sdata[4] = {0xff, 0x10, 0x95};
-	char rdata[4] = {0xa,0xb,0xc,0xd};
+//	char rdata[4] = {0xa,0xb,0xc,0xd};
 	char parity_byte = (uint8_t)(0xff ^ (uint8_t)0x10 ^ 0x95);
 	sdata[3] = parity_byte;	
 	char  test[32];
 
 	uint16_t sc_state = 0;
 	
-	sc_io.clk_pin_num = WM_IO_PA_02;
-	sc_io.clk_opt = WM_IO_OPTION1;
+	//sc_io.clk_pin_num = WM_IO_PA_02;
+	sc_io.clk_pin_num = WM_IO_PB_21;
+	//sc_io.clk_opt = WM_IO_OPTION1;
+	sc_io.clk_opt = WM_IO_OPTION2;
 
-	sc_io.io_pin_num = WM_IO_PA_01;
-	sc_io.io_opt = WM_IO_OPTION1;
+	//sc_io.io_pin_num = WM_IO_PA_01;
+	sc_io.io_pin_num = WM_IO_PB_20;
+	//sc_io.io_opt = WM_IO_OPTION1;
+	sc_io.io_opt = WM_IO_OPTION2;
 	sc_io.initialed = 1;
 
-	sc_rx.buf = test;
+	sc_rx.buf = (uint8_t *)test;
 	sc_rx.buf_len = 32;
 	sc_rx.require_len = 20;
 	sc_rx.current_len = 0;
@@ -115,7 +120,7 @@ void wm_sc_atr_test()
 					sc_rx.require_len = 1;
 					sc_rx.current_len = 0;
 					sc_rx.timeout = 0;
-					tls_uart_write(2, i2d_cmd, 5);
+					tls_uart_write(2, (char *)i2d_cmd, 5);
 				}
 				break;
 			case 3:
@@ -124,7 +129,7 @@ void wm_sc_atr_test()
 					sc_rx.require_len = 2;
 					sc_rx.current_len = 0;
 					sc_rx.timeout = 0;
-					tls_uart_write(2, &i2d_cmd[5], 16);
+					tls_uart_write(2, (char *)&i2d_cmd[5], 16);
 				}
 				break;
 			case 4:
@@ -200,7 +205,7 @@ static OS_STK DemoTaskStk7816[DEMO_TASK_SIZE];
 int wm_7816_demo(void)
 {
 	tls_os_task_create(NULL, NULL,
-			wm_sc_atr_test,
+			(void (*)())wm_sc_atr_test,
                     NULL,
                     (void *)DemoTaskStk7816,
                     DEMO_TASK_SIZE * sizeof(u32),

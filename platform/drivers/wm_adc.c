@@ -26,7 +26,7 @@
 static u16 adc_offset = 0;
 
 volatile ST_ADC gst_adc;
-
+volatile u8 adc_irq_flag = 0;
 void ADC_IRQHandler(void)
 {
 	u16 adcvalue;
@@ -35,6 +35,7 @@ void ADC_IRQHandler(void)
 	reg = tls_reg_read32(HR_SD_ADC_CONFIG_REG);
 	if(reg & CONFIG_ADC_INT)      //ADC中断
 	{
+	    adc_irq_flag = 1;
 	    tls_adc_clear_irq(ADC_INT_TYPE_ADC);
 	    adcvalue = tls_read_adc_result();
 	    if(gst_adc.adc_cb)
@@ -372,111 +373,130 @@ void tls_adc_set_clk(int div)
 
 void signedToUnsignedData(u16 *adcValue, u16 *offset)
 {
-    if(*adcValue >= 8192)
-	{
-		*adcValue -= 8192;
-	}
-	else
-	{
-		*adcValue += 8192;
-	}
-    *adcValue -= *offset;
+//  s16 temp = 0;
+  if(*adcValue >= 8192)
+  {
+    *adcValue -= 8192;
+  }
+  else
+  {
+    *adcValue += 8192;
+  }
+
+/*  if (*offset >=8192)
+  {
+    temp =((*offset-1)&0x1FFF) - 8192;
+  }else{
+    temp = *offset;
+  }
+
+  *adcValue -= temp;
+*/
 }
 
 static void waitForAdcDone(void)
 {
-    while(1)
+  while(1)
+  {
+    if(adc_irq_flag)      //ADC中断
     {
-        int reg = tls_reg_read32(HR_SD_ADC_CONFIG_REG);
-        if(reg & CONFIG_ADC_INT)      //ADC中断
-        {
-            tls_adc_clear_irq(ADC_INT_TYPE_ADC);
-            break;
-        }
+      adc_irq_flag = 0;
+      break;
     }
+  }
 }
 
-u8 adc_get_offset(void)
+u16 adc_get_offset(void)
 { 
-	tls_adc_init(0, 0); 
-	tls_adc_reference_sel(ADC_REFERENCE_INTERNAL);
-    
-	tls_adc_enable_calibration_buffer_offset(); //使能校准功能
-    waitForAdcDone();
-	adc_offset = tls_read_adc_result(); //获取adc转换结果
-	tls_adc_stop(0);
+  tls_adc_init(0, 0); 
+  tls_adc_reference_sel(ADC_REFERENCE_INTERNAL);
+  adc_irq_flag = 0;
+  tls_adc_enable_calibration_buffer_offset(); //使能校准功能
+  waitForAdcDone();
+  adc_offset = tls_read_adc_result(); //获取adc转换结果
+  tls_adc_stop(0);
 
-	//printf("\r\noffset:%d", adc_offset);
-    return adc_offset;
+  //printf("\r\noffset:%d", adc_offset);
+  return adc_offset;
 }
 
 u32 adc_get_interTemp(void)
 {
 	u16 code2, code1, realCode;
-    u32 tem;
+  u32 tem;
 
-    tls_adc_init(0, 0); 
-	tls_adc_reference_sel(ADC_REFERENCE_INTERNAL);
+  tls_adc_init(0, 0); 
+  tls_adc_reference_sel(ADC_REFERENCE_INTERNAL);
+  adc_irq_flag = 0;
+  tls_adc_temp_offset_with_cpu(1); //code2
+  waitForAdcDone();
+  code2 = tls_read_adc_result(); 
+  tls_adc_stop(0);
+  signedToUnsignedData(&code2, &adc_offset);
 
-    tls_adc_temp_offset_with_cpu(1); //code2
-    waitForAdcDone();
-    code2 = tls_read_adc_result(); 
-    tls_adc_stop(0);
-    signedToUnsignedData(&code2, &adc_offset);
+  adc_irq_flag = 0;
+  tls_adc_temp_offset_with_cpu(0); //code1
+  waitForAdcDone();
+  code1 = tls_read_adc_result();
+  tls_adc_stop(0);
+  signedToUnsignedData(&code1, &adc_offset);
 
-	tls_adc_temp_offset_with_cpu(0); //code1
-    waitForAdcDone();
-	code1 = tls_read_adc_result();
-	tls_adc_stop(0);
-    signedToUnsignedData(&code1, &adc_offset);
-
-	realCode = ( (code1-code2)/2+8192 );
-    //printf("\r\nTEMP:%.1f", realCode*0.12376-1294.58);
-    //return (realCode*0.12376-1294.58);
-    tem = realCode*124-1294580;
-    return tem;
+  realCode = ( (code1-code2)/2+8192 );
+  //printf("\r\nTEMP:%.1f", realCode*0.12376-1294.58);
+  //return (realCode*0.12376-1294.58);
+  tem = realCode*124-1294580;
+  return tem;
 }
 
 u16 adc_get_inputVolt(u8 channel)
 {
-    u16 average = 0;
-    
-    tls_adc_init(0, 0);
-	tls_adc_reference_sel(ADC_REFERENCE_INTERNAL);
-	tls_adc_start_with_cpu(channel);
-    waitForAdcDone();
-    average = tls_read_adc_result();
-    tls_adc_stop(0);
-    
-    signedToUnsignedData(&average, &adc_offset);
-    printf("\r\ninputVolt:%.2f", ((average-8192.0)/8192*2.25/1.2 + 1.584));
-    return average;
+  u16 average = 0;
+
+  /*calibration*/
+  adc_get_offset();
+  /*get value*/
+  tls_adc_init(0, 0);
+  tls_adc_reference_sel(ADC_REFERENCE_INTERNAL);
+  adc_irq_flag = 0;
+  tls_adc_start_with_cpu(channel);
+  waitForAdcDone();
+  average = tls_read_adc_result();
+  tls_adc_stop(0);
+
+  signedToUnsignedData(&average, &adc_offset);
+
+  //printf("ch[%d]inputVolt:%.3f\r\n", channel+1, ((average-8192.0)/8192*2.25/1.2 + 1.584));
+  return average;
 }
 
 u16 adc_get_interVolt(void)
 {
-	u16 voltValue;
-	
-	tls_adc_init(0, 0);
-	tls_adc_reference_sel(ADC_REFERENCE_INTERNAL);
+  u16 voltValue;
 
-	tls_adc_voltage_start_with_cpu();
-	waitForAdcDone();
-	voltValue = tls_read_adc_result();
-	tls_adc_stop(0);
+  /*calibration*/
+  adc_get_offset();
+  /*get value*/
+  tls_adc_init(0, 0);
+  tls_adc_reference_sel(ADC_REFERENCE_INTERNAL);
 
-    signedToUnsignedData(&voltValue, &adc_offset);
-	float voltage = ( 1.214 - ((float)voltValue-8192)/8192*2.25/1.2 )*2;
-	printf("\r\ninterVolt:%.2f", voltage);
-    return voltValue;
+  adc_irq_flag = 0;
+  tls_adc_voltage_start_with_cpu();
+  waitForAdcDone();
+  voltValue = tls_read_adc_result();
+  tls_adc_stop(0);
+
+  signedToUnsignedData(&voltValue, &adc_offset);
+  float voltage = ( 1.214 - ((float)voltValue-8192)/8192*2.25/1.2 )*2;
+  //printf("\r\ninterVolt:%.2f", voltage);
+  return voltValue;
 }
 
 u32 adc_temp(void)
 {
-    u32 tem;
-    adc_get_offset();
-    tem = adc_get_interTemp();
-    return tem;
+  u32 tem;
+  adc_get_offset();
+  tem = adc_get_interTemp();
+  return tem;
 }
 
 

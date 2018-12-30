@@ -1,26 +1,28 @@
-/***************************************************************************** 
-* 
-* File Name : wm_adc.h 
-* 
-* Description: adc Driver Module 
-* 
-* Copyright (c) 2014 Winner Microelectronics Co., Ltd. 
-* All rights reserved. 
-* 
-* Author : dave
-* 
-* Date : 2014-8-15
-*****************************************************************************/ 
+/**
+ * @file wm_adc.h
+ *
+ * @brief ADC Driver Module
+ *
+ * @author 
+ *
+ * Copyright (c) 2014 Winner Microelectronics Co., Ltd.
+ */
+
 
 #ifndef WM_ADC_H
 #define WM_ADC_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "wm_type_def.h"
 
+/** ADC MACRO */
 //每次启动dma之后，需要一段稳定时间，所以采集到的数据前面的12个byte不稳定，要舍去
-#define ADC_DEST_BUFFER_DMA     		(u32)0x20028000//(u32)0x20037000	//前面的地方高速SPI可能会用	
-#define ADC_DEST_BUFFER_SIZE			65532//2000			//以半字为单位	
-#define SAMPLE_NUM_PER_CHANNEL  		20//2000
+#define ADC_DEST_BUFFER_DMA     		(u32)0x20028000
+#define ADC_DEST_BUFFER_SIZE			65532	
+#define SAMPLE_NUM_PER_CHANNEL  		20
 
 
 
@@ -68,118 +70,228 @@ typedef struct adc_st{
 	u16 offset;
 }ST_ADC;
 
-/**********************************************************************************************************
-* Description: 	This function is used to init adc.
-*
-* Arguments  : 	ifusedma		if use dma
-*				dmachannel	dma channel
-*
-* Returns    : 
-* 		
-* Notes:			If the requested dma channel is already used by other task, system will auto use other dma channel.
-**********************************************************************************************************/
+/**
+ * @defgroup Driver_APIs Driver APIs
+ * @brief Driver APIs
+ */
+
+/**
+ * @addtogroup Driver_APIs
+ * @{
+ */
+
+/**
+ * @defgroup ADC_Driver_APIs ADC Driver APIs
+ * @brief ADC driver APIs
+ */
+
+/**
+ * @addtogroup ADC_Driver_APIs
+ * @{
+ */
+
+/**
+ * @brief		This function is used to init ADC
+ *
+ * @param[in]	ifusedma		if use dma
+ * @param[in]	dmachannel	dma channel
+ *
+ * @return		None
+ *
+ * @note			If the requested dma channel is already used by other task, system will auto use other dma channel.	
+ */
 void tls_adc_init(u8 ifusedma,u8 dmachannel);
 
 
-/**********************************************************************************************************
-* Description: 	This function is used to register interrupt callback function.
-*
-* Arguments  : 	inttype			interrupt type
-*				ADC_INT_TYPE_ADC		adc interrupt,user get adc result from the callback function.
-*				ADC_INT_TYPE_DMA		dma interrupt,dma transfer the adc result to the user's buffer.
-*				callback			interrupt callback function.
-* Returns    : 
-* 		
-**********************************************************************************************************/
+/**
+ * @brief		This function is used to register interrupt callback function
+ *
+ * @param[in]	inttype	interrupt type
+ *				 ADC_INT_TYPE_ADC		 adc interrupt,user get adc result from the callback function.
+ *				 ADC_INT_TYPE_DMA		 dma interrupt,dma transfer the adc result to the user's buffer.
+ * @param[in]	callback	interrupt callback function
+ *
+ * @return		None
+ *
+ * @note			None
+ */
 void tls_adc_irq_register(int inttype, void (*callback)(u16 *buf, u16 len));
 
-/**********************************************************************************************************
-* Description: 	This function is used to clear the interrupt source.
-*
-* Arguments  : 	inttype			interrupt type
-*
-* Returns    : 
-* 		
-**********************************************************************************************************/
+/**
+ * @brief		This function is used to clear the interrupt source
+ *
+ * @param[in]	inttype 	interrupt type
+ *				ADC_INT_TYPE_ADC		 adc interrupt,user get adc result from the callback function.
+ *				ADC_INT_TYPE_DMA		 dma interrupt,dma transfer the adc result to the user's buffer.
+ *				ADC_INT_TYPE_ADC_COMP adc compare with setting data
+ *
+ * @return		None
+ *
+ * @note			None
+ */
 void tls_adc_clear_irq(int inttype);
 
-/**********************************************************************************************************
-* Description: 	This function is used to start adc,use dma for transfer data.
-*
-* Arguments  : 	channel		adc channel,from 0 to 3 is single input;4 and 5 is differential input.
-*				accuracy		Sampling precision
-*							ADC_SAMPLE_ACCURACY_7Bits
-*							ADC_SAMPLE_ACCURACY_9Bits
-*							ADC_SAMPLE_ACCURACY_10Bits
-*							ADC_SAMPLE_ACCURACY_12Bits
-*				length		byte data length,is an integer multiple of half word,need <= 0x500
-* Returns    : 
-* 		
-**********************************************************************************************************/
+/**
+ * @brief	     This function is used to start adc,use dma for transfer data
+ *
+ * @param[in]    channel	adc channel,from 0 to 3 is single input;4 and 5 is differential input
+ *
+ * @param[in]    length 	byte data length,is an integer multiple of half word,need <= 0x500
+ *
+ * @return	     None
+ *
+ * @note		     None
+ */
 void tls_adc_start_with_dma(int Channel, int Length);
 
-/**********************************************************************************************************
-* Description: 	This function is used to start adc.
-*
-* Arguments  : 	channel		adc channel,from 0 to 3 is single input;4 and 5 is differential input.
-*				accuracy		Sampling precision
-*							ADC_SAMPLE_ACCURACY_7Bits
-*							ADC_SAMPLE_ACCURACY_9Bits
-*							ADC_SAMPLE_ACCURACY_10Bits
-*							ADC_SAMPLE_ACCURACY_12Bits
-* Returns    : 
-**********************************************************************************************************/
+/**
+ * @brief		 This function is used to start adc,use cpu
+ *
+ * @param[in]	 channel	adc channel,from 0 to 3 is single input;4 and 5 is differential input
+ *
+ * @return		 None
+ *
+ * @note			 None
+ */
 void tls_adc_start_with_cpu(int Channel);
+
+/**
+ * @brief		 This function is used to enable input buffer calibration
+ *
+ * @param[in]	 None
+ *
+ * @return		 None
+ *
+ * @note			 None
+ */
 void tls_adc_enable_calibration_buffer_offset(void);
+
+/**
+ * @brief		 This function is used to sample voltage using cpu
+ *
+ * @param[in]	 None
+ *
+ * @return		 None
+ *
+ * @note			 None
+ */
 void tls_adc_voltage_start_with_cpu(void);
-void tls_adc_temp_offset_with_cpu(u8 calTemp12);
-void tls_adc_voltage_start_with_dma(int Length);
 
+/**
+ * @brief		 This function is used to sample temperature using cpu
+ *
+ * @param[in]	 calenflag 1:enable calibration , 0: disable calibration
+ *
+ * @return		 None
+ *
+ * @note			 None
+ */
+void tls_adc_temp_offset_with_cpu(u8 calenflag);
 
-
-
-/**********************************************************************************************************
-* Description: 	This function is used to read adc result.
-*
-* Arguments  : 	
-* Returns    : 
-**********************************************************************************************************/
+/**
+ * @brief		 This function is used to read adc result
+ *
+ * @param[in]	 None
+ *
+ * @return		 None
+ *
+ * @note			 None
+ */
 u16 tls_read_adc_result(void);
 
-/**********************************************************************************************************
-* Description: 	This function is used to stop the adc.
-*
-* Arguments  : 	ifusedma		if use dma
-* Returns    : 
-**********************************************************************************************************/
+/**
+ * @brief		 This function is used to stop the adc
+ *
+ * @param[in]	 ifusedma 1:use dma, 0:not use dma
+ *
+ * @return		 None
+ *
+ * @note			 None
+ */
 void tls_adc_stop(int ifusedma);
 
-/**********************************************************************************************************
-* Description: 	This function is used to config adc bigger register.
-*
-* Arguments  : 	comp_data		compare data
-* Returns    : 
-**********************************************************************************************************/
+/**
+ * @brief		 This function is used to config adc compare register
+ *
+ * @param[in]	 cmp_data compare data
+ *
+ * @param[in]	 cmp_pol compare polarity
+ *
+ * @return		 None
+ *
+ * @note			 None
+ */
 void tls_adc_config_cmp_reg(int cmp_data, int cmp_pol);
 
-/**********************************************************************************************************
-* Description: 	This function is used to set adc reference source.
-*
-* Arguments  : 	ref     ADC_REFERENCE_EXTERNAL
-                        ADC_REFERENCE_INTERNAL 
-* Returns    : 
-**********************************************************************************************************/
+/**
+ * @brief		 This function is used to set adc reference source
+ *
+ * @param[in]	 ref
+ *                       ADC_REFERENCE_EXTERNAL
+ *				ADC_REFERENCE_INTERNAL 
+ *
+ * @return		 None
+ *
+ * @note			 None
+ */
 void tls_adc_reference_sel(int ref);
-void tls_adc_set_clk(int div);
-void signedToUnsignedData(u16 *adcValue, u16 *offset);
-void tls_adc_buffer_bypass_set(u8 isset);
-void tls_adc_cmp_start(int Channel, int cmp_data, int cmp_pol);
 
-u8  adc_get_offset(void);
+/**
+ * @brief		 This function is used to set clock division
+ *
+ * @param[in]	 div
+ *
+ * @return		 None
+ *
+ * @note			 None
+ */
+void tls_adc_set_clk(int div);
+
+void signedToUnsignedData(u16 *adcValue, u16 *offset);
+
+/**
+ * @brief		 This function is used to set buffer bypass
+ *
+ * @param[in]	 isset  1: buffer bypass, 0: buffer work
+ *
+ * @return		 None
+ *
+ * @note			 None
+ */
+void tls_adc_buffer_bypass_set(u8 isset);
+
+/**
+ * @brief		 This function is used to start compare
+ *
+ * @param[in]	 Channel   sample channel
+ *
+ * @param[in]	 cmp_data compare data
+ *
+ * @param[in]	 cmp_pol  compare polarity
+ *
+ * @return		 None
+ *
+ * @note			 None
+ */
+ void tls_adc_cmp_start(int Channel, int cmp_data, int cmp_pol);
+
+u16 adc_get_offset(void);
 u32 adc_get_interTemp(void);
 u16 adc_get_inputVolt(u8 channel);
 u16 adc_get_interVolt(void);
 u32 adc_temp(void);
 
-#endif
+/**
+ * @}
+ */
 
+/**
+ * @}
+ */
+
+#ifdef __cplusplus
+}
+#endif
+#endif /* end of WM_ADC_H */
+
+/*** (C) COPYRIGHT 2014 Winner Microelectronics Co., Ltd. ***/

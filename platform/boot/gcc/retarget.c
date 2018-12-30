@@ -138,12 +138,73 @@ int Int2Str(char *str,int num,char base,char width,int opflag)
 	return len; 
 }  
 
-static void Mac2Str(unsigned char *inchar, char *outtxt)
+static int IP2Str(unsigned char v4v6, unsigned int *inuint, char *outtxt)
+{
+    unsigned char i;
+    unsigned char j = 0;
+    unsigned char k;
+    unsigned char h;
+    unsigned char m;
+    unsigned char l;
+    unsigned char bit;
+
+    if (4 == v4v6)
+    {
+        for(i = 0; i < 4; i++)
+        {
+            bit = (*inuint >> (8 * i)) & 0xff;
+            h = bit / 100;
+            if (h)
+                outtxt[j++] = '0' + h;
+            m = (bit % 100) / 10;
+            if (m)
+            {
+                outtxt[j++] = '0' + m;
+            }
+            else
+            {
+                if (h)
+                    outtxt[j++] = '0';
+            }
+            l = (bit % 100) % 10;
+            outtxt[j++] = '0' + l;
+            outtxt[j++] = '.';
+        }
+    }
+    else
+    {
+        for (k = 0; k < 4; k++)
+        {
+            for(i = 0; i < 4; i++)
+            {
+                m = (*inuint >> (8 * i)) & 0xff;
+                h = m >> 4;
+                l = m & 0xf;
+                if (h > 9)
+                    outtxt[j++] = 'A' + h - 10;
+                else 
+                    outtxt[j++]= '0' + h;
+                if (l > 9)
+                    outtxt[j++] = 'A' + l - 10;
+                else
+                    outtxt[j++] = '0' + l;
+                if (0 != (i % 2))
+                    outtxt[j++] = ':';
+            }
+            inuint++;
+        }
+    }
+
+    outtxt[j - 1] = 0;
+    return j - 1;
+}
+
+static int Mac2Str(unsigned char *inchar, char *outtxt)
 {
     unsigned char hbit,lbit;
     unsigned int i;
 
-    for(i = 0; i < 6; i++)
+    for(i = 0; i < 6; i++)/* mac length */
     {
         hbit = (*(inchar + i) & 0xf0) >> 4;
         lbit = *(inchar + i ) & 0x0f;
@@ -160,7 +221,7 @@ static void Mac2Str(unsigned char *inchar, char *outtxt)
 
     outtxt[3 * (i - 1) + 2] = 0;
 
-    return;
+    return 3 * (i - 1) + 2;
 }
 
 int wm_vprintf(const char *fmt, va_list arg_ptr)
@@ -171,7 +232,7 @@ int wm_vprintf(const char *fmt, va_list arg_ptr)
 	//va_list arg_ptr; 
 	char *pval;
 	int opflag = 0;
-	char store[20];
+	char store[40];
 	char c;
 	int i;
 	char* str;
@@ -273,9 +334,9 @@ int wm_vprintf(const char *fmt, va_list arg_ptr)
 						}
 					}
 					break; 
-                case 'M':
-                    pval=va_arg(arg_ptr,char*);
-                    len = 17;/* xx-xx-xx-xx-xx-xx */
+                case 'v':/* ip v4 address */
+                    i = va_arg(arg_ptr, int);
+                    len = IP2Str(4, (unsigned int *)&i, store);
 					if((width > len) && (0 == (opflag&P_ALIGN_BIT)))		//右对齐
 					{
 						for(i = 0;i < (width - len);i ++)	//左边补空格
@@ -283,7 +344,46 @@ int wm_vprintf(const char *fmt, va_list arg_ptr)
 							sendchar(' ');
 						}
 					}
-                    Mac2Str((unsigned char *)pval, store);/* mac length */
+                    str = store;
+                    while( *str != '\0') sendchar(*str++);
+					if((width > len) && (opflag&P_ALIGN_BIT))		//左对齐
+					{
+						for(i = 0;i < (width - len);i ++)	//右边补空格
+						{
+							sendchar(' ');
+						}
+					}
+			        break;
+			    case 'V':/* ip v6 address */
+                    pval=va_arg(arg_ptr,char*);
+                    len = IP2Str(6, (unsigned int *)pval, store);
+					if((width > len) && (0 == (opflag&P_ALIGN_BIT)))		//右对齐
+					{
+						for(i = 0;i < (width - len);i ++)	//左边补空格
+						{
+							sendchar(' ');
+						}
+					}
+                    str = store;
+                    while( *str != '\0') sendchar(*str++);
+					if((width > len) && (opflag&P_ALIGN_BIT))		//左对齐
+					{
+						for(i = 0;i < (width - len);i ++)	//右边补空格
+						{
+							sendchar(' ');
+						}
+					}
+			        break;
+				case 'M':/* mac address */
+                    pval=va_arg(arg_ptr,char*);
+                    len = Mac2Str((unsigned char *)pval, store);
+					if((width > len) && (0 == (opflag&P_ALIGN_BIT)))		//右对齐
+					{
+						for(i = 0;i < (width - len);i ++)	//左边补空格
+						{
+							sendchar(' ');
+						}
+					}
                     str = store;
                     while( *str != '\0') sendchar(*str++);
 					if((width > len) && (opflag&P_ALIGN_BIT))		//左对齐
@@ -370,7 +470,7 @@ int wm_sprintf(char *str, const char *fmt,...)
 					fp++; 
 				}
 			}
-			while('l' == *fp)
+			while('l' == *fp || 'h' == *fp)
 			{
 				fp ++;
 			}			

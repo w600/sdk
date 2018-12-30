@@ -407,7 +407,7 @@ sys_thread_t sys_thread_new(const char *name, lwip_thread_fn thread, void *arg,
     int tsk_prio = ubPrio-LWIP_TASK_START_PRIO;
     OS_STK * task_stk = &lwip_task_stk[tsk_prio*LWIP_STK_SIZE];
 
-    tls_os_task_create(NULL, NULL,
+    tls_os_task_create(NULL, (const signed char *)name,
                        thread,
                        (void *)arg,
                        (void *)task_stk,

@@ -302,7 +302,7 @@ PSPUBLIC void psSha256Update(psDigestContext_t * md, const unsigned char *buf,
 				uint32 len);
 PSPUBLIC int32 psSha256Final(psDigestContext_t * md, unsigned char *hash);
 #else 
-#define psSha256Init(md) sha256_init((struct sha256_state *)md)
+#define psSha256Init(md) wpa_sha256_init((struct sha256_state *)md)
 #define psSha256Update(md, in, len)  sha256_process((struct sha256_state *)md, in, len)
 #define psSha256Final(md, out)  sha256_done((struct sha256_state *)md, out)
 #endif

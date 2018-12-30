@@ -98,6 +98,21 @@
 #define     WIFI_SOFTAP_CLOSED              0x6
 
 
+enum tls_wifi_auth_mode {
+    WM_WIFI_AUTH_MODE_OPEN              = 0, /**< authenticate mode : open */
+    WM_WIFI_AUTH_MODE_WEP_AUTO          = 3, /**< authenticate mode : wep (open or/and shared...) */
+    WM_WIFI_AUTH_MODE_WPA_PSK_TKIP      = 4, /**< authenticate mode : wpa psk rc4 */
+    WM_WIFI_AUTH_MODE_WPA_PSK_CCMP      = 8, /**< authenticate mode : wpa psk aes */
+    WM_WIFI_AUTH_MODE_WPA_PSK_AUTO      = (WM_WIFI_AUTH_MODE_WPA_PSK_TKIP | WM_WIFI_AUTH_MODE_WPA_PSK_CCMP), /**< authenticate mode : wpa psk, tkip and aes */
+    WM_WIFI_AUTH_MODE_WPA2_PSK_TKIP     = 16, /**< authenticate mode : wpa2 psk rc4 */
+    WM_WIFI_AUTH_MODE_WPA2_PSK_CCMP     = 32, /**< authenticate mode : wpa2 psk aes */
+    WM_WIFI_AUTH_MODE_WPA2_PSK_AUTO     = (WM_WIFI_AUTH_MODE_WPA2_PSK_TKIP | WM_WIFI_AUTH_MODE_WPA2_PSK_CCMP), /**< authenticate mode : wpa2 psk, tkip and aes */
+    WM_WIFI_AUTH_MODE_WPA_WPA2_PSK_TKIP = (WM_WIFI_AUTH_MODE_WPA_PSK_TKIP | WM_WIFI_AUTH_MODE_WPA2_PSK_TKIP),
+    WM_WIFI_AUTH_MODE_WPA_WPA2_PSK_CCMP = (WM_WIFI_AUTH_MODE_WPA_PSK_CCMP | WM_WIFI_AUTH_MODE_WPA2_PSK_CCMP),
+    WM_WIFI_AUTH_MODE_WPA_WPA2_PSK_AUTO = (WM_WIFI_AUTH_MODE_WPA_PSK_AUTO | WM_WIFI_AUTH_MODE_WPA2_PSK_AUTO), /**< authenticate mode : wpa and wpa2, tkip and aes */
+    WM_WIFI_AUTH_MODE_UNKNOWN
+};
+
 /** Wi-Fi states */
 enum tls_wifi_states {
 	WM_WIFI_DISCONNECTED,      /**< Disconnected state */
@@ -241,10 +256,12 @@ struct tls_bss_info_t {
     u8 bssid[ETH_ALEN];    /**< MAC address of AP */
     u8 mode;               /**< AP type, value is: 1-ibss, 2-ess */
     u8 channel;            /**< channel of AP */
-    u8 privacy;            /**< whether is encrypted */
+    u8 privacy;            /**< encryption type, @ref enum tls_wifi_auth_mode */
     u8 ssid_len;           /**< SSID length */
-    u8 rssi;               /**< single strength of AP */
+    u8 rssi;               /**< single strength of AP, real rssi = -(char)(0x100 - rssi) */
     u8 ssid[32];           /**< SSID of AP */
+    u32 max_data_rate;     /**< maximum rate of AP, the unit is Mbps */
+    bool wps_support;      /**< is support WPS function */
 };
 
 /** scan result */
@@ -330,6 +347,30 @@ void tls_wifi_set_listen_mode(u8 enable);
  * @note           None
  */
 u8 tls_wifi_get_listen_mode(void);
+
+/**
+ * @brief          This function is used to enable/disable special listen mode
+ *
+ * @param[in]      enable:non-zero, disable: 0
+ *
+ * @return         None
+ *
+ * @note           This function used when special oneshot start.
+ */
+void tls_wifi_set_special_mode(u8 enable);
+
+/**
+ * @brief          This function is used to get special listen mode
+ *
+ * @param          None
+ *
+ * @retval         0        		normal mode
+ * @retval         non-zero 	special listen mode
+ *
+ * @note           None
+ */
+u8 tls_wifi_get_special_mode(void);
+
 
 /**
 * @brief          This function is used to filter multicast frames
@@ -499,8 +540,12 @@ void tls_wifi_scan_result_cb_register(void (*callback)(void));
  * @retval         WM_FAILED	  failed
  *
  * @note           User need to alloc buffer in advance.
- *                 Size for one item of scan result is 43Bytes;
+ *                 One item of scan result is @ref struct tls_bss_info_t.
+ *                 Size for one item of scan result is 48Bytes;
  *				   The buffer size depends how many items user wants.
+ *                 Compared with the previous scanning results, 
+ *                 max_data_rate and wps_support fields were added, 
+ *                 and the meaning of the privacy field was extended.
  */
 int tls_wifi_get_scan_rslt(u8* buf, u32 buffer_size);
 

@@ -319,6 +319,18 @@ int tls_fwup_get_current_update_numer(void);
 int tls_fwup_get_current_session_id(void);
 
 /**
+ * @brief          This function is used to check image header
+ *
+ * @param[in]      None
+ *
+ * @retval         TRUE:   success
+ * @retval         FALSE:  failure
+ *
+ * @note           None
+ */
+int tls_fwup_img_header_check(T_BOOTER *img_param);
+
+/**
  * @}
  */
 

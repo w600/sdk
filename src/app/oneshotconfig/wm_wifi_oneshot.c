@@ -132,7 +132,7 @@ static u8 uclsddatalen = 0xFF;
 static u8 uclsdsyncode = 0x64;
 #endif
 
-#if TLS_CONFIG_UDP_LSD_SPECIAL
+#if (TLS_CONFIG_UDP_LSD_SPECIAL || TLS_CONFIG_AIRKISS_MODE_ONESHOT)
 #define    ONESHOT_SPEC_TASK_SIZE      256
 
 static u8 oneshot_timer_id = 0xFF;
@@ -140,13 +140,15 @@ static u16 oneshot_seq = 0;
 static u8 oneshot_buf[1200];
 static u16 oneshot_last_len = 0;
 static u8 oneshot_local_mac[6] = {0x20,0x01,0x02,0x03,0x04,0x05};
-static u8 oneshot_dst_mac[6] = {0x01,0x00,0x5E,0xFF,0xFF,0xFF};
+
+//static u8 oneshot_dst_mac[6] = {0x01,0x00,0x5E,0xFF,0xFF,0xFF};
+static u8 oneshot_dst_mac[6] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF};
+
 static OS_STK OneshotSpecialTaskStk[ONESHOT_SPEC_TASK_SIZE];
 static tls_os_sem_t	*oneshot_special_sem = NULL;
 //static u8 oneshot_special_flag = 0;
-static u8 oneshot_special_mode = 0;
+
 int tls_oneshot_special_timer_stop(void);
-void tls_oneshot_special_mode_set(u8 enable);
 #endif 
 
 static tls_os_sem_t	*gWifiRecvSem = NULL;
@@ -226,6 +228,7 @@ void tls_wifi_set_oneshot_customdata(u8 *data)
 	if (gpfResult)
 	{
 		gpfResult(WM_WIFI_ONESHOT_TYPE_CUSTOMDATA);	
+		tls_wifi_set_oneshot_flag(0);
 	}
 }
 
@@ -1023,13 +1026,9 @@ int tls_wifi_lsd_oneshot_special(u8 *data, u16 data_len)
 		if(lsd_param.user_len > 0)
 		{
 			tls_wifi_set_oneshot_customdata(lsd_param.user_data);
-			if(lsd_param.ssid_len == 0)
-			{
-				tls_wifi_set_oneshot_flag(0);
-				return 0;
-			}
+
 		}
-		if(lsd_param.ssid_len > 0)
+		else if(lsd_param.ssid_len > 0)
 		{
 			oneshot_lsd_finish();
 		}
@@ -1208,8 +1207,8 @@ void tls_oneshot_callback_start(void)
  	tls_airkiss_start();
 #endif
 
-#if TLS_CONFIG_UDP_LSD_SPECIAL 
-	tls_oneshot_special_mode_set(0);
+#if (TLS_CONFIG_UDP_LSD_SPECIAL || TLS_CONFIG_AIRKISS_MODE_ONESHOT)
+	tls_wifi_set_special_mode(0);
 #endif
 
 #if	TLS_CONFIG_UDP_LSD_SPECIAL
@@ -1220,12 +1219,11 @@ void tls_oneshot_callback_start(void)
 #endif
 }
 
-u8 tls_oneshot_special_mode_get(void);
 
 u8 tls_wifi_dataframe_recv(struct ieee80211_hdr *hdr, u32 data_len)
 {
-#if TLS_CONFIG_UDP_LSD_SPECIAL
-	if(tls_oneshot_special_mode_get() && hdr->duration_id)
+#if (TLS_CONFIG_UDP_LSD_SPECIAL || TLS_CONFIG_AIRKISS_MODE_ONESHOT)
+	if(tls_wifi_get_special_mode() && hdr->duration_id)
 	{
 		return 1;
 	}
@@ -1240,7 +1238,9 @@ u8 tls_wifi_dataframe_recv(struct ieee80211_hdr *hdr, u32 data_len)
 		return 1;
 	}
 
+#if TLS_CONFIG_UDP_ONE_SHOT
 	tls_os_sem_acquire(gWifiRecvSem, 0);
+#endif
 
 #if TLS_CONFIG_QQLINK_MODE_ONESHOT
     tls_process_qq_link_packet((u8 *)hdr, data_len);
@@ -1264,12 +1264,12 @@ u8 tls_wifi_dataframe_recv(struct ieee80211_hdr *hdr, u32 data_len)
 
 #endif
 
+#if TLS_CONFIG_UDP_ONE_SHOT
 	tls_os_sem_release(gWifiRecvSem);
+#endif
 
 	return 1;
 }
-
-void tls_oneshot_special_mode_set(u8 enable);
 
 void tls_oneshot_stop_clear_data(void)
 {
@@ -1337,9 +1337,9 @@ void tls_oneshot_stop_clear_data(void)
     tls_airkiss_stop();
 #endif
 
-#if	TLS_CONFIG_UDP_LSD_SPECIAL
+#if	(TLS_CONFIG_UDP_LSD_SPECIAL || TLS_CONFIG_AIRKISS_MODE_ONESHOT)
 	tls_oneshot_special_timer_stop();
-	tls_oneshot_special_mode_set(0);
+	tls_wifi_set_special_mode(0);
 #endif
 
 #if TLS_CONFIG_QQLINK_MODE_ONESHOT
@@ -1677,7 +1677,7 @@ void tls_oneshot_switch_channel_tim_stop(struct ieee80211_hdr *hdr)
 		ONESHOT_DBG("change to BW20 ch:%d\n", ch);
 		tls_wifi_change_chanel(ch);
 	}
-#if TLS_CONFIG_UDP_LSD_SPECIAL
+#if (TLS_CONFIG_UDP_LSD_SPECIAL || TLS_CONFIG_AIRKISS_MODE_ONESHOT)
 	else if(hdr->duration_id == 0)
 	{
 		ONESHOT_DBG("special frame!!!!!!!!!!!!!!\n");
@@ -1824,7 +1824,7 @@ void wm_oneshot_send_mac(void)
 }
 #endif
 
-#if TLS_CONFIG_UDP_LSD_SPECIAL
+#if (TLS_CONFIG_UDP_LSD_SPECIAL || TLS_CONFIG_AIRKISS_MODE_ONESHOT)
 int oneshot_polling_check(u8 *arg)
 {
 	u32 val;
@@ -1836,7 +1836,7 @@ int oneshot_polling_check(u8 *arg)
 		return 0;
 	}
 
-	if(tls_oneshot_special_mode_get() == 0)
+	if(tls_wifi_get_special_mode() == 0)
 	{
 		return 0;
 	}
@@ -1948,43 +1948,6 @@ int tls_oneshot_special_timer_stop(void)
 	ONESHOT_DBG("oneshot_timer_stop\n");
 	return 0;
 }
-
-void tls_oneshot_special_mode_set(u8 enable)
-{
-	u32 value;
-	u32 cpu_sr;
-	
-	cpu_sr = tls_os_set_critical();
-	if(enable)
-	{		
-		value = tls_reg_read32(0x400014E0);
-		value |= (1UL<<31);
-		tls_reg_write32(0x400014E0, value);
-		value = tls_reg_read32(0x400014E0);
-		
-		value = tls_reg_read32(0x40000B08);
-		value |= (1UL<<31);
-		tls_reg_write32(0x40000B08, value);	
-	}
-	else
-	{	
-		value = tls_reg_read32(0x400014E0);
-		value &= ~(1UL<<31);
-		tls_reg_write32(0x400014E0, value);
-		value = tls_reg_read32(0x400014E0);
-
-		value = tls_reg_read32(0x40000B08);
-		value &= ~(1UL<<31);
-		tls_reg_write32(0x40000B08, value);	
-	}	
-	oneshot_special_mode = enable;
-	tls_os_release_critical(cpu_sr);
-}
-
-u8 tls_oneshot_special_mode_get(void)
-{
-	return oneshot_special_mode;
-}
 #endif
 
 void tls_oneshot_task_handle(void *arg)
@@ -2036,7 +1999,7 @@ void tls_oneshot_task_handle(void *arg)
             break;
 
             case ONESHOT_SWITCH_CHANNEL:
-#if TLS_CONFIG_UDP_LSD_SPECIAL
+#if (TLS_CONFIG_UDP_LSD_SPECIAL || TLS_CONFIG_AIRKISS_MODE_ONESHOT)
 			if(chanRepeat >= 2)
 			{
 				chanRepeat = 0;
@@ -2049,20 +2012,20 @@ void tls_oneshot_task_handle(void *arg)
 			{
 				chanCnt = 0;		
 			}
-#if TLS_CONFIG_UDP_LSD_SPECIAL
-			if(0 == tls_oneshot_special_mode_get())
+#if (TLS_CONFIG_UDP_LSD_SPECIAL || TLS_CONFIG_AIRKISS_MODE_ONESHOT)
+			if(0 == tls_wifi_get_special_mode())
 			{
 				chanRepeat ++;
 				tls_oneshot_special_timer_start(500);
-				tls_oneshot_special_mode_set(1);
+				tls_wifi_set_special_mode(1);
 				wifi_change_chanel(airwifichan[chanCnt], 0);
 				ONESHOT_DBG("chan:%d,bandwidth:%d\n", airwifichan[chanCnt], 0);
 			}else
 #endif
 			{
-#if TLS_CONFIG_UDP_LSD_SPECIAL
+#if (TLS_CONFIG_UDP_LSD_SPECIAL || TLS_CONFIG_AIRKISS_MODE_ONESHOT)
 				tls_oneshot_special_timer_stop();
-				tls_oneshot_special_mode_set(0);
+				tls_wifi_set_special_mode(0);
 				chanRepeat ++;
 #endif
 				wifi_change_chanel(airwifichan[chanCnt], airchantype[chanCnt]);
@@ -2356,7 +2319,9 @@ void tls_wifi_set_oneshot_flag(u8 flag)
 #if TLS_CONFIG_AP_MODE_ONESHOT
 			if (guconeshotflag)
 			{
+				u8 wireless_protocol = IEEE80211_MODE_INFRA;		
 				tls_wifi_softap_destroy();
+				tls_param_set(TLS_PARAM_ID_WPROTOCOL, (void*) &wireless_protocol, TRUE);
 			}
 #endif
 		}

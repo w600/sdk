@@ -25,18 +25,19 @@ else
 			set -e
 			make  -f Makefile.mk  clean APP_BIN_NAME=$APP_BIN_NAME;
 		elif [ $2 == "flash" ]; then
-			if [ -z "$4" ];then
+			if [ -z "$3" ];then
 				set -e
 				make -f Makefile.mk clean APP_BIN_NAME=$APP_BIN_NAME;
 				make -f Makefile.mk flash COMPILE=$COMPILE \
 					APP_BIN_NAME=$APP_BIN_NAME TARGET=$APP_BIN_NAME\
 					DL_PORT=$DL_PORT DL_BAUD=$DL_BAUD
 			else
+				echo "download..."
 				set -e
 				make -f Makefile.mk clean APP_BIN_NAME=$APP_BIN_NAME;
 				make -f Makefile.mk flash COMPILE=$COMPILE \
 					APP_BIN_NAME=$APP_BIN_NAME TARGET=$APP_BIN_NAME\
-					DL_PORT=$4 DL_BAUD=$DL_BAUD
+					DL_PORT=$3 DL_BAUD=$DL_BAUD
 			fi
 		else
 			echo "error app param, you can input clean or flash !!!"
