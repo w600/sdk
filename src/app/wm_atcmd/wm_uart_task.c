@@ -923,8 +923,14 @@ static int cache_tcp_recv(struct tls_hostif_tx_msg *tx_msg)
     tail = precvmit->tail;
     while (1)
     {
+#ifdef __ICCARM__
+        int end = (TLS_SOCKET_RECV_BUF_SIZE) - 1 - (precvmit->head);
+        int n = (end + (tail)) & ((TLS_SOCKET_RECV_BUF_SIZE)-1);
+        copylen = n < end ? n : end+1;
+#else
         copylen = CIRC_SPACE_TO_END_FULL(precvmit->head,
                                          tail, TLS_SOCKET_RECV_BUF_SIZE);
+#endif
         if (copylen == 0)
         {
             tail = 0;

@@ -299,7 +299,14 @@ int tls_cmd_join_net(void)
 	tls_cmd_get_key(key);	
 
 	if(bssid.enable){
-		ret = tls_wifi_connect_by_ssid_bssid(ssid.ssid, ssid.ssid_len,bssid.bssid, key->key, key->key_len);
+		if (ssid.ssid_len)
+		{
+			ret = tls_wifi_connect_by_ssid_bssid(ssid.ssid, ssid.ssid_len,bssid.bssid, key->key, key->key_len);
+		}
+		else
+		{
+			ret = tls_wifi_connect_by_bssid(bssid.bssid, key->key, key->key_len);
+		}
 	}else{
 		ret = tls_wifi_connect(ssid.ssid, ssid.ssid_len, key->key, key->key_len);
 	}

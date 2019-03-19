@@ -649,7 +649,7 @@ PARTIAL_PARSED:
 				}	
 				macError = 0;
 			} else {
-				/* Lucky 13 step 3 and 4 condition:  Then let P' denote the 铿乺st
+				/* Lucky 13 step 3 and 4 condition:  Then let P' denote the ﬁrst
 					plen - t bytes of P, compute a MAC on SQN||HDR||P' and do a
 					constant-time comparison of the computed MAC with the
 					last t bytes of P. Return fatal error. */

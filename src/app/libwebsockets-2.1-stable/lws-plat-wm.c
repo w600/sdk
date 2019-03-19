@@ -291,7 +291,7 @@ lws_plat_context_late_destroy(struct lws_context *context)
 		pt++;
 	}
 #endif
-	close(context->fd_random);
+	//close(context->fd_random);
 }
 
 LWS_VISIBLE void
@@ -339,7 +339,8 @@ lws_malloc(u32 size)
 LWS_VISIBLE void 
 lws_free(void *p)
 {
-	tls_mem_free(p);
+	if(p)
+		tls_mem_free(p);
 }
 
 #ifdef LWS_USE_IPV6

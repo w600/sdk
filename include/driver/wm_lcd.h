@@ -46,47 +46,33 @@ typedef struct
 typedef enum
 {
 	/** Static (2 levels) */
-	BIAS_STATIC		= LCD_BIAS_STATIC,
+	BIAS_STATIC	   = LCD_BIAS_STATIC,
 	/** 1/2 Bias (3 levels) */
-	BIAS_ONEHALF 		= LCD_BIAS_ONEHALF,
+	BIAS_ONEHALF   = LCD_BIAS_ONEHALF,
 	/** 1/3 Bias (4 levels) */
-	BIAS_ONETHIRD 		= LCD_BIAS_ONETHIRD,
+	BIAS_ONETHIRD  = LCD_BIAS_ONETHIRD,
 	/** 1/4 Bias (4 levels) */
-	BIAS_ONEFOURTH	= LCD_BIAS_ONEFOURTH,
+	BIAS_ONEFOURTH = LCD_BIAS_ONEFOURTH,
 } LCD_BiasDef;
 
 typedef enum
 {
 	/** VLCD 2.7v */
 	VLCD27		= LCD_VLCD_27,
-	/** VLCD 2.8v */
-	VLCD28		= LCD_VLCD_28,
 	/** VLCD 2.9v */
 	VLCD29		= LCD_VLCD_29,
-	/** VLCD 3.0v */
-	VLCD30		= LCD_VLCD_30,
 	/** VLCD 3.1v */
 	VLCD31		= LCD_VLCD_31,
-	/** VLCD 3.2v */
-	VLCD32		= LCD_VLCD_32,
 	/** VLCD 3.3v */
 	VLCD33		= LCD_VLCD_33,
 } LCD_VlcdDef;
 
 typedef enum
 {
-	/** VLCD Powered by external VDD */
-	X_VDD,
-	/** VLCD Powered by VDD */
-	I_VDD,
-} LCD_VddDef;
-
-typedef enum
-{
 	/** max configuration is 8x16 */
-	MODE8x16,
+	MODE8x16 = LCD_CR_MODE_8X16,
 	/** max configuration is 4x20 */
-	MODE4x20,
+	MODE4x20 = LCD_CR_MODE_4x20,
 } LCD_ModeDef;
 
 typedef enum
@@ -94,15 +80,15 @@ typedef enum
 	/** Static (segments can be multiplexed with LCD_COM[0]) */
 	DUTY_STATIC		= LCD_DUTY_STATIC,
 	/**  1/2 Duty cycle (segments can be multiplexed with LCD_COM[0:1]) */
-	DUTY_ONEHALF		= LCD_DUTY_ONEHALF,
+	DUTY_ONEHALF	= LCD_DUTY_ONEHALF,
 	/**  1/3 Duty cycle (segments can be multiplexed with LCD_COM[0:2]) */
-	DUTY_ONETHIRD		= LCD_DUTY_ONETHIRD,
+	DUTY_ONETHIRD	= LCD_DUTY_ONETHIRD,
 	/**  1/4 Duty cycle (segments can be multiplexed with LCD_COM[0:3]) */
 	DUTY_ONEFOURTH	= LCD_DUTY_ONEFOURTH,
 	/**  1/5 Duty cycle (segments can be multiplexed with LCD_COM[0:4]) */
-	DUTY_ONEFIFTH	  	= LCD_DUTY_ONEFIFTH,
+	DUTY_ONEFIFTH	= LCD_DUTY_ONEFIFTH,
 	/**  1/6 Duty cycle (segments can be multiplexed with LCD_COM[0:5]) */
-	DUTY_ONESIXTH		= LCD_DUTY_ONESIXTH,
+	DUTY_ONESIXTH	= LCD_DUTY_ONESIXTH,
 	/**  1/7 Duty cycle (segments can be multiplexed with LCD_COM[0:6]) */
 	DUTY_ONESEVENTH	= LCD_DUTY_ONESEVENTH,
 	/**  1/8 Duty cycle (segments can be multiplexed with LCD_COM[0:7]) */
@@ -111,7 +97,6 @@ typedef enum
 
 typedef struct tls_lcd_options
 {
-	/** */
 	bool enable;
 	/** 8x16 or 4x20*/
 	LCD_ModeDef  mode;
@@ -121,8 +106,6 @@ typedef struct tls_lcd_options
 	LCD_DutyDef  duty;
 	/** Vlcd configuration */
 	LCD_VlcdDef  vlcd;
-	/** Vdd configuration */
-	LCD_VddDef  vdd_mode;
 	/** Fresh rate configuration */
 	uint16_t	 fresh_rate;
 } tls_lcd_options_t;
@@ -174,11 +157,8 @@ void tls_lcd_seg_set(int com, int bit, int on_off);
  * @brief   Select the voltage of LCD module
  * @param[in] vlcd   This parameter can be one of the following values:
  *     - \ref VLCD27
- *     - \ref VLCD28
  *     - \ref VLCD29
- *     - \ref VLCD30
  *     - \ref VLCD31
- *     - \ref VLCD32
  *     - \ref VLCD33
  */
 void tls_lcd_vlcd_sel(LCD_VlcdDef vlcd);
@@ -208,16 +188,6 @@ void tls_lcd_duty_set(LCD_DutyDef duty);
  *
  */
 void tls_lcd_bias_set(LCD_BiasDef bias);
-
-/**
- * @brief   Config the vdd mode of LCD module
- *
- * @param[in] duty   This parameter can be one of the following values:
- *     - \ref X_VDD
- *     - \ref I_VDD
- *
- */
-void tls_lcd_vdd_sel(LCD_VddDef vdd_mode);
 
 /**
  * @brief  Enable or disable the LCD module gpio

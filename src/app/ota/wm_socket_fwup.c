@@ -44,7 +44,7 @@ s8  socket_fwup_recv(u8 skt_num, struct pbuf *p, s8 err)
 			if(current_pack.operation > SOCKET_FWUP_DATA || current_pack.operation < SOCKET_FWUP_START)
 			{
 				TLS_DBGPRT_ERR("current_pack.operation = %d is invalid\n", current_pack.operation);
-				return ERR_ABRT;
+				goto err;//return ERR_ABRT;
 			}
 			if(current_pack.operation == SOCKET_FWUP_START)
 			{
@@ -52,14 +52,14 @@ s8  socket_fwup_recv(u8 skt_num, struct pbuf *p, s8 err)
 				if(session_id == 0)
 				{
 					TLS_DBGPRT_ERR("session_id = %d is invalid\n", session_id);
-					return ERR_ABRT;
+					goto err;//return ERR_ABRT;
 				}
 			}
 
 			if (current_pack.datalen == 0)
 			{
 				//tls_socket_close(skt_num);
-				return ERR_ABRT;
+				goto err;//return ERR_ABRT;
 			}			
 		}
 		else if(current_pack.datalen > 0 && current_pack.datalen <= SOCKET_FWUP_PACK_SIZE)
@@ -74,7 +74,7 @@ s8  socket_fwup_recv(u8 skt_num, struct pbuf *p, s8 err)
 				if(ret != TLS_FWUP_STATUS_OK)
 				{
 					TLS_DBGPRT_ERR("up data error.\n");
-					return ERR_ABRT;
+					goto err;//return ERR_ABRT;
 				}
 				
 				if(current_pack.operation == SOCKET_FWUP_END)
@@ -106,6 +106,11 @@ s8  socket_fwup_recv(u8 skt_num, struct pbuf *p, s8 err)
 	if (p)
             pbuf_free(p);
 	return ERR_OK;
+
+err:
+    if (p)
+        pbuf_free(p);
+    return ERR_ABRT;
 }
 
 void  socket_fwup_err(u8 skt_num, s8 err)

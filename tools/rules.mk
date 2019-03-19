@@ -79,14 +79,14 @@ ifeq ($(UNAME_O),Darwin)
 else
 	@echo "windows platform"
 	@$(SDK_TOOLS)/wm_gzip.exe  $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin
-	@$(SDK_TOOLS)/makeimg.exe  $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin "$(FIRMWAREDIR)/$(TARGET)/$(TARGET).img" 0 0 "$(FIRMWAREDIR)/version.txt" 90000 10100
-	@$(SDK_TOOLS)/makeimg.exe  $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin.gz "$(FIRMWAREDIR)/$(TARGET)/$(TARGET)_gz.img" 0 1 "$(FIRMWAREDIR)/version.txt" 90000 10100 $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin
+	@$(SDK_TOOLS)/makeimg.exe  $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin "$(FIRMWAREDIR)/$(TARGET)/$(TARGET).img" 3 0 "$(FIRMWAREDIR)/version.txt" 90000 10100
+	@$(SDK_TOOLS)/makeimg.exe  $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin.gz "$(FIRMWAREDIR)/$(TARGET)/$(TARGET)_gz.img" 3 1 "$(FIRMWAREDIR)/version.txt" 90000 10100 $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin
 	@$(SDK_TOOLS)/makeimg_all.exe "$(FIRMWAREDIR)/secboot.img" "$(FIRMWAREDIR)/$(TARGET)/$(TARGET).img" "$(FIRMWAREDIR)/$(TARGET)/$(TARGET).fls"
 	@$(SDK_TOOLS)/makeimg_dbg.exe "$(FIRMWAREDIR)/$(TARGET)/$(TARGET).img" "$(IMAGEODIR)/$(TARGET).dbg"
 endif
 endif
 	@cp $(IMAGEODIR)/$(TARGET).map $(FIRMWAREDIR)/$(TARGET)/$(TARGET).map
-	@rm ./test.bin
+#	@rm ./test.bin
 	@rm $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin.gz
 	@rm $(FIRMWAREDIR)/$(TARGET)/$(TARGET).img
 	@echo ""

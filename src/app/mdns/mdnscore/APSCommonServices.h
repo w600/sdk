@@ -6,8 +6,8 @@
 	Disclaimer: IMPORTANT: This Apple software is supplied to you, by Apple Inc. ("Apple"), in your
 	capacity as a current, and in good standing, Licensee in the MFi Licensing Program. Use of this
 	Apple software is governed by and subject to the terms and conditions of your MFi License,
-	including, but not limited to, the restrictions specified in the provision entitled 鈥漃ublic
-	Software鈥? and is further subject to your agreement to the following additional terms, and your
+	including, but not limited to, the restrictions specified in the provision entitled ”Public
+	Software”, and is further subject to your agreement to the following additional terms, and your
 	agreement that the use, installation, modification or redistribution of this Apple software
 	constitutes acceptance of these additional terms. If you do not agree with these additional terms,
 	please do not use, install, modify or redistribute this Apple software.
@@ -27,7 +27,7 @@
 	incorporated.
 	
 	Unless you explicitly state otherwise, if you provide any ideas, suggestions, recommendations, bug
-	fixes or enhancements to Apple in connection with this software (鈥淔eedback鈥?, you hereby grant to
+	fixes or enhancements to Apple in connection with this software (“Feedback”), you hereby grant to
 	Apple a non-exclusive, fully paid-up, perpetual, irrevocable, worldwide license to make, use,
 	reproduce, incorporate, modify, display, perform, sell, make or have made derivative works of,
 	distribute (directly or indirectly) and sublicense, such Feedback in connection with Apple products

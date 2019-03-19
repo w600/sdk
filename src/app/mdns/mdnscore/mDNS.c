@@ -1936,7 +1936,9 @@ mDNSexport mDNSu8 *ConstructServiceName(domainname *const fqdn,
 	return(dst);
 
  fail:
+#if MDNS_DEBUGMSGS > 2
 	LogMsg("ConstructServiceName: %s: %#s.%##s%##s", errormsg, name->c, type->c, domain->c);
+#endif
 	return(mDNSNULL);
 }
 
@@ -7135,7 +7137,9 @@ mDNSexport void mDNS_Close(mDNS *const m)
 		// Reset tail pointer back to empty state (not that it really matters on exit, but we'll do it anyway, for the sake of completeness)
 		m->rrcache_tail[slot] = &m->rrcache_hash[slot];
 	}
+#if MDNS_DEBUGMSGS
 	debugf("mDNS_Close: RR Cache was using %ld records, %d active", rrcache_totalused, rrcache_active);
+#endif
 	if (rrcache_active != m->rrcache_active)
 		LogMsg("*** ERROR *** rrcache_active %lu != m->rrcache_active %lu", rrcache_active, m->rrcache_active);
 

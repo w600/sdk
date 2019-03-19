@@ -1012,7 +1012,7 @@ static int32 parseGeneralNames(psPool_t *pool, unsigned char **buf, int32 len,
 			activeName = prevName->next;
 			memset(activeName, 0x0, sizeof(x509GeneralName_t));
 		}
-		activeName->id = (typeof(activeName->id))(*p & 0xF);
+        activeName->id = (x509GeneralNameID_e)(*p & 0xF);
 		p++; len--;
 		switch (activeName->id) {
 			case GN_OTHER:

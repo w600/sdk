@@ -30,7 +30,7 @@
  *  http://www.ietf.org/rfc/rfc2246.txt
  *  http://www.ietf.org/rfc/rfc4346.txt
  */
-
+#include "aes.h"
 #include "polarssl/config.h"
 
 #if defined(POLARSSL_SSL_TLS_C)

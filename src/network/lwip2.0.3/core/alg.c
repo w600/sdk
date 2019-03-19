@@ -18,24 +18,37 @@
 ******************************************************************************/
 #include <stdio.h>
 #include <string.h>
+#include "wm_type_def.h"
+#include "wm_timer.h"
 #include "tls_common.h"
+#include "tls_wireless.h"
 #include "lwip/ip.h"
 #include "lwip/udp.h"
 #include "lwip/icmp.h"
+#include "lwip/dns.h"
 #include "lwip/priv/tcp_priv.h"
-#include "lwip/sys.h"
 #include "lwip/alg.h"
 #include "netif/ethernetif.h"
 
 #if TLS_CONFIG_AP_OPT_FWD
 extern u8 *hostapd_get_mac(void);
+extern u8 *wpa_supplicant_get_mac(void);
+extern u8 *wpa_supplicant_get_bssid(void);
 extern struct netif *tls_get_netif(void);
+extern struct tls_wif *tls_get_wif_data(void);
 
 //#define NAPT_ALLOC_DEBUG
 #ifdef  NAPT_ALLOC_DEBUG
 static u16 napt4ic_cnt;
 static u16 napt4tcp_cnt;
 static u16 napt4udp_cnt;
+#endif
+
+//#define NAPT_DEBUG
+#ifdef  NAPT_DEBUG
+#define NAPT_PRINT printf
+#else
+#define NAPT_PRINT(...)
 #endif
 
 #define IP_PROTO_GRE                 47
@@ -90,11 +103,14 @@ static struct napt_table_head_4tu napt_table_4tcp;
 static struct napt_table_head_4tu napt_table_4udp;
 static struct napt_table_head_4ic napt_table_4ic;
 
-//#define NAPT_TABLE_MUTEX_LOCK
+#define NAPT_TABLE_MUTEX_LOCK
 #ifdef  NAPT_TABLE_MUTEX_LOCK
-static sys_mutex_t napt_table_lock_4tcp;
-static sys_mutex_t napt_table_lock_4udp;
-static sys_mutex_t napt_table_lock_4ic;
+static tls_os_sem_t *napt_table_lock_4tcp;
+static tls_os_sem_t *napt_table_lock_4udp;
+static tls_os_sem_t *napt_table_lock_4ic;
+static bool napt_check_tcp = FALSE;
+static bool napt_check_udp = FALSE;
+static bool napt_check_ic  = FALSE;
 #endif
 
 /* tcp&udp */
@@ -123,7 +139,7 @@ static struct napt_addr_gre gre_info;
 *****************************************************************************/
 static inline void *alg_napt_mem_alloc(u32 size)
 {
-    return mem_malloc(size);
+    return tls_mem_alloc(size);
 }
 
 /*****************************************************************************
@@ -142,8 +158,67 @@ static inline void *alg_napt_mem_alloc(u32 size)
 *****************************************************************************/
 static inline void alg_napt_mem_free(void *p)
 {
-    mem_free(p);
+    tls_mem_free(p);
     return;
+}
+
+/*****************************************************************************
+ Prototype    : alg_napt_try_lock
+ Description  : try hold lock
+ Input        : tls_os_sem_t *lock  point lock
+ Output       : None
+ Return Value : int  0  success
+                    -1  failed
+ ------------------------------------------------------------------------------
+ 
+  History        :
+  1.Date         : 2019/2/1
+    Author       : Li Limin, lilm@winnermicro.com
+    Modification : Created function
+
+*****************************************************************************/
+static inline int alg_napt_try_lock(tls_os_sem_t *lock)
+{
+    return (tls_os_sem_acquire(lock, HZ / 10) == TLS_OS_SUCCESS) ? 0 : -1;
+}
+
+/*****************************************************************************
+ Prototype    : alg_napt_lock
+ Description  : hold lock
+ Input        : tls_os_sem_t *lock  point lock
+ Output       : None
+ Return Value : void
+ ------------------------------------------------------------------------------
+ 
+  History        :
+  1.Date         : 2019/2/1
+    Author       : Li Limin, lilm@winnermicro.com
+    Modification : Created function
+
+*****************************************************************************/
+static inline void alg_napt_lock(tls_os_sem_t *lock)
+{
+    tls_os_sem_acquire(lock, 0);
+    return;
+}
+
+/*****************************************************************************
+ Prototype    : alg_napt_unlock
+ Description  : release lock
+ Input        : tls_os_sem_t *lock  point lock
+ Output       : None
+ Return Value : void
+ ------------------------------------------------------------------------------
+ 
+  History        :
+  1.Date         : 2019/2/1
+    Author       : Li Limin, lilm@winnermicro.com
+    Modification : Created function
+
+*****************************************************************************/
+static inline void alg_napt_unlock(tls_os_sem_t *lock)
+{
+    tls_os_sem_release(lock);
 }
 
 #ifdef NAPT_TABLE_LIMIT
@@ -171,7 +246,7 @@ static inline bool alg_napt_table_is_full(void)
 #ifdef NAPT_ALLOC_DEBUG
         printf("@@@ napt batle: limit is reached for tcp/udp.\r\n");
 #endif
-        LWIP_DEBUGF(NAPT_DEBUG, ("napt batle: limit is reached for tcp/udp.\n"));
+        NAPT_PRINT("napt batle: limit is reached for tcp/udp.\n");
         is_full = true;
     }
 
@@ -759,6 +834,168 @@ static inline void alg_napt_table_update_4udp(struct napt_addr_4tu *napt)
 }
 
 /*****************************************************************************
+ Prototype    : alg_napt_table_check_4tcp
+ Description  : tcp event handle
+ Input        : void
+ Output       : None
+ Return Value : void
+ ------------------------------------------------------------------------------
+ 
+  History        :
+  1.Date         : 2015/3/10
+    Author       : Li Limin, lilm@winnermicro.com
+    Modification : Created function
+
+*****************************************************************************/
+static void alg_napt_table_check_4tcp(void)
+{
+    struct napt_addr_4tu *napt4tcp;
+    struct napt_addr_4tu *napt4tcp_prev;
+
+    /* tcp */
+#ifdef NAPT_TABLE_MUTEX_LOCK
+    if (alg_napt_try_lock(napt_table_lock_4tcp))
+    {
+        //printf("## try tcp\r\n");
+        napt_check_tcp = TRUE;
+        return;
+    }
+    napt_check_tcp = FALSE;
+#endif
+    for (napt4tcp_prev = napt_table_4tcp.next;\
+         NULL != napt4tcp_prev;\
+         napt4tcp_prev = napt4tcp_prev->next)
+    {
+        napt4tcp = napt4tcp_prev->next;
+        if (NULL != napt4tcp)
+        {
+            if (0 == napt4tcp->time_stamp)
+            {
+#ifdef NAPT_TABLE_LIMIT
+                napt_table_4tcp.cnt--;
+#endif
+                napt4tcp_prev->next = napt4tcp->next;
+                napt4tcp->next = NULL;
+                alg_napt_mem_free(napt4tcp);
+#ifdef NAPT_ALLOC_DEBUG
+                printf("@@ napt tcp port free %hu\r\n", --napt4tcp_cnt);
+#endif
+            }
+            else
+            {
+                napt4tcp->time_stamp = 0;
+            }
+        }
+        
+    }
+    napt4tcp = napt_table_4tcp.next;
+    if (NULL != napt4tcp)
+    {
+        if (0 == napt4tcp->time_stamp)
+        {
+#ifdef NAPT_TABLE_LIMIT
+            napt_table_4tcp.cnt--;
+#endif
+            napt_table_4tcp.next = napt4tcp->next;
+            napt4tcp->next = NULL;
+            alg_napt_mem_free(napt4tcp);
+#ifdef NAPT_ALLOC_DEBUG
+            printf("@@ napt tcp port free %hu\r\n", --napt4tcp_cnt);
+#endif
+        }
+        else
+        {
+            napt4tcp->time_stamp = 0;
+        }
+    }
+#ifdef NAPT_TABLE_MUTEX_LOCK
+    alg_napt_unlock(napt_table_lock_4tcp);
+#endif
+    return;
+}
+
+/*****************************************************************************
+ Prototype    : alg_napt_table_check_4udp
+ Description  : udp event handle
+ Input        : void
+ Output       : None
+ Return Value : void
+ ------------------------------------------------------------------------------
+ 
+  History        :
+  1.Date         : 2015/3/10
+    Author       : Li Limin, lilm@winnermicro.com
+    Modification : Created function
+
+*****************************************************************************/
+static void alg_napt_table_check_4udp(void)
+{
+    struct napt_addr_4tu *napt4udp;
+    struct napt_addr_4tu *napt4udp_prev;
+
+    /* udp */
+#ifdef NAPT_TABLE_MUTEX_LOCK
+    if (alg_napt_try_lock(napt_table_lock_4udp))
+    {
+        //printf("## try udp\r\n");
+        napt_check_udp = TRUE;
+        return;
+    }
+    napt_check_udp = FALSE;
+#endif
+    for (napt4udp_prev = napt_table_4udp.next;\
+         NULL != napt4udp_prev;\
+         napt4udp_prev = napt4udp_prev->next)
+    {
+        napt4udp = napt4udp_prev->next;
+        if (NULL != napt4udp)
+        {
+            if (0 == napt4udp->time_stamp)
+            {
+#ifdef NAPT_TABLE_LIMIT
+                napt_table_4udp.cnt--;
+#endif
+                napt4udp_prev->next = napt4udp->next;
+                napt4udp->next = NULL;
+                alg_napt_mem_free(napt4udp);
+#ifdef NAPT_ALLOC_DEBUG
+                printf("@@ napt udp port free %hu\r\n", --napt4udp_cnt);
+#endif
+            }
+            else
+            {
+                napt4udp->time_stamp = 0;
+            }
+        }
+        
+    }
+    napt4udp = napt_table_4udp.next;
+    if (NULL != napt4udp)
+    {
+        if (0 == napt4udp->time_stamp)
+        {
+#ifdef NAPT_TABLE_LIMIT
+            napt_table_4udp.cnt--;
+#endif
+            napt_table_4udp.next = napt4udp->next;
+            napt4udp->next = NULL;
+            alg_napt_mem_free(napt4udp);
+#ifdef NAPT_ALLOC_DEBUG
+            printf("@@ napt udp port free %hu\r\n", --napt4udp_cnt);
+#endif
+        }
+        else
+        {
+            napt4udp->time_stamp = 0;
+        }
+    }
+#ifdef NAPT_TABLE_MUTEX_LOCK
+    alg_napt_unlock(napt_table_lock_4udp);
+#endif
+    return;
+}
+
+/*****************************************************************************
  Prototype    : alg_napt_table_check_4ic
  Description  : icmp event handle
  Input        : void
@@ -779,7 +1016,13 @@ static void alg_napt_table_check_4ic(void)
 
     /* icmp */
 #ifdef NAPT_TABLE_MUTEX_LOCK
-    sys_mutex_lock(napt_table_lock_4ic);
+    if (alg_napt_try_lock(napt_table_lock_4ic))
+    {
+        //printf("## try ic\r\n");
+        napt_check_ic = TRUE;
+        return;
+    }
+    napt_check_ic = FALSE;
 #endif
     /* skip the first item */
     for (napt4ic_prev = napt_table_4ic.next;\
@@ -830,157 +1073,7 @@ static void alg_napt_table_check_4ic(void)
         }
     }
 #ifdef NAPT_TABLE_MUTEX_LOCK
-    sys_mutex_unlock(napt_table_lock_4ic);
-#endif
-    return;
-}
-
-/*****************************************************************************
- Prototype    : alg_napt_table_check_4tcp
- Description  : tcp event handle
- Input        : void
- Output       : None
- Return Value : void
- ------------------------------------------------------------------------------
- 
-  History        :
-  1.Date         : 2015/3/10
-    Author       : Li Limin, lilm@winnermicro.com
-    Modification : Created function
-
-*****************************************************************************/
-static void alg_napt_table_check_4tcp(void)
-{
-    struct napt_addr_4tu *napt4tcp;
-    struct napt_addr_4tu *napt4tcp_prev;
-
-    /* tcp */
-#ifdef NAPT_TABLE_MUTEX_LOCK
-    sys_mutex_lock(napt_table_lock_4tcp);
-#endif
-    for (napt4tcp_prev = napt_table_4tcp.next;\
-         NULL != napt4tcp_prev;\
-         napt4tcp_prev = napt4tcp_prev->next)
-    {
-        napt4tcp = napt4tcp_prev->next;
-        if (NULL != napt4tcp)
-        {
-            if (0 == napt4tcp->time_stamp)
-            {
-#ifdef NAPT_TABLE_LIMIT
-                napt_table_4tcp.cnt--;
-#endif
-                napt4tcp_prev->next = napt4tcp->next;
-                napt4tcp->next = NULL;
-                alg_napt_mem_free(napt4tcp);
-#ifdef NAPT_ALLOC_DEBUG
-                printf("@@ napt tcp port free %hu\r\n", --napt4tcp_cnt);
-#endif
-            }
-            else
-            {
-                napt4tcp->time_stamp = 0;
-            }
-        }
-        
-    }
-    napt4tcp = napt_table_4tcp.next;
-    if (NULL != napt4tcp)
-    {
-        if (0 == napt4tcp->time_stamp)
-        {
-#ifdef NAPT_TABLE_LIMIT
-            napt_table_4tcp.cnt--;
-#endif
-            napt_table_4tcp.next = napt4tcp->next;
-            napt4tcp->next = NULL;
-            alg_napt_mem_free(napt4tcp);
-#ifdef NAPT_ALLOC_DEBUG
-            printf("@@ napt tcp port free %hu\r\n", --napt4tcp_cnt);
-#endif
-        }
-        else
-        {
-            napt4tcp->time_stamp = 0;
-        }
-    }
-#ifdef NAPT_TABLE_MUTEX_LOCK
-    sys_mutex_unlock(napt_table_lock_4tcp);
-#endif
-    return;
-}
-
-/*****************************************************************************
- Prototype    : alg_napt_table_check_4udp
- Description  : udp event handle
- Input        : void
- Output       : None
- Return Value : void
- ------------------------------------------------------------------------------
- 
-  History        :
-  1.Date         : 2015/3/10
-    Author       : Li Limin, lilm@winnermicro.com
-    Modification : Created function
-
-*****************************************************************************/
-static void alg_napt_table_check_4udp(void)
-{
-    struct napt_addr_4tu *napt4udp;
-    struct napt_addr_4tu *napt4udp_prev;
-
-    /* udp */
-#ifdef NAPT_TABLE_MUTEX_LOCK
-    sys_mutex_lock(napt_table_lock_4udp);
-#endif
-    for (napt4udp_prev = napt_table_4udp.next;\
-         NULL != napt4udp_prev;\
-         napt4udp_prev = napt4udp_prev->next)
-    {
-        napt4udp = napt4udp_prev->next;
-        if (NULL != napt4udp)
-        {
-            if (0 == napt4udp->time_stamp)
-            {
-#ifdef NAPT_TABLE_LIMIT
-                napt_table_4udp.cnt--;
-#endif
-                napt4udp_prev->next = napt4udp->next;
-                napt4udp->next = NULL;
-                alg_napt_mem_free(napt4udp);
-#ifdef NAPT_ALLOC_DEBUG
-                printf("@@ napt udp port free %hu\r\n", --napt4udp_cnt);
-#endif
-            }
-            else
-            {
-                napt4udp->time_stamp = 0;
-            }
-        }
-        
-    }
-    napt4udp = napt_table_4udp.next;
-    if (NULL != napt4udp)
-    {
-        if (0 == napt4udp->time_stamp)
-        {
-#ifdef NAPT_TABLE_LIMIT
-            napt_table_4udp.cnt--;
-#endif
-            napt_table_4udp.next = napt4udp->next;
-            napt4udp->next = NULL;
-            alg_napt_mem_free(napt4udp);
-#ifdef NAPT_ALLOC_DEBUG
-            printf("@@ napt udp port free %hu\r\n", --napt4udp_cnt);
-#endif
-        }
-        else
-        {
-            napt4udp->time_stamp = 0;
-        }
-    }
-#ifdef NAPT_TABLE_MUTEX_LOCK
-    sys_mutex_unlock(napt_table_lock_4udp);
+    alg_napt_unlock(napt_table_lock_4ic);
 #endif
     return;
 }
@@ -1015,65 +1108,8 @@ static void alg_napt_table_check_4gre(void)
 }
 
 /*****************************************************************************
- Prototype    : alg_napt_port_is_used
- Description  : port is used
- Input        : u16 port        port number
- Output       : None
- Return Value : bool    true    used
-                        false   unused
- ------------------------------------------------------------------------------
- 
-  History        :
-  1.Date         : 2015/3/10
-    Author       : Li Limin, lilm@winnermicro.com
-    Modification : Created function
-
-*****************************************************************************/
-bool alg_napt_port_is_used(u16 port)
-{
-    bool is_used = false;
-    struct napt_addr_4tu *napt_tcp;
-    struct napt_addr_4tu *napt_udp;
-
-#ifdef NAPT_TABLE_MUTEX_LOCK
-    sys_mutex_lock(napt_table_lock_4tcp);
-#endif
-    NAPT_TABLE_FOREACH(napt_tcp, napt_table_4tcp)
-    {
-        if (port == napt_tcp->new_port)
-        {
-            is_used = true;
-            break;
-        }
-    }
-#ifdef NAPT_TABLE_MUTEX_LOCK
-    sys_mutex_unlock(napt_table_lock_4tcp);
-#endif
-
-    if (true != is_used)
-    {
-#ifdef NAPT_TABLE_MUTEX_LOCK
-        sys_mutex_lock(napt_table_lock_4udp);
-#endif
-        NAPT_TABLE_FOREACH(napt_udp, napt_table_4udp)
-        {
-            if (port == napt_udp->new_port)
-            {
-                is_used = true;
-                break;
-            }
-        }
-#ifdef NAPT_TABLE_MUTEX_LOCK
-        sys_mutex_unlock(napt_table_lock_4udp);
-#endif
-    }
-
-    return is_used;
-}
-
-/*****************************************************************************
- Prototype    : alg_napt_event_handle
- Description  : napt event handle
+ Prototype    : alg_napt_table_check
+ Description  : napt table age check
  Input        : u32 type  event type
  Output       : None
  Return Value : void
@@ -1085,95 +1121,31 @@ bool alg_napt_port_is_used(u16 port)
     Modification : Created function
 
 *****************************************************************************/
-void alg_napt_event_handle(u32 type)
+static void alg_napt_table_check(void *arg)
 {
-    switch (type)
-    {
-        case NAPT_TMR_TYPE_TCP:
-        {
-            alg_napt_table_check_4tcp();
-            break;
-        }
-        case NAPT_TMR_TYPE_UDP:
-        {
-            alg_napt_table_check_4udp();
-            break;
-        }
-        case NAPT_TMR_TYPE_ICMP:
-        {
-            alg_napt_table_check_4ic();
-            break;
-        }
-        case NAPT_TMR_TYPE_GRE:
-        {
-            alg_napt_table_check_4gre();
-            break;
-        }
-        default:
-        {
-            break;
-        }
-    }
+    alg_napt_table_check_4tcp();
+    alg_napt_table_check_4udp();
+    alg_napt_table_check_4ic();
+    alg_napt_table_check_4gre();
 
     return;
 }
 
-/*****************************************************************************
- Prototype    : alg_napt_init
- Description  : Network Address Port Translation（napt）initialize
- Input        : void
- Output       : None
- Return Value : int      0   success
-                     other   fail
- ------------------------------------------------------------------------------
- 
-  History        :
-  1.Date         : 2015/3/10
-    Author       : Li Limin, lilm@winnermicro.com
-    Modification : Created function
-
-*****************************************************************************/
-int alg_napt_init(void)
-{
-    int err = 0;
-
-    memset(&napt_table_4tcp, 0, sizeof(struct napt_table_head_4tu));
-    memset(&napt_table_4udp, 0, sizeof(struct napt_table_head_4tu));
-    memset(&napt_table_4ic, 0, sizeof(struct napt_table_head_4ic));
-
-    napt_curr_port = NAPT_LOCAL_PORT_RANGE_START;
-    napt_curr_id   = NAPT_ICMP_ID_RANGE_START;
-
 #ifdef NAPT_TABLE_MUTEX_LOCK
-    err = sys_mutex_new(&napt_table_lock_4tcp);
-    if (err)
-    {
-        LWIP_DEBUGF(NAPT_DEBUG, ("failed to init alg.\n"));
-        return err;
-    }
+static void alg_napt_table_check_try(void)
+{
+    if (napt_check_tcp)
+        alg_napt_table_check_4tcp();
 
-    err = sys_mutex_new(&napt_table_lock_4udp);
-    if (err)
-    {
-        LWIP_DEBUGF(NAPT_DEBUG, ("failed to init alg.\n"));
-        return err;
-    }
+    if (napt_check_udp)
+        alg_napt_table_check_4udp();
 
-    err = sys_mutex_new(&napt_table_lock_4ic);
-    if (err)
-    {
-        LWIP_DEBUGF(NAPT_DEBUG, ("failed to init alg.\n"));
-    }
-#endif
+    if (napt_check_ic)
+        alg_napt_table_check_4ic();
 
-#ifdef NAPT_ALLOC_DEBUG
-    napt4ic_cnt = 0;
-    napt4tcp_cnt = 0;
-    napt4udp_cnt = 0;
-#endif
-
-    return err;
+    return;
 }
+#endif
 
 /*****************************************************************************
  Prototype    : alg_hdr_16bitsum
@@ -1276,6 +1248,30 @@ static inline u16 alg_tcpudphdr_chksum(u32 src_addr, u32 dst_addr, u8 proto,
 
 /*****************************************************************************
  Prototype    : alg_output
+ Description  : wifi mac layer forward
+ Input        : u8 *ehdr
+                u16 eth_len
+ Output       : None
+ Return Value : int      0   success
+                        -1   fail
+ ------------------------------------------------------------------------------
+ 
+  History        :
+  1.Date         : 2015/3/10
+    Author       : Li Limin, lilm@winnermicro.com
+    Modification : Created function
+
+*****************************************************************************/
+static inline int alg_output(u8 *ehdr, u16 eth_len)
+{
+    int err;
+    struct tls_wif *wif = tls_get_wif_data();
+    err = tls_wl_if_xmit(wif, ehdr, eth_len, FALSE, FALSE);
+    return err;
+}
+
+/*****************************************************************************
+ Prototype    : alg_output2
  Description  : send by lwip
  Input        : struct netif *netif
                 struct ip_hdr *ip_hdr
@@ -1290,7 +1286,7 @@ static inline u16 alg_tcpudphdr_chksum(u32 src_addr, u32 dst_addr, u8 proto,
     Modification : Created function
 
 *****************************************************************************/
-static inline int alg_output(struct netif *netif, const struct ip_hdr *ip_hdr)
+static inline int alg_output2(struct netif *netif, const struct ip_hdr *ip_hdr)
 {
     int err;
     u16 len;
@@ -1374,6 +1370,7 @@ static int alg_icmp_proc(const u8 *bssid,
     struct napt_addr_4ic *napt;
     struct icmp_echo_hdr *icmp_hdr;
     struct netif *net_if = tls_get_netif();
+    u8 *mac = wpa_supplicant_get_mac();
     u8 *mac2 = hostapd_get_mac();
     u8 iphdr_len;
 
@@ -1383,14 +1380,14 @@ static int alg_icmp_proc(const u8 *bssid,
     if (0 == compare_ether_addr(bssid, mac2))
     {
         if ((ip_hdr->dest.addr == ip_addr_get_ip4_u32(&net_if->next->ip_addr))||
-		   (ip_hdr->dest.addr == ip_addr_get_ip4_u32(&net_if->ip_addr)))
+		    (ip_hdr->dest.addr == ip_addr_get_ip4_u32(&net_if->ip_addr)))
         {
             err = alg_deliver2lwip(bssid, ehdr, eth_len);
             return err;
         }
 
 #ifdef NAPT_TABLE_MUTEX_LOCK
-        sys_mutex_lock(napt_table_lock_4ic);
+        alg_napt_lock(napt_table_lock_4ic);
 #endif
         napt = alg_napt_get_by_src_id(icmp_hdr->id, ip_hdr->src.addr >> 24);
         if (NULL == napt)
@@ -1399,7 +1396,7 @@ static int alg_icmp_proc(const u8 *bssid,
             if (NULL == napt)
             {
 #ifdef NAPT_TABLE_MUTEX_LOCK
-                sys_mutex_unlock(napt_table_lock_4ic);
+                alg_napt_unlock(napt_table_lock_4ic);
 #endif
                 return -1;
             }
@@ -1412,7 +1409,7 @@ static int alg_icmp_proc(const u8 *bssid,
         icmp_hdr->id = napt->new_id;
 
 #ifdef NAPT_TABLE_MUTEX_LOCK
-        sys_mutex_unlock(napt_table_lock_4ic);
+        alg_napt_unlock(napt_table_lock_4ic);
 #endif
 
         icmp_hdr->chksum = 0;
@@ -1422,12 +1419,22 @@ static int alg_icmp_proc(const u8 *bssid,
         ip_hdr->_chksum = 0;
         ip_hdr->_chksum = alg_iphdr_chksum((u16 *)ip_hdr, iphdr_len);
 
-        err = alg_output(net_if, ip_hdr);
+        if ((ip_addr_get_ip4_u32(&net_if->ip_addr) & 0xFFFFFF) == (ip_hdr->dest.addr & 0xFFFFFF))
+        {
+            err = alg_output2(net_if, ip_hdr);
+        }
+        else /* to the internet */
+        {
+            memcpy(ehdr, wpa_supplicant_get_bssid(), ETH_ALEN);
+            memcpy(ehdr + ETH_ALEN, mac, ETH_ALEN);
+            /* forward to ap...*/
+            err = alg_output(ehdr, eth_len);
+        }
     }
     else
     {
 #ifdef NAPT_TABLE_MUTEX_LOCK
-        sys_mutex_lock(napt_table_lock_4ic);
+        alg_napt_lock(napt_table_lock_4ic);
 #endif
         napt = alg_napt_get_by_dst_id(icmp_hdr->id);
         if (NULL != napt)
@@ -1439,18 +1446,26 @@ static int alg_icmp_proc(const u8 *bssid,
             icmp_hdr->chksum = alg_iphdr_chksum((u16 *)icmp_hdr, ntohs(ip_hdr->_len) - iphdr_len);
 
             ip_hdr->dest.addr = ((napt->src_ip) << 24) | (ip_addr_get_ip4_u32(&net_if->next->ip_addr) & 0x00ffffff);
+
+#ifdef NAPT_TABLE_MUTEX_LOCK
+            alg_napt_unlock(napt_table_lock_4ic);
+#endif
+
             ip_hdr->_chksum = 0;
             ip_hdr->_chksum = alg_iphdr_chksum((u16 *)ip_hdr, iphdr_len);
 
-            err = alg_output(net_if->next, ip_hdr);
+            memcpy(ehdr, tls_dhcps_getmac((ip_addr_t *)&ip_hdr->dest.addr), ETH_ALEN);
+            memcpy(ehdr + ETH_ALEN, mac2, ETH_ALEN);
+            err = alg_output(ehdr, eth_len);
         }
         else
         {
+#ifdef NAPT_TABLE_MUTEX_LOCK
+            alg_napt_unlock(napt_table_lock_4ic);
+#endif
+
             err = alg_deliver2lwip(bssid, ehdr, eth_len);
         }
-#ifdef NAPT_TABLE_MUTEX_LOCK
-        sys_mutex_unlock(napt_table_lock_4ic);
-#endif
     }
 
     return err;
@@ -1487,6 +1502,7 @@ static int alg_tcp_proc(const u8 *bssid,
     struct napt_addr_4tu *napt;
     struct tcp_hdr *tcp_hdr;
     struct netif *net_if = tls_get_netif();
+    u8 *mac = wpa_supplicant_get_mac();
     u8 *mac2 = hostapd_get_mac();
     u8 iphdr_len;
 
@@ -1503,7 +1519,7 @@ static int alg_tcp_proc(const u8 *bssid,
         }
 
 #ifdef NAPT_TABLE_MUTEX_LOCK
-        sys_mutex_lock(napt_table_lock_4tcp);
+        alg_napt_lock(napt_table_lock_4tcp);
 #endif
         src_ip = ip_hdr->src.addr >> 24;
         napt = alg_napt_get_tcp_port_by_src(tcp_hdr->src, src_ip);
@@ -1513,7 +1529,7 @@ static int alg_tcp_proc(const u8 *bssid,
             if (NULL == napt)
             {
 #ifdef NAPT_TABLE_MUTEX_LOCK
-                sys_mutex_unlock(napt_table_lock_4tcp);
+                alg_napt_unlock(napt_table_lock_4tcp);
 #endif
                 return -1;
             }
@@ -1523,14 +1539,15 @@ static int alg_tcp_proc(const u8 *bssid,
             alg_napt_table_update_4tcp(napt);
         }
 
+        tcp_hdr->src = napt->new_port;
+#ifdef NAPT_TABLE_MUTEX_LOCK
+        alg_napt_unlock(napt_table_lock_4tcp);
+#endif
+
         ip_hdr->src.addr = ip_addr_get_ip4_u32(&net_if->ip_addr);
         ip_hdr->_chksum = 0;
         ip_hdr->_chksum = alg_iphdr_chksum((u16 *)ip_hdr, iphdr_len);
 
-        tcp_hdr->src = napt->new_port;
-#ifdef NAPT_TABLE_MUTEX_LOCK
-        sys_mutex_unlock(napt_table_lock_4tcp);
-#endif
         tcp_hdr->chksum = 0;
         tcp_hdr->chksum = alg_tcpudphdr_chksum(ip_hdr->src.addr,
                                                ip_hdr->dest.addr,
@@ -1538,14 +1555,23 @@ static int alg_tcp_proc(const u8 *bssid,
                                                (u16 *)tcp_hdr,
                                                ntohs(ip_hdr->_len) - iphdr_len);
 
-        /* forward to ap...*/
-        err = alg_output(net_if, ip_hdr);
+        if ((ip_addr_get_ip4_u32(&net_if->ip_addr) & 0xFFFFFF) == (ip_hdr->dest.addr & 0xFFFFFF))
+        {
+            err = alg_output2(net_if, ip_hdr);
+        }
+        else /* to the internet */
+        {
+            memcpy(ehdr, wpa_supplicant_get_bssid(), ETH_ALEN);
+            memcpy(ehdr + ETH_ALEN, mac, ETH_ALEN);
+            /* forward to ap...*/
+            err = alg_output(ehdr, eth_len);
+        }
     }
     /* from ap... */
     else
     {
 #ifdef NAPT_TABLE_MUTEX_LOCK
-        sys_mutex_lock(napt_table_lock_4tcp);
+        alg_napt_lock(napt_table_lock_4tcp);
 #endif
         napt = alg_napt_get_tcp_port_by_dest(tcp_hdr->dest);
         /* forward to sta... */
@@ -1558,6 +1584,11 @@ static int alg_tcp_proc(const u8 *bssid,
             ip_hdr->_chksum = alg_iphdr_chksum((u16 *)ip_hdr, iphdr_len);
 
             tcp_hdr->dest = napt->src_port;
+
+#ifdef NAPT_TABLE_MUTEX_LOCK
+            alg_napt_unlock(napt_table_lock_4tcp);
+#endif
+
             tcp_hdr->chksum = 0;
             tcp_hdr->chksum = alg_tcpudphdr_chksum(ip_hdr->src.addr,
                                                    ip_hdr->dest.addr,
@@ -1565,16 +1596,19 @@ static int alg_tcp_proc(const u8 *bssid,
                                                    (u16 *)tcp_hdr,
                                                    ntohs(ip_hdr->_len) - iphdr_len);
 
-            err = alg_output(net_if->next, ip_hdr);
+            memcpy(ehdr, tls_dhcps_getmac((ip_addr_t *)&ip_hdr->dest.addr), ETH_ALEN);
+            memcpy(ehdr + ETH_ALEN, mac2, ETH_ALEN);
+            err = alg_output(ehdr, eth_len);
         }
         /* deliver to default gateway */
         else
         {
+#ifdef NAPT_TABLE_MUTEX_LOCK
+            alg_napt_unlock(napt_table_lock_4tcp);
+#endif
+
             err = alg_deliver2lwip(bssid, ehdr, eth_len);
         }
-#ifdef NAPT_TABLE_MUTEX_LOCK
-        sys_mutex_unlock(napt_table_lock_4tcp);
-#endif
     }
 
     return err;
@@ -1611,6 +1645,7 @@ static int alg_udp_proc(const u8 *bssid,
     struct napt_addr_4tu *napt;
     struct udp_hdr *udp_hdr;
     struct netif *net_if = tls_get_netif();
+    u8 *mac = wpa_supplicant_get_mac();
     u8 *mac2 = hostapd_get_mac();
     u8 iphdr_len;
     int is_dns = 0;
@@ -1639,7 +1674,7 @@ static int alg_udp_proc(const u8 *bssid,
 
         /* create/update napt item */
 #ifdef NAPT_TABLE_MUTEX_LOCK
-        sys_mutex_lock(napt_table_lock_4udp);
+        alg_napt_lock(napt_table_lock_4udp);
 #endif
         src_ip = ip_hdr->src.addr >> 24;
         napt = alg_napt_get_udp_port_by_src(udp_hdr->src, src_ip);
@@ -1649,7 +1684,7 @@ static int alg_udp_proc(const u8 *bssid,
             if (NULL == napt)
             {
 #ifdef NAPT_TABLE_MUTEX_LOCK
-                sys_mutex_unlock(napt_table_lock_4udp);
+                alg_napt_unlock(napt_table_lock_4udp);
 #endif
                 return -1;
             }
@@ -1659,6 +1694,12 @@ static int alg_udp_proc(const u8 *bssid,
             alg_napt_table_update_4udp(napt);
         }
 
+        udp_hdr->src = napt->new_port;
+
+#ifdef NAPT_TABLE_MUTEX_LOCK
+        alg_napt_unlock(napt_table_lock_4udp);
+#endif
+
 redo:
         if (is_dns)
         {
@@ -1667,14 +1708,10 @@ redo:
                 goto end;
             ip_hdr->dest.addr = dns->addr;
         }
+        
         ip_hdr->src.addr = ip_addr_get_ip4_u32(&net_if->ip_addr);
         ip_hdr->_chksum = 0;
         ip_hdr->_chksum = alg_iphdr_chksum((u16 *)ip_hdr, iphdr_len);
-
-        udp_hdr->src = napt->new_port;
-#ifdef NAPT_TABLE_MUTEX_LOCK
-        sys_mutex_unlock(napt_table_lock_4udp);
-#endif
 
         if (0 != udp_hdr->chksum)
         {
@@ -1686,8 +1723,18 @@ redo:
                                                    ntohs(ip_hdr->_len) - iphdr_len);
         }
 
-        /* forward to ap... */
-        err = alg_output(net_if, ip_hdr);
+        if ((ip_addr_get_ip4_u32(&net_if->ip_addr) & 0xFFFFFF) == (ip_hdr->dest.addr & 0xFFFFFF))
+        {
+            err = alg_output2(net_if, ip_hdr);
+        }
+        else /* to the internet */
+        {
+            memcpy(ehdr, wpa_supplicant_get_bssid(), ETH_ALEN);
+            memcpy(ehdr + ETH_ALEN, mac, ETH_ALEN);
+            /* forward to ap...*/
+            err = alg_output(ehdr, eth_len);
+        }
+
         if (1 == is_dns)
         {
             is_dns = 2;
@@ -1698,22 +1745,29 @@ redo:
     else
     {
 #ifdef NAPT_TABLE_MUTEX_LOCK
-        sys_mutex_lock(napt_table_lock_4udp);/* lock ... may be long time */
+        alg_napt_lock(napt_table_lock_4udp);
 #endif
         napt = alg_napt_get_udp_port_by_dest(udp_hdr->dest);
         /* forward to sta... */
         if (NULL != napt)
         {
-            //alg_napt_table_update_4udp(napt);
+            alg_napt_table_update_4udp(napt);
+
+            ip_hdr->dest.addr = (napt->src_ip << 24) | (ip_addr_get_ip4_u32(&net_if->next->ip_addr) & 0x00ffffff);
+
+            udp_hdr->dest = napt->src_port;
+
+#ifdef NAPT_TABLE_MUTEX_LOCK
+            alg_napt_unlock(napt_table_lock_4udp);
+#endif
+
             if (53 == ntohs(udp_hdr->src))
             {
                 ip_hdr->src.addr = ip_addr_get_ip4_u32(&net_if->next->ip_addr);
             }
-            ip_hdr->dest.addr = (napt->src_ip << 24) | (ip_addr_get_ip4_u32(&net_if->next->ip_addr) & 0x00ffffff);
+
             ip_hdr->_chksum = 0;
             ip_hdr->_chksum = alg_iphdr_chksum((u16 *)ip_hdr, iphdr_len);
-
-            udp_hdr->dest = napt->src_port;
 
             if (0 != udp_hdr->chksum)
             {
@@ -1725,16 +1779,19 @@ redo:
                                                        ntohs(ip_hdr->_len) - iphdr_len);
             }
 
-            err = alg_output(net_if->next, ip_hdr);
+            memcpy(ehdr, tls_dhcps_getmac((ip_addr_t *)&ip_hdr->dest.addr), ETH_ALEN);
+            memcpy(ehdr + ETH_ALEN, mac2, ETH_ALEN);
+            err = alg_output(ehdr, eth_len);
         }
         /* deliver to default gateway */
         else
         {
+#ifdef NAPT_TABLE_MUTEX_LOCK
+            alg_napt_unlock(napt_table_lock_4udp);
+#endif
+
             err = alg_deliver2lwip(bssid, ehdr, eth_len);
         }
-#ifdef NAPT_TABLE_MUTEX_LOCK
-        sys_mutex_unlock(napt_table_lock_4udp);
-#endif
     }
 
 end:
@@ -1769,6 +1826,7 @@ static int alg_gre_proc(const u8 *bssid, struct ip_hdr *ip_hdr, u8 *ehdr, u16 et
     u8 src_ip;
     u8 iphdr_len;
     struct netif *net_if = tls_get_netif();
+    u8 *mac = wpa_supplicant_get_mac();
     u8 *mac2 = hostapd_get_mac();
 
     iphdr_len = (ip_hdr->_v_hl & 0x0F) * 4;
@@ -1798,8 +1856,17 @@ static int alg_gre_proc(const u8 *bssid, struct ip_hdr *ip_hdr, u8 *ehdr, u16 et
         ip_hdr->_chksum = 0;
         ip_hdr->_chksum = alg_iphdr_chksum((u16 *)ip_hdr, iphdr_len);
 
-        /* forward to ap... */
-        err = alg_output(net_if, ip_hdr);
+        if ((ip_addr_get_ip4_u32(&net_if->ip_addr) & 0xFFFFFF) == (ip_hdr->dest.addr & 0xFFFFFF))
+        {
+            err = alg_output2(net_if, ip_hdr);
+        }
+        else /* to the internet */
+        {
+            memcpy(ehdr, wpa_supplicant_get_bssid(), ETH_ALEN);
+            memcpy(ehdr + ETH_ALEN, mac, ETH_ALEN);
+            /* forward to ap...*/
+            err = alg_output(ehdr, eth_len);
+        }
     }
     /* from ap... */
     else
@@ -1808,7 +1875,9 @@ static int alg_gre_proc(const u8 *bssid, struct ip_hdr *ip_hdr, u8 *ehdr, u16 et
         ip_hdr->_chksum = 0;
         ip_hdr->_chksum = alg_iphdr_chksum((u16 *)ip_hdr, iphdr_len);
 
-        err = alg_output(net_if->next, ip_hdr);
+        memcpy(ehdr, tls_dhcps_getmac((ip_addr_t *)&ip_hdr->dest.addr), ETH_ALEN);
+        memcpy(ehdr + ETH_ALEN, mac2, ETH_ALEN);
+        err = alg_output(ehdr, eth_len);
     }
 
     return err;
@@ -1835,6 +1904,10 @@ int alg_input(const u8 *bssid, u8 *pkt_body, u32 pkt_len)
 {
     int err;
     struct ip_hdr *ip_hdr;
+
+#ifdef NAPT_TABLE_MUTEX_LOCK
+    alg_napt_table_check_try();
+#endif
 
     ip_hdr = (struct ip_hdr *)(pkt_body + NAPT_ETH_HDR_LEN);
     switch(ip_hdr->_proto)
@@ -1863,6 +1936,137 @@ int alg_input(const u8 *bssid, u8 *pkt_body, u32 pkt_len)
             err = -1;
             break;
         }
+    }
+
+    return err;
+}
+
+/*****************************************************************************
+ Prototype    : alg_napt_port_is_used
+ Description  : port is used
+ Input        : u16 port        port number
+ Output       : None
+ Return Value : bool    true    used
+                        false   unused
+ ------------------------------------------------------------------------------
+ 
+  History        :
+  1.Date         : 2015/3/10
+    Author       : Li Limin, lilm@winnermicro.com
+    Modification : Created function
+
+*****************************************************************************/
+bool alg_napt_port_is_used(u16 port)
+{
+    bool is_used = false;
+    struct napt_addr_4tu *napt_tcp;
+    struct napt_addr_4tu *napt_udp;
+
+#ifdef NAPT_TABLE_MUTEX_LOCK
+    alg_napt_lock(napt_table_lock_4tcp);
+#endif
+    NAPT_TABLE_FOREACH(napt_tcp, napt_table_4tcp)
+    {
+        if (port == napt_tcp->new_port)
+        {
+            is_used = true;
+            break;
+        }
+    }
+#ifdef NAPT_TABLE_MUTEX_LOCK
+    alg_napt_unlock(napt_table_lock_4tcp);
+#endif
+
+    if (true != is_used)
+    {
+#ifdef NAPT_TABLE_MUTEX_LOCK
+        alg_napt_lock(napt_table_lock_4udp);
+#endif
+        NAPT_TABLE_FOREACH(napt_udp, napt_table_4udp)
+        {
+            if (port == napt_udp->new_port)
+            {
+                is_used = true;
+                break;
+            }
+        }
+#ifdef NAPT_TABLE_MUTEX_LOCK
+        alg_napt_unlock(napt_table_lock_4udp);
+#endif
+    }
+
+    return is_used;
+}
+
+/*****************************************************************************
+ Prototype    : alg_napt_init
+ Description  : Network Address Port Translation（napt）initialize
+ Input        : void
+ Output       : None
+ Return Value : int      0   success
+                     other   fail
+ ------------------------------------------------------------------------------
+ 
+  History        :
+  1.Date         : 2015/3/10
+    Author       : Li Limin, lilm@winnermicro.com
+    Modification : Created function
+
+*****************************************************************************/
+int alg_napt_init(void)
+{
+    int err = 0;
+    struct tls_timer_cfg timer_cfg;
+
+    memset(&napt_table_4tcp, 0, sizeof(struct napt_table_head_4tu));
+    memset(&napt_table_4udp, 0, sizeof(struct napt_table_head_4tu));
+    memset(&napt_table_4ic, 0, sizeof(struct napt_table_head_4ic));
+
+    napt_curr_port = NAPT_LOCAL_PORT_RANGE_START;
+    napt_curr_id   = NAPT_ICMP_ID_RANGE_START;
+
+#ifdef NAPT_TABLE_MUTEX_LOCK
+    err = tls_os_sem_create(&napt_table_lock_4tcp, 1);
+    if (TLS_OS_SUCCESS != err)
+    {
+        NAPT_PRINT("failed to init alg.\n");
+        return err;
+    }
+
+    err = tls_os_sem_create(&napt_table_lock_4udp, 1);
+    if (TLS_OS_SUCCESS != err)
+    {
+        NAPT_PRINT("failed to init alg.\n");
+        return err;
+    }
+
+    err = tls_os_sem_create(&napt_table_lock_4ic, 1);
+    if (TLS_OS_SUCCESS != err)
+    {
+        NAPT_PRINT("failed to init alg.\n");
+    }
+#endif
+
+#ifdef NAPT_ALLOC_DEBUG
+    napt4ic_cnt = 0;
+    napt4tcp_cnt = 0;
+    napt4udp_cnt = 0;
+#endif
+
+    memset(&timer_cfg, 0, sizeof(timer_cfg));
+    timer_cfg.unit = TLS_TIMER_UNIT_MS;
+    timer_cfg.timeout = NAPT_TMR_INTERVAL;
+    timer_cfg.is_repeat = TRUE;
+    timer_cfg.callback = alg_napt_table_check;
+    err = tls_timer_create(&timer_cfg);
+    if (WM_TIMER_ID_INVALID != err)
+    {
+        tls_timer_start(err);
+        err = 0;
+    }
+    else
+    {
+        NAPT_PRINT("failed to init alg timer.\n");
     }
 
     return err;

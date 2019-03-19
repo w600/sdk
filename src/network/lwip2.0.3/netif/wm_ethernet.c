@@ -182,12 +182,6 @@ struct netif *Tcpip_stack_init()
 #if TLS_CONFIG_AP
     struct netif *nif4apsta = NULL;
 #endif
-
-	/*Register Ethernet Rx Data callback From wifi*/
-	tls_ethernet_data_rx_callback(ethernetif_input);
-#if TLS_CONFIG_AP_OPT_FWD
-	tls_ethernet_ip_rx_callback(alg_input);
-#endif
 	
     /* Setup lwIP. */
     tcpip_init(NULL, NULL);
@@ -222,6 +216,14 @@ struct netif *Tcpip_stack_init()
     dl_list_init(&netif_status_event.list);
     netif_set_status_callback(nif, netif_status_changed);
     tls_wifi_status_change_cb_register(wifi_status_changed);
+
+	/*Register Ethernet Rx Data callback From wifi*/
+	tls_ethernet_data_rx_callback(ethernetif_input);
+#if TLS_CONFIG_AP_OPT_FWD
+    alg_napt_init(); 
+	tls_ethernet_ip_rx_callback(alg_input);
+#endif
+
     return nif;
 }
 
@@ -246,6 +248,13 @@ int tls_ethernet_init()
     tls_net_init();
 #endif
     return 0;
+}
+
+void tls_netif_set_status(u8 status)
+{
+    ethif->status = status;
+
+    return;
 }
 
 struct tls_ethif * tls_netif_get_ethif(void)
@@ -273,7 +282,7 @@ struct tls_ethif * tls_netif_get_ethif(void)
     dns2 = *dns_getserver(1);
     //MEMCPY(&ethif->dns2.addr, (char *)&dns2.addr, 4);
     ip_addr_copy(ethif->dns2, dns2);
-	ethif->status = nif->flags&NETIF_FLAG_UP;
+	//ethif->status = nif->flags&NETIF_FLAG_UP;
 #if TLS_CONFIG_IPV6
 	for(i = 0; i < IPV6_ADDR_MAX_NUM; i++)
 	{
@@ -391,6 +400,10 @@ void tls_dnss_stop(void)
 ip_addr_t *tls_dhcps_getip(const u8_t *mac)
 {
 	return DHCPS_GetIpByMac(mac);
+}
+u8 *tls_dhcps_getmac(const ip_addr_t *ip)
+{
+	return DHCPS_GetMacByIp(ip);
 }
 #endif
 

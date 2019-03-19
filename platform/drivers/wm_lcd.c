@@ -172,32 +172,6 @@ void tls_lcd_bias_set(LCD_BiasDef bias)
 	LCD->CTRL |= bias;		
 }
 
-
-/**
- * @brief
- *   config the vdd mode of LCD module
- *
- */
-void tls_lcd_vdd_sel(LCD_VddDef vdd_mode)
-{
-	switch (vdd_mode)
-	{
-		case I_VDD:
-			LCD->CTRL &= ~ LCD_XVDD_SEL;
-			LCD->CTRL |= LCD_IVDD_SEL;
-			break;
-		
-		case X_VDD:
-			LCD->CTRL &= ~LCD_IVDD_SEL;
-			LCD->CTRL |= LCD_XVDD_SEL;			
-			break;
-		
-		default:
-			break;		
-	}
-}
-
-
 /**
  * @brief
  *   initialize the lcd module
@@ -206,7 +180,7 @@ void tls_lcd_vdd_sel(LCD_VddDef vdd_mode)
 void tls_lcd_init(tls_lcd_options_t *opts)
 {
 	LCD->CTRL = 0;
-	LCD->CTRL = opts->mode | opts->bias | opts->duty | opts->vdd_mode | opts->vlcd;
+	LCD->CTRL = opts->mode | opts->bias | opts->duty | opts->vlcd | (1 << 12);
 	tls_lcd_fresh_ratio(opts->fresh_rate);	
 	TLS_LCD_ENABLE(opts->enable);
 	TLS_LCD_POWERDOWM(0);

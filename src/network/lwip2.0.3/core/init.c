@@ -364,9 +364,6 @@ lwip_init(void)
 #if LWIP_RAW
   raw_init();
 #endif /* LWIP_RAW */
-#if TLS_CONFIG_AP_OPT_FWD
-  alg_napt_init();
-#endif
 #if LWIP_UDP
   udp_init();
 #endif /* LWIP_UDP */

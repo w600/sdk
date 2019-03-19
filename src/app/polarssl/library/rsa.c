@@ -28,7 +28,7 @@
  *  http://theory.lcs.mit.edu/~rivest/rsapaper.pdf
  *  http://www.cacr.math.uwaterloo.ca/hac/about/chap8.pdf
  */
-
+#include "aes.h"
 #include "polarssl/config.h"
 
 

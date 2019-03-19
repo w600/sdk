@@ -723,44 +723,39 @@ typedef volatile unsigned int TLS_REG;    /* Hardware register definition */
 #define LCD_CR_MODE_4x20					(1UL<<11)
 #define LCD_CR_MODE_8X16					(0UL<<11)
 
-#define LCD_XVDD_SEL							(1UL<<10)
-#define LCD_IVDD_SEL							(1UL<<9)
-#define LCD_EN										(1UL<<8)
+#define LCD_EN								(1UL<<8)
 
-#define LCD_BIAS_MASK							(3UL<<6)
+#define LCD_BIAS_MASK						(3UL<<6)
 #define LCD_BIAS_MASK_Pos					(6)
-#define LCD_BIAS_ONEFOURTH				(0UL<<6)
+#define LCD_BIAS_ONEFOURTH					(0UL<<6)
 #define LCD_BIAS_ONEHALF					(1UL<<6)
 #define LCD_BIAS_ONETHIRD					(2UL<<6)
 #define LCD_BIAS_STATIC						(3UL<<6)
 
-#define LCD_VLCD_MASK							(7UL<<3)
-#define LCD_VLCD_MASK_Pos						(3)
-#define LCD_VLCD_27								(0UL<<3)
-#define LCD_VLCD_28								(1UL<<3)
-#define LCD_VLCD_29								(2UL<<3)
-#define LCD_VLCD_30								(3UL<<3)
-#define LCD_VLCD_31								(4UL<<3)
-#define LCD_VLCD_32								(5UL<<3)
-#define LCD_VLCD_33								(6UL<<3)
-#define LCD_VLCD_RSV							(7UL<<3)
+#define LCD_VLCD_MASK						(7UL<<3)
+#define LCD_VLCD_MASK_Pos					(3)
+#define LCD_VLCD_27							(0UL<<3)
+#define LCD_VLCD_29							(1UL<<3)
+#define LCD_VLCD_31							(2UL<<3)
+#define LCD_VLCD_33							(3UL<<3)
 
-#define LCD_DUTY_MASK							(7UL<<0)
-#define LCD_DUTY_MASK_Pos						(0)
+
+#define LCD_DUTY_MASK						(7UL<<0)
+#define LCD_DUTY_MASK_Pos					(0)
 #define LCD_DUTY_STATIC						(0UL<<0)
 #define LCD_DUTY_ONEHALF					(1UL<<0)
 #define LCD_DUTY_ONETHIRD					(2UL<<0)
-#define LCD_DUTY_ONEFOURTH				(3UL<<0)
+#define LCD_DUTY_ONEFOURTH					(3UL<<0)
 #define LCD_DUTY_ONEFIFTH					(4UL<<0)
 #define LCD_DUTY_ONESIXTH					(5UL<<0)
-#define LCD_DUTY_ONESEVENTH				(6UL<<0)
-#define LCD_DUTY_ONEEIGHTH				(7UL<<0)
+#define LCD_DUTY_ONESEVENTH					(6UL<<0)
+#define LCD_DUTY_ONEEIGHTH					(7UL<<0)
 
 
 /***********************************************************//**
  * I2S寄存器定义
  ***************************************************************/
-#define HR_CLK_I2S_GATE_Pos						(10)
+#define HR_CLK_I2S_GATE_Pos					(10)
 
 
 #define HR_I2S_REG_BASE					 (HR_APB_BASE_ADDR+0x1A00)

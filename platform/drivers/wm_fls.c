@@ -21,7 +21,7 @@
 
 static struct tls_fls *spi_fls = NULL;
 
-static int tls_spifls_read_id(u32 * id)
+int tls_spifls_read_id(u32 * id)
 {
     u32 cmd;
     int err;
@@ -539,3 +539,4 @@ int tls_spifls_exit(void)
     TLS_DBGPRT_FLASH_INFO("Not support flash driver module uninstalled!\n");
     return TLS_FLS_STATUS_EPERM;
 }
+

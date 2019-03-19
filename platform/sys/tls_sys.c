@@ -246,6 +246,7 @@ static void sys_net_down()
     {
         tls_dhcp_stop();
     }
+    tls_netif_set_status(0);
     tls_netif_set_down();
 
     /* Try to reconnect if auto_connect is set*/
@@ -613,6 +614,7 @@ static void sys_net_status_changed(u8 status)
             tls_sys_net_down();
             break;
         case NETIF_IP_NET_UP:
+            tls_netif_set_status(1);
             /*对于STA，拿到IP之后再依据节能标志设置节能模式，联网拿IP过程中不节能*/
             tls_param_get(TLS_PARAM_ID_PSM, &enable, TRUE);		
             tls_wifi_set_psflag(enable, FALSE);

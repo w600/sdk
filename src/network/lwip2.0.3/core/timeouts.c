@@ -171,15 +171,6 @@ cyclic_timer(void *arg)
   cyclic->handler();
   sys_timeout(cyclic->interval_ms, cyclic_timer, arg);
 }
-#if TLS_CONFIG_AP_OPT_FWD
-static void
-alg_timer(void *arg)
-{
-  LWIP_DEBUGF(TIMERS_DEBUG, ("tcpip: alg_tmr(), type: %u\n", (u32)arg));
-  alg_napt_event_handle((u32)arg);
-  sys_timeout(NAPT_TMR_INTERVAL, alg_timer, arg);
-}
-#endif 
 
 /** Initialize this module */
 void sys_timeouts_init(void)
@@ -191,12 +182,6 @@ void sys_timeouts_init(void)
       (this is OK as cyclic_timer() casts back to const* */
     sys_timeout(lwip_cyclic_timers[i].interval_ms, cyclic_timer, LWIP_CONST_CAST(void*, &lwip_cyclic_timers[i]));
   }
-#if TLS_CONFIG_AP_OPT_FWD
-  sys_timeout(NAPT_TMR_INTERVAL, alg_timer, (void *)NAPT_TMR_TYPE_TCP);
-  sys_timeout(NAPT_TMR_INTERVAL, alg_timer, (void *)NAPT_TMR_TYPE_UDP);
-  sys_timeout(NAPT_TMR_INTERVAL, alg_timer, (void *)NAPT_TMR_TYPE_ICMP);
-  sys_timeout(NAPT_TMR_INTERVAL, alg_timer, (void *)NAPT_TMR_TYPE_GRE);
-#endif /* TLS_CONFIG_APSTA */
   /* Initialise timestamp for sys_check_timeouts */
   timeouts_last_time = sys_now();
 }

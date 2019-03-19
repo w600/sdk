@@ -44,30 +44,30 @@
     Alain.Durand@imag.fr, IMAG,
     Jean-Luc.Richier@imag.fr, IMAG-LSR.
 
-    Ce travail a 茅t茅 fait au sein du GIE DYADE (Groupement d'Int茅r锚t
-    脡conomique ayant pour membres BULL S.A. et l'INRIA).
+    Ce travail a été fait au sein du GIE DYADE (Groupement d'Intérêt
+    Économique ayant pour membres BULL S.A. et l'INRIA).
 
     Ce logiciel informatique est disponible aux conditions
-    usuelles dans la recherche, c'est-脿-dire qu'il peut
-    锚tre utilis茅, copi茅, modifi茅, distribu茅 脿 l'unique
-    condition que ce texte soit conserv茅 afin que
+    usuelles dans la recherche, c'est-à-dire qu'il peut
+    être utilisé, copié, modifié, distribué à l'unique
+    condition que ce texte soit conservé afin que
     l'origine de ce logiciel soit reconnue.
 
     Le nom de l'Institut National de Recherche en Informatique
     et en Automatique (INRIA), de l'IMAG, ou d'une personne morale
-    ou physique ayant particip茅 脿 l'茅laboration de ce logiciel ne peut
-    锚tre utilis茅 sans son accord pr茅alable explicite.
+    ou physique ayant participé à l'élaboration de ce logiciel ne peut
+    être utilisé sans son accord préalable explicite.
 
     Ce logiciel est fourni tel quel sans aucune garantie,
-    support ou responsabilit茅 d'aucune sorte.
-    Ce logiciel est d茅riv茅 de sources d'origine
+    support ou responsabilité d'aucune sorte.
+    Ce logiciel est dérivé de sources d'origine
     "University of California at Berkeley" et
     "Digital Equipment Corporation" couvertes par des copyrights.
 
-    L'Institut d'Informatique et de Math茅matiques Appliqu茅es de Grenoble (IMAG)
-    est une f茅d茅ration d'unit茅s mixtes de recherche du CNRS, de l'Institut National
-    Polytechnique de Grenoble et de l'Universit茅 Joseph Fourier regroupant
-    sept laboratoires dont le laboratoire Logiciels, Syst猫mes, R茅seaux (LSR).
+    L'Institut d'Informatique et de Mathématiques Appliquées de Grenoble (IMAG)
+    est une fédération d'unités mixtes de recherche du CNRS, de l'Institut National
+    Polytechnique de Grenoble et de l'Université Joseph Fourier regroupant
+    sept laboratoires dont le laboratoire Logiciels, Systèmes, Réseaux (LSR).
 
     This work has been done in the context of GIE DYADE (joint R & D venture
     between BULL S.A. and INRIA).

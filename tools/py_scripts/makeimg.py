@@ -29,7 +29,7 @@ def main(argv):
         print("param 0:  .py")
         print("param 1:  input .bin file.(uncompressed file or compressed file)")
         print("param 2:  output file")
-        print("param 3:  image type ,0：user image,1：reserved,2：secboot")
+        print("param 3:  image type ,0：old param user image,1：reserved,2：secboot,3: new param user image")
         print("param 4:  compressed type,0：uncompressed file,1.compressed file")
         print("param 5:  firmware version file")
         print("param 6： input image storage address")

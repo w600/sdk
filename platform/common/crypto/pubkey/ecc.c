@@ -86,8 +86,8 @@ static unsigned long get_digit(void *a, int32 n);
 	
 	The recommended elliptic curve domain parameters over p have been given
 	nicknames to enable them to be easily identified. The nicknames were
-	chosen as follows. Each name begins with sec to denote 鈥楽tandards for
-	Efficient Cryptography鈥? followed by a p to denote parameters over p,
+	chosen as follows. Each name begins with sec to denote ‘Standards for
+	Efficient Cryptography’, followed by a p to denote parameters over p,
 	followed by a number denoting the length in bits of the field size p,
 	followed by a k to denote parameters associated with a Koblitz curve or an
 	r to denote verifiably random parameters, followed by a sequence number.

@@ -430,7 +430,14 @@ int mqtt_publish_with_qos(mqtt_broker_handle_t* broker,
     }
     /**********************add by alex******************************/
     packetLen = fixed_headerLen+var_headerLen+msgLen;
-    uint8_t packet[packetLen];
+    //uint8_t packet[packetLen];
+    uint8_t *packet = tls_mem_alloc(packetLen);
+    if (!packet)
+    {
+        tls_mem_free(var_header);
+        tls_mem_free( fixed_header );
+        return -1;
+    }
     memset(packet, 0, packetLen);
     memcpy(packet, fixed_header, fixed_headerLen);
     memcpy(packet+fixed_headerLen, var_header, var_headerLen);
@@ -440,10 +447,12 @@ int mqtt_publish_with_qos(mqtt_broker_handle_t* broker,
     if(broker->mqttsend(broker->socketid, packet, packetLen ) < packetLen) {
         tls_mem_free(var_header);
         tls_mem_free( fixed_header );
+        tls_mem_free(packet);
         return -1;
     }
     tls_mem_free( fixed_header );
     tls_mem_free(var_header);
+    tls_mem_free(packet);
     return 1;
 }
 

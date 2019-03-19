@@ -91,18 +91,20 @@ typedef struct {
 	s32	pathLenConstraint;
 } x509extBasicConstraints_t;
 
+typedef enum {
+	GN_OTHER = 0,	// OtherName
+    GN_EMAIL,		// IA5String
+    GN_DNS,			// IA5String
+    GN_X400,		// ORAddress
+    GN_DIR,			// Name
+    GN_EDI,			// EDIPartyName
+    GN_URI,			// IA5String
+    GN_IP,			// OCTET STRING
+    GN_REGID		// OBJECT IDENTIFIER
+} x509GeneralNameID_e;
+
 typedef struct psGeneralNameEntry {
-	enum {
-		GN_OTHER = 0,	// OtherName
-        GN_EMAIL,		// IA5String
-        GN_DNS,			// IA5String
-        GN_X400,		// ORAddress
-        GN_DIR,			// Name
-        GN_EDI,			// EDIPartyName
-        GN_URI,			// IA5String
-        GN_IP,			// OCTET STRING
-        GN_REGID		// OBJECT IDENTIFIER
-	}								id;
+	x509GeneralNameID_e             id;
 	unsigned char					name[16];
 	unsigned char					oid[32]; /* SubjectAltName OtherName */
 	u32							oidLen;

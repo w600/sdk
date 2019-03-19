@@ -13,9 +13,15 @@
 #include "wm_dbg.h"
 #include "wm_mem.h"
 #include "list.h"
+#include "wm_flash_map.h"
 #include "wm_internal_flash.h"
+#include "wm_flash.h"
 
 static struct tls_inside_fls *inside_fls = NULL;
+static u32 inner1flashsize = 0; /*first inner flash size*/
+static u32 inner2flashsize = 0; /*second inner flash size*/
+
+u32 flashtotalsize = 0;
 
 unsigned char com_mem[4096];
 
@@ -520,29 +526,46 @@ void tls_fls_sem_unlock(void)
  */
 int tls_fls_read(u32 addr, u8 * buf, u32 len)
 {
-    int err;
+	int err = TLS_FLS_STATUS_EINVAL;
+	u32 addrfor1M = 0;
+	u32 lenfor1M = 0;
+	u32 addrfor2M = 0;
+	u32 lenfor2M = 0;
 
+	addrfor1M = addr < FLASH_1M_END_ADDR ? addr:0xFFFFFFFF;
+	if (addrfor1M != 0xFFFFFFFF)
+	{
+	    lenfor1M  = (addr + len ) <= FLASH_1M_END_ADDR ? len : (FLASH_1M_END_ADDR - addr);
+	    if (inside_fls == NULL)
+	    {
+	        TLS_DBGPRT_ERR("flash driver module not beed installed!\n");
+	        return TLS_FLS_STATUS_EPERM;
+	    }
 
+	    if (((addrfor1M&(INSIDE_FLS_BASE_ADDR-1)) >=  inner1flashsize) || (lenfor1M == 0) || (buf == NULL))
+	    {
+	        return TLS_FLS_STATUS_EINVAL;
+	    }
+		
+	    tls_os_sem_acquire(inside_fls->fls_lock, 0);
 
+		flashRead(addrfor1M, buf, lenfor1M);
 
+	    err = TLS_FLS_STATUS_OK;
+	    tls_os_sem_release(inside_fls->fls_lock);	
+	}
 
-    if (inside_fls == NULL)
-    {
-        TLS_DBGPRT_ERR("flash driver module not beed installed!\n");
-        return TLS_FLS_STATUS_EPERM;
-    }
+	if (inner2flashsize)
+	{
+		addrfor2M = addr >= FLASH_1M_END_ADDR ? addr : ((addr + len ) >= FLASH_1M_END_ADDR ? FLASH_1M_END_ADDR : 0xFFFFFFFF);
+		if (addrfor2M != 0xFFFFFFFF)
+		{
+			lenfor2M  = len - lenfor1M;
+			lenfor2M = (addrfor2M + lenfor2M) <= (FLASH_BASE_ADDR | flashtotalsize) ? lenfor2M : ((FLASH_BASE_ADDR | flashtotalsize) - addrfor2M);
+		    return tls_spifls_read(addrfor2M&0xFFFFF, buf+lenfor1M, lenfor2M);
+		}
+	}
 
-    if (((addr&(INSIDE_FLS_BASE_ADDR-1)) >=  getFlashDensity()) || (len == 0) || (buf == NULL))
-    {
-        return TLS_FLS_STATUS_EINVAL;
-    }
-	
-    tls_os_sem_acquire(inside_fls->fls_lock, 0);
-
-	flashRead(addr, buf, len);
-
-    err = TLS_FLS_STATUS_OK;
-    tls_os_sem_release(inside_fls->fls_lock);
     return err;
 }
 
@@ -570,49 +593,60 @@ int tls_fls_write(u32 addr, u8 * buf, u32 len)
  	unsigned int i;    
 	unsigned int offaddr; 
 
-    if (inside_fls == NULL)
-    {
-        TLS_DBGPRT_ERR("flash driver module not beed installed!\n");
-        return TLS_FLS_STATUS_EPERM;
-    }
+	u32 addrfor1M = 0;
+	u32 lenfor1M = 0;
+	u32 addrfor2M = 0;
+	u32 lenfor2M = 0;
 
-    if (((addr&(INSIDE_FLS_BASE_ADDR-1)) >=  getFlashDensity()) || (len == 0) || (buf == NULL))
-    {
-        return TLS_FLS_STATUS_EINVAL;
-    }
-	
-    tls_os_sem_acquire(inside_fls->fls_lock, 0);
+	addrfor1M = addr < FLASH_1M_END_ADDR ? addr:0xFFFFFFFF;
+	if (addrfor1M != 0xFFFFFFFF)
+	{
+	    lenfor1M  = (addr + len ) <= FLASH_1M_END_ADDR ? len : (FLASH_1M_END_ADDR - addr);
 
-    cache = tls_mem_alloc(INSIDE_FLS_SECTOR_SIZE);
-    if (cache == NULL)
-    {
-        tls_os_sem_release(inside_fls->fls_lock);
-        TLS_DBGPRT_ERR("allocate sector cache memory fail!\n");
-        return TLS_FLS_STATUS_ENOMEM;
-    }
+	    if (inside_fls == NULL)
+	    {
+	        TLS_DBGPRT_ERR("flash driver module not beed installed!\n");
+	        return TLS_FLS_STATUS_EPERM;
+	    }
 
-    offaddr = addr&(INSIDE_FLS_BASE_ADDR -1);			//Offset of 0X08000000
-    secpos = offaddr/INSIDE_FLS_SECTOR_SIZE;				//Section addr
-    secoff = (offaddr%INSIDE_FLS_SECTOR_SIZE);			//Offset in section
-    secremain = INSIDE_FLS_SECTOR_SIZE - secoff;    // 扇区剩余空间大小
-    if(len<=secremain)
-    {
-    	secremain=len;								//Not bigger with remain size in section
-    }
-    while (1)
-    {
-		flashRead(secpos*INSIDE_FLS_SECTOR_SIZE, cache, INSIDE_FLS_SECTOR_SIZE);
+	    if (((addrfor1M&(INSIDE_FLS_BASE_ADDR-1)) >=  inner1flashsize) || (lenfor1M == 0) || (buf == NULL))
+	    {
+	        return TLS_FLS_STATUS_EINVAL;
+	    }
+		
+	    tls_os_sem_acquire(inside_fls->fls_lock, 0);
 
-		eraseSector(secpos*INSIDE_FLS_SECTOR_SIZE);
+	    cache = tls_mem_alloc(INSIDE_FLS_SECTOR_SIZE);
+	    if (cache == NULL)
+	    {
+	        tls_os_sem_release(inside_fls->fls_lock);
+	        TLS_DBGPRT_ERR("allocate sector cache memory fail!\n");
+	        return TLS_FLS_STATUS_ENOMEM;
+	    }
+
+	    offaddr = addrfor1M&(INSIDE_FLS_BASE_ADDR -1);			//Offset of 0X08000000
+	    secpos = offaddr/INSIDE_FLS_SECTOR_SIZE;				//Section addr
+	    secoff = (offaddr%INSIDE_FLS_SECTOR_SIZE);			//Offset in section
+	    secremain = INSIDE_FLS_SECTOR_SIZE - secoff;    // 扇区剩余空间大小
+
+	    if(lenfor1M<=secremain)
+	    {
+	    	secremain=lenfor1M;								//Not bigger with remain size in section
+	    }
+	    while (1)
+	    {
+			flashRead(secpos*INSIDE_FLS_SECTOR_SIZE, cache, INSIDE_FLS_SECTOR_SIZE);
+
+			eraseSector(secpos*INSIDE_FLS_SECTOR_SIZE);
 	        for (i = 0; i < secremain; i++) // 复制
 	        {
 	            cache[i + secoff] = buf[i];
 	        }
 	        for (i = 0; i < (INSIDE_FLS_SECTOR_SIZE / INSIDE_FLS_PAGE_SIZE); i++)
 	        {
-			programPage(secpos*INSIDE_FLS_SECTOR_SIZE + i*INSIDE_FLS_PAGE_SIZE, INSIDE_FLS_PAGE_SIZE, &cache[i*INSIDE_FLS_PAGE_SIZE]);	//Write
+				programPage(secpos*INSIDE_FLS_SECTOR_SIZE + i*INSIDE_FLS_PAGE_SIZE, INSIDE_FLS_PAGE_SIZE, &cache[i*INSIDE_FLS_PAGE_SIZE]);	//Write
 	        }
-	        if(len == secremain)
+	        if(lenfor1M == secremain)
 	        {
 	            break;              // 写入结束了
 	        }
@@ -621,16 +655,28 @@ int tls_fls_write(u32 addr, u8 * buf, u32 len)
 	            secpos++;           // 扇区地址增1
 	            secoff = 0;         // 偏移位置为0
 	            buf += secremain;   // 指针偏移
-		   len -= secremain;					
-		   if(len > (INSIDE_FLS_SECTOR_SIZE))
+		   lenfor1M -= secremain;					
+		   if(lenfor1M > (INSIDE_FLS_SECTOR_SIZE))
 		       secremain = INSIDE_FLS_SECTOR_SIZE; // 下一个扇区还是写不完
 		   else
-		      secremain = len;					//Next section will finish
+		      secremain = lenfor1M;					//Next section will finish
 	        }
-    }
+	    }
 
-    tls_mem_free(cache);
-    tls_os_sem_release(inside_fls->fls_lock);
+	    tls_mem_free(cache);
+	    tls_os_sem_release(inside_fls->fls_lock);
+	}
+
+	if (inner2flashsize)
+	{
+		addrfor2M = addr >= FLASH_1M_END_ADDR ? addr : ((addr + len ) >= FLASH_1M_END_ADDR ? FLASH_1M_END_ADDR : 0xFFFFFFFF);
+		if (addrfor2M != 0xFFFFFFFF)
+		{
+			lenfor2M  = len - lenfor1M;
+			lenfor2M = (addrfor2M + lenfor2M) <= (FLASH_BASE_ADDR | flashtotalsize)? lenfor2M : ((FLASH_BASE_ADDR | flashtotalsize) - addrfor2M);
+		    return tls_spifls_write((addrfor2M&0xFFFFF), buf + lenfor1M, lenfor2M);
+		}
+	}
     return TLS_FLS_STATUS_OK;
 }
 
@@ -647,32 +693,33 @@ int tls_fls_write(u32 addr, u8 * buf, u32 len)
 int tls_fls_erase(u32 sector)
 {
 	u32 addr;
-    if (inside_fls == NULL)
-    {
-        TLS_DBGPRT_ERR("flash driver module not beed installed!\n");
-        return TLS_FLS_STATUS_EPERM;
-    }
+	if (sector < (inner1flashsize/INSIDE_FLS_SECTOR_SIZE + INSIDE_FLS_BASE_ADDR/INSIDE_FLS_SECTOR_SIZE))
+	{
+	    if (inside_fls == NULL)
+	    {
+	        TLS_DBGPRT_ERR("flash driver module not beed installed!\n");
+	        return TLS_FLS_STATUS_EPERM;
+	    }
 
-    if (sector >= (getFlashDensity()/INSIDE_FLS_SECTOR_SIZE + INSIDE_FLS_BASE_ADDR/INSIDE_FLS_SECTOR_SIZE))
-    {
-        TLS_DBGPRT_ERR("the sector to be erase overflow!\n");
-        return TLS_FLS_STATUS_EINVAL;
-    }
+	    tls_os_sem_acquire(inside_fls->fls_lock, 0);
 
-	tls_os_sem_acquire(inside_fls->fls_lock, 0);
+	    addr = sector*INSIDE_FLS_SECTOR_SIZE;
 
-	addr = sector*INSIDE_FLS_SECTOR_SIZE;
+	    eraseSector(addr);
 
-	eraseSector(addr);
-
-	tls_os_sem_release(inside_fls->fls_lock);
+	    tls_os_sem_release(inside_fls->fls_lock);
+	}
+	else if (sector < (flashtotalsize/INSIDE_FLS_SECTOR_SIZE + INSIDE_FLS_BASE_ADDR/INSIDE_FLS_SECTOR_SIZE))
+	{
+	    return tls_spifls_erase(sector&0xFF);
+	}
 
     return TLS_FLS_STATUS_OK;
 }
 
 
 static u8 *gsflscache = NULL;
-static u32 gsSecOffset = 0;
+//static u32 gsSecOffset = 0;
 static u32 gsSector = 0;
 
 
@@ -689,22 +736,24 @@ static void tls_fls_flush_sector(void)
 {
     int i;
     u32 addr;	
-    if (gsSector >= (getFlashDensity()/INSIDE_FLS_SECTOR_SIZE + INSIDE_FLS_BASE_ADDR/INSIDE_FLS_SECTOR_SIZE))
+    if (gsSector < (inner1flashsize/INSIDE_FLS_SECTOR_SIZE + INSIDE_FLS_BASE_ADDR/INSIDE_FLS_SECTOR_SIZE))
     {
-        TLS_DBGPRT_ERR("the sector to be erase overflow!\n");
-        return;
+	    addr = gsSector*INSIDE_FLS_SECTOR_SIZE;
+
+	    eraseSector(addr);
+	    for (i = 0; i < INSIDE_FLS_SECTOR_SIZE / INSIDE_FLS_PAGE_SIZE; i++)
+	    {
+	        programPage(gsSector * INSIDE_FLS_SECTOR_SIZE +
+	                    i * INSIDE_FLS_PAGE_SIZE, INSIDE_FLS_PAGE_SIZE,
+	                    &gsflscache[i * INSIDE_FLS_PAGE_SIZE]);
+	    }
     }
-
-    addr = gsSector*INSIDE_FLS_SECTOR_SIZE;
-
-    eraseSector(addr);
-    for (i = 0; i < INSIDE_FLS_SECTOR_SIZE / INSIDE_FLS_PAGE_SIZE; i++)
+    else if (gsSector < (flashtotalsize/INSIDE_FLS_SECTOR_SIZE + INSIDE_FLS_BASE_ADDR/INSIDE_FLS_SECTOR_SIZE))
     {
-        programPage(gsSector * INSIDE_FLS_SECTOR_SIZE +
-                    i * INSIDE_FLS_PAGE_SIZE, INSIDE_FLS_PAGE_SIZE,
-                    &gsflscache[i * INSIDE_FLS_PAGE_SIZE]);
+        addr = gsSector*INSIDE_FLS_SECTOR_SIZE;
+        tls_spifls_write(addr&0xFFFFF, gsflscache, INSIDE_FLS_SECTOR_SIZE);
     }
-    gsSecOffset = 0;
+    //gsSecOffset = 0;
 
 }
 
@@ -791,7 +840,8 @@ int tls_fls_fast_write(u32 addr, u8 * buf, u32 length)
         TLS_DBGPRT_ERR("flash driver module not beed installed!\n");
         return TLS_FLS_STATUS_EPERM;
     }
-    if(((addr&(INSIDE_FLS_BASE_ADDR-1)) >=  getFlashDensity()) || (length == 0) || (buf == NULL))
+
+    if(((addr&(INSIDE_FLS_BASE_ADDR-1)) >=  flashtotalsize) || (length == 0) || (buf == NULL))
     {
         return TLS_FLS_STATUS_EINVAL;
     }
@@ -864,7 +914,7 @@ int tls_fls_chip_erase(void)
     }
 
 
-	for( i = 0; i < ( getFlashDensity() - (INSIDE_FLS_SECBOOT_ADDR&0xFFFFF))/INSIDE_FLS_SECTOR_SIZE; i ++)
+	for( i = 0; i < ( inner1flashsize - (INSIDE_FLS_SECBOOT_ADDR&0xFFFFF))/INSIDE_FLS_SECTOR_SIZE; i ++)
     {
 		flashRead(INSIDE_FLS_SECBOOT_ADDR + i*INSIDE_FLS_SECTOR_SIZE, cache, INSIDE_FLS_SECTOR_SIZE);	
 		for (j = 0;j < INSIDE_FLS_SECTOR_SIZE; j++)
@@ -876,6 +926,11 @@ int tls_fls_chip_erase(void)
 			}
 		}
     }
+
+	if (inner2flashsize)
+	{
+		tls_spifls_chip_erase();
+	}
 
 	tls_mem_free(cache);
 
@@ -920,7 +975,7 @@ int tls_fls_get_param(u8 type, void *param)
             break;
 
         case TLS_FLS_PARAM_TYPE_SIZE:
-            *((u32 *) param) = getFlashDensity();
+            *((u32 *) param) = flashtotalsize;
             break;
 
         case TLS_FLS_PARAM_TYPE_PAGE_SIZE:
@@ -958,6 +1013,7 @@ int tls_fls_init(void)
 {
     struct tls_inside_fls *fls;
     int err;
+	u32 id = 0;
 
     if (inside_fls != NULL)
     {
@@ -982,6 +1038,13 @@ int tls_fls_init(void)
     }
     inside_fls = fls;
 
+	inner1flashsize = getFlashDensity();
+	if (TLS_FLS_STATUS_OK == tls_spifls_read_id(&id))
+	{
+		id = (id>>16)&0xFF;
+		inner2flashsize = (id ?(1<<id):0);
+	}
+	flashtotalsize = inner1flashsize+inner2flashsize;
 
     return TLS_FLS_STATUS_OK;
 }

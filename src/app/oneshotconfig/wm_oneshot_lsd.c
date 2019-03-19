@@ -16,10 +16,13 @@
 #define LSD_REPLY_PORT			65534
 #define LSD_REPLY_MAX_CNT		20
 
+#define LSD_DATA_MAX			256
+
+
 
 struct lsd_data_t{
-	u8 data[256];
-	u8 used[256];
+	u8 data[LSD_DATA_MAX];
+	u8 used[LSD_DATA_MAX];
 };
 
 struct lsd_data_coding_t{
@@ -337,6 +340,10 @@ int tls_lsd_recv(u8 *buf, u16 data_len)
 						lsd_data.data[(data_coding.seq<<1)+1] = data_coding.data2;
 						lsd_data.used[(data_coding.seq<<1)+1] = 1;	
 						lsd_data_cnt ++;
+						if(lsd_data_cnt >= LSD_DATA_MAX)
+						{
+							return LSD_ONESHOT_ERR;
+						}
 					}
 				}
 				lsd_byte_cnt[tods] = 0;
@@ -347,6 +354,10 @@ int tls_lsd_recv(u8 *buf, u16 data_len)
 				totalLen = lsd_data.data[0];
 				pwdLen = lsd_data.data[1];
 				ssidLen = lsd_data.data[2];
+				if((ssidLen > 32) || (pwdLen > 64))
+				{
+					return LSD_ONESHOT_ERR;
+				}
 				if((pwdLen==0) && (ssidLen==0) && (totalLen<=2))
 				{
 					if(lsd_printf)
@@ -407,6 +418,10 @@ int tls_lsd_recv(u8 *buf, u16 data_len)
 						lsd_param.ssid_len = 0;
 						lsd_param.pwd_len = 0;
 						lsd_param.user_len = totalLen - 2;
+						if(lsd_param.user_len > 128)
+						{
+							return LSD_ONESHOT_ERR;
+						}
 						memcpy(lsd_param.user_data, &lsd_data.data[3], lsd_param.user_len);	
 						if(lsd_printf)
 							lsd_printf("user data:%s\n", lsd_param.user_data);
@@ -420,6 +435,10 @@ int tls_lsd_recv(u8 *buf, u16 data_len)
 						memcpy(lsd_param.ssid, &lsd_data.data[5+pwdLen], ssidLen);
 						ssidCrc = lsd_data.data[5+ssidLen+pwdLen];	
 						lsd_param.user_len = totalLen - pwdLen - ssidLen - 5;	
+						if(lsd_param.user_len > 128)
+						{
+							return LSD_ONESHOT_ERR;
+						}
 						memcpy(lsd_param.user_data, &lsd_data.data[6+ssidLen+pwdLen], lsd_param.user_len);
 					}
 					else
@@ -427,6 +446,10 @@ int tls_lsd_recv(u8 *buf, u16 data_len)
 						memcpy(lsd_param.ssid, &lsd_data.data[4+pwdLen], ssidLen);
 						ssidCrc = lsd_data.data[4+ssidLen+pwdLen];
 						lsd_param.user_len = totalLen - ssidLen - 4;	
+						if(lsd_param.user_len > 128)
+						{
+							return LSD_ONESHOT_ERR;
+						}
 						memcpy(lsd_param.user_data, &lsd_data.data[5+ssidLen], lsd_param.user_len);
 					}	
 					lsd_param.ssid_len = ssidLen;

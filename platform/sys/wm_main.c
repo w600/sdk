@@ -43,6 +43,7 @@
 #include "wm_crypto_hard.h"
 #endif
 #include "wm_gpio_afsel.h"
+#include "wm_pmu.h"
 
 /* c librayr mutex */
 tls_os_sem_t    *libc_sem;
@@ -85,7 +86,7 @@ u32 TaskStartStk[TASK_START_STK_SIZE];
 
 
 #define FW_MAJOR_VER           0x03
-#define FW_MINOR_VER           0x01
+#define FW_MINOR_VER           0x02
 #define FW_PATCH_VER           0x00
 
 const char FirmWareVer[4] = {
@@ -109,6 +110,7 @@ extern int wpa_supplicant_init(u8 *mac_addr);
 extern void tls_sys_auto_mode_run(void);
 extern void tls_spi_slave_sel(u16 slave);
 extern void UserMain(void);
+extern void tls_fls_layout_init(void);
 
 
 void task_start (void *data);
@@ -158,10 +160,10 @@ void wm_gpio_config()
 	wm_uart1_tx_config(WM_IO_PB_12);	
 
 	/*MASTER SPI configuratioin*/
-	wm_spi_cs_config(WM_IO_PB_15);
-	wm_spi_ck_config(WM_IO_PB_16);
-	wm_spi_di_config(WM_IO_PB_17);
-	wm_spi_do_config(WM_IO_PB_18);
+	wm_spi_cs_config(WM_IO_PA_02);
+	wm_spi_ck_config(WM_IO_PA_11);
+	wm_spi_di_config(WM_IO_PA_03);
+	wm_spi_do_config(WM_IO_PA_09);
 }
 
 int main(void)
@@ -169,6 +171,8 @@ int main(void)
 	SystemInit();
 
 	tls_sys_clk_set(CPU_CLK_80M);
+	
+	tls_pmu_clk_select(0);
 
 	tls_os_init(NULL);
 
@@ -240,6 +244,10 @@ void task_start (void *data)
 #endif
 
 	tls_fls_init();
+
+	/*initialize flash layout parameter according to image type*/
+	tls_fls_layout_init();
+
 	/*PARAM GAIN,MAC default*/
 	tls_ft_param_init();
 	tls_param_load_factory_default();

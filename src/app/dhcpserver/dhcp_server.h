@@ -157,6 +157,7 @@ INT8S DHCPS_ClientDelete(INT8U * MacAddr);
 void DHCPS_RecvCb(void *Arg, struct udp_pcb *Pcb, struct pbuf *P, ip_addr_t *Addr, INT16U Port);
 void DHCPS_SetDns(INT8U numdns, INT32U dns);
 ip_addr_t *DHCPS_GetIpByMac(const INT8U *mac_addr);
+INT8U *DHCPS_GetMacByIp(const ip_addr_t *ipaddr);
 #endif
 #endif /* __DHCP_SERVER_H_175137__ */
  

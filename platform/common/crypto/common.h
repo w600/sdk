@@ -73,9 +73,7 @@
 			 (((u64) (a)[3]) << 24) | (((u64) (a)[2]) << 16) | \
 			 (((u64) (a)[1]) << 8) | ((u64) (a)[0]))
 
-#if TLS_WPA_DBG//TLS_CONFIG_SUPPLICANT_DEBUG
 const char * wpa_ssid_txt(const u8 *ssid, size_t ssid_len);
-#endif
 int hex2byte(const char *hex);
 int hexstr2bin(const char *hex, u8 *buf, size_t len);
 void inc_byte_array(u8 *counter, size_t len);

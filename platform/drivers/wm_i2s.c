@@ -107,7 +107,7 @@ void tls_i2s_set_freq(uint32_t freq)
 	reg = I2S->CTRL;
 	width = (((reg>>4)&0x03)+1)<<3;
 	stereo = tls_bitband_read(HR_I2S_CTRL, I2S_CTRL_STEREO_MONO_Pos) ? 1:2;
-	div = (I2S_CLK + freq * width * stereo)/(2* freq * width * stereo) - 1;
+	div = (I2S_CLK + freq * width * stereo)/(freq * width * stereo) - 1;
 
 	*(volatile uint32_t *)HR_CLK_I2S_CTL &= ~0xFF00;
 	*(volatile uint32_t *)HR_CLK_I2S_CTL |= (uint32_t)div<<8;

@@ -120,6 +120,17 @@ int tls_ethernet_init(void);
 struct tls_ethif * tls_netif_get_ethif(void);
 
 /**
+ * @brief          This function is used to set tls_ethif status
+ *
+ * @param[in]      status  net status, 0-up, 1-down
+ *
+ * @return         None
+ *
+ * @note           None
+ */
+void tls_netif_set_status(u8 status);
+
+/**
  * @brief          This function is used to start DHCP Client
  *
  * @param[in]      None
@@ -282,6 +293,17 @@ void tls_dnss_stop(void);
  * @note           None
  */
 ip_addr_t *tls_dhcps_getip(const u8_t *mac);
+
+/**
+ * @brief          Get station's mac address by ip address
+ *
+ * @param[in]      ip    station's ip address
+ *
+ * @retval         u8*   station's mac address
+ *
+ * @note           None
+ */
+u8 *tls_dhcps_getmac(const ip_addr_t *ip);
 #endif //TLS_CONFIG_AP
 
 #if TLS_CONFIG_RMMS

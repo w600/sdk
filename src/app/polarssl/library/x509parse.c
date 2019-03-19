@@ -37,7 +37,7 @@
 #include "polarssl/config.h"
 
 #if defined(POLARSSL_X509_PARSE_C)
-
+#include "aes.h"
 #include "polarssl/x509.h"
 #include "polarssl/asn1.h"
 #include "polarssl/pem.h"

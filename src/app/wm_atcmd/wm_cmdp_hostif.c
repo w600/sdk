@@ -3466,7 +3466,7 @@ int updd_proc(u8 set_opt, u8 update_flash, union HOSTIF_CMD_PARAMS_UNION *cmd, u
     }
     else if (1 == cmd->updd.data[0])/* ri */
     {
-        /* do nothing */
+        tls_set_hspi_fwup_mode(1);
     }
 
     return err;
@@ -5912,7 +5912,13 @@ int at_format_func(char *at_name, u8 set_opt, u8 update_flash, union HOSTIF_CMDR
 	        
 	        while(1)
 			{
+#ifdef __ICCARM__
+                int end = (TLS_SOCKET_RECV_BUF_SIZE) - (precvmit->tail); 
+                int n = ((precvmit->head) + end) & ((TLS_SOCKET_RECV_BUF_SIZE)-1); 
+                ret = n < end ? n : end;
+#else
 				ret = CIRC_CNT_TO_END(precvmit->head, precvmit->tail, TLS_SOCKET_RECV_BUF_SIZE);
+#endif
 				if(ret == 0)
 				{
 					break;
@@ -6193,7 +6199,6 @@ int ri_parse_func(s16 ri_cmd_id, char *buf, u32 length, union HOSTIF_CMD_PARAMS_
     }
     else if(ri_cmd_id == HOSTIF_CMD_UPDD){
         cmd->updd.data[0] = 1;/* 标识是ri指令 */
-        //tls_set_hspi_fwup_mode(1);
     }
 #if TLS_CONFIG_RI_CMD
     else if(ri_cmd_id == HOSTIF_CMD_WSCAN || ri_cmd_id == HOSTIF_CMD_WJOIN){ 

@@ -19,6 +19,7 @@
 #include "list.h"
 #include "wm_debug.h"
 #include "wm_internal_flash.h"
+#include "wm_flash.h"
 #include "wm_crypto_hard.h"
 
 #include "utils.h"
@@ -40,15 +41,12 @@ static struct tls_fwup *fwup = NULL;
 static tls_os_queue_t *fwup_msg_queue = NULL;
 
 static u32 fwup_task_stk[FWUP_TASK_STK_SIZE];
-static struct tls_fwup_image_hdr *current_hdr;
+
 static u8 oneshotback = 0;
+static u8 *fwupwritebuffer = NULL;
 
 T_BOOTER imgheader[2];
-extern int tls_fls_fast_write_init(void);
-extern int tls_fls_fast_write(u32 addr, u8 *buf, u32 length);
-extern void tls_fls_fast_write_destroy(void);
-
-
+extern u32 flashtotalsize;
 static void fwup_update_autoflag(void)
 {
     u8 auto_reconnect = 0xff;
@@ -65,16 +63,21 @@ static void fwup_update_autoflag(void)
 int tls_fwup_img_header_check(T_BOOTER *img_param)
 {
 	psCrcContext_t	crcContext;
-	unsigned int value = 0;
+	u32 value = 0;
 	int i = 0;
+	u32 runaddr = 0;
+	u32 updaddr = 0;
+
 	if (img_param->magic_no != SIGNATURE_WORD)
 	{
 		return FALSE;	
 	}
-	if (img_param->img_type == IMG_TYPE_SECBOOT)
+
+	if ((IMG_TYPE_OLD_PLAIN != img_param->img_type) && (IMG_TYPE_NEW_PLAIN != img_param->img_type))
 	{
 		return FALSE;
 	}
+
 	tls_crypto_crc_init(&crcContext, 0xFFFFFFFF, CRYPTO_CRC_TYPE_32, 3);
 	for (i = 0; i <  (sizeof(T_BOOTER)-4)/4; i++)
 	{
@@ -83,9 +86,49 @@ int tls_fwup_img_header_check(T_BOOTER *img_param)
 	}
 	value = 0;
 	tls_crypto_crc_final(&crcContext, &value);
-	if ((img_param->hd_checksum == value) && (((img_param->upd_img_addr|FLASH_BASE_ADDR) + img_param->upd_img_len) <= USER_ADDR_START)
-		&&((img_param->upd_img_addr|FLASH_BASE_ADDR) >= CODE_UPD_START_ADDR))
-	{
+
+	runaddr = img_param->run_img_addr|FLASH_BASE_ADDR;
+	if ((img_param->hd_checksum == value) && (runaddr < FLASH_1M_END_ADDR))
+	{  
+		/*forbid 1M_Plain and 2M_PLAIN update*/
+		tls_fls_read(CODE_RUN_HEADER_ADDR, (unsigned char *)&imgheader[0], sizeof(T_BOOTER));
+		if (imgheader[0].img_type != img_param->img_type)
+		{
+			return FALSE;
+		}
+
+		/*run addr must be page-aligned in first 1M flash */
+		if ((runaddr % INSIDE_FLS_PAGE_SIZE)
+			|| (0 == img_param->run_img_len)
+			|| (runaddr + img_param->run_img_len >= FLASH_1M_END_ADDR)
+			|| (runaddr < CODE_RUN_START_ADDR))
+		{
+			return FALSE;
+		}
+
+		/*can not upd over flash size minus system parameter area*/
+		value = runaddr + img_param->run_img_len;
+		if (value < imgheader[0].run_img_addr + imgheader[0].run_img_len)
+		{
+			value = (imgheader[0].run_img_addr|FLASH_BASE_ADDR) + imgheader[0].run_img_len;
+		}
+
+		value = value%INSIDE_FLS_BLOCK_SIZE ? (value/INSIDE_FLS_BLOCK_SIZE)*INSIDE_FLS_BLOCK_SIZE + INSIDE_FLS_BLOCK_SIZE : value;
+		updaddr = img_param->upd_img_addr|FLASH_BASE_ADDR;
+		/*upd address can not overlap run addr & must be 64K aligned*/
+		if ((updaddr < value) 							
+			|| (updaddr%INSIDE_FLS_BLOCK_SIZE) 			
+			|| (0 == img_param->upd_img_len))
+		{
+			return FALSE;
+		}
+
+		/*over flash capacity decrease one block size used as sys param area*/
+		if ((updaddr + img_param->upd_img_len) > ((flashtotalsize - INSIDE_FLS_BLOCK_SIZE)|FLASH_BASE_ADDR)) 
+		{
+			return FALSE;
+		}
+
 		return TRUE;
 	}
 	else
@@ -130,6 +173,9 @@ static void fwup_scheduler(void *data)
 	struct tls_fwup_request *request;
 	struct tls_fwup_request *temp;
 	T_BOOTER booter;
+	u32 currentlen = 0;
+	u32 tmplen = 0;
+	bool isacrossflash = FALSE;
 
 	while (1) 
 	{
@@ -201,85 +247,146 @@ static void fwup_scheduler(void *data)
 									goto request_finish;
 								}
 							
-								//if (booter.zip_type == ZIP_FILE)
+								if ((IMG_TYPE_OLD_PLAIN == booter.img_type ) ||(IMG_TYPE_NEW_PLAIN == booter.img_type))
 								{
 									fwup->program_base = booter.upd_img_addr | FLASH_BASE_ADDR;
 									fwup->total_len = booter.upd_img_len;
 									org_checksum = booter.upd_checksum;
+									isacrossflash = FALSE;
+									currentlen = 0;
 								}
-#if 0								
-								else
+								else 
 								{
-									fwup->program_base = booter.img_addr| FLASH_BASE_ADDR;
-									fwup->total_len = booter.img_len;
-									org_checksum = booter.org_checksum;
+									request->status = TLS_FWUP_REQ_STATUS_FCRC;
+									goto request_finish;
 								}
-#endif
+
 								fwup->updated_len = 0;
 							}
 						}
 						fwup->received_len += request->data_len;
 					}
-					if (request->data_len > 0) 
+					if ((request->data_len > 0) && (fwupwritebuffer))
 					{
-					//	TLS_DBGPRT_INFO("write the firmware image to the flash. %x\n\r", fwup->program_base + fwup->program_offset);
-                        				err = tls_fls_fast_write(fwup->program_base + fwup->program_offset, buffer, request->data_len);
-						if(err != TLS_FLS_STATUS_OK) 
+						if((currentlen + request->data_len) < INSIDE_FLS_SECTOR_SIZE)
 						{
-							TLS_DBGPRT_ERR("failed to program flash!\n");
-							request->status = TLS_FWUP_REQ_STATUS_FIO;
-							fwup->current_state |= TLS_FWUP_STATE_ERROR_IO;
-							goto request_finish;
-						}	
+							memcpy(fwupwritebuffer + currentlen, buffer, request->data_len);
+							currentlen += request->data_len;
+							fwup->updated_len += request->data_len;
+						}
+						else
+						{
+							if ((IMG_TYPE_OLD_PLAIN == booter.img_type) \
+								&& (0x200000 == flashtotalsize)\
+								&& (fwup->program_base < FLASH_1M_END_ADDR)\
+								&& ((fwup->program_base + fwup->updated_len) >= (FLASH_1M_END_ADDR - INSIDE_FLS_BLOCK_SIZE)))
+							{
+								isacrossflash = TRUE;
+								fwup->program_base = FLASH_1M_END_ADDR;
+								fwup->program_offset = 0;
+							}
 
-						fwup->program_offset += request->data_len;
-						fwup->updated_len += request->data_len;
+							//TLS_DBGPRT_INFO("write the firmware image to the flash. %x\n\r", fwup->program_base + fwup->program_offset);							
+							memcpy(fwupwritebuffer + currentlen, buffer, (INSIDE_FLS_SECTOR_SIZE - currentlen));
+							tmplen = fwup->program_offset/INSIDE_FLS_SECTOR_SIZE * INSIDE_FLS_SECTOR_SIZE;
+							err = tls_fls_write(fwup->program_base + tmplen, fwupwritebuffer,  INSIDE_FLS_SECTOR_SIZE);
+							if(err != TLS_FLS_STATUS_OK) 
+							{
+								TLS_DBGPRT_ERR("failed to program flash!\n");
+								request->status = TLS_FWUP_REQ_STATUS_FIO;
+								fwup->current_state |= TLS_FWUP_STATE_ERROR_IO;
+								goto request_finish;
+							}
+
+							memcpy(fwupwritebuffer, buffer + (INSIDE_FLS_SECTOR_SIZE - currentlen), (currentlen + request->data_len) - INSIDE_FLS_SECTOR_SIZE);
+							fwup->program_offset += INSIDE_FLS_SECTOR_SIZE;
+							fwup->updated_len += request->data_len;
+							currentlen = (currentlen + request->data_len) - INSIDE_FLS_SECTOR_SIZE;
+						}
 
 						//TLS_DBGPRT_INFO("updated: %d bytes\n" , fwup->updated_len);
-						if(fwup->updated_len >= (fwup->total_len)) 
+						if(fwup->updated_len >= fwup->total_len) 
 						{
-
-							u8 *buffer_t;
-							u32 len, left, offset;							
-							//int j;
-
+							u32 left = 0, offset = 0;							
 							psCrcContext_t	crcContext;
-
-							tls_fls_fast_write_destroy();
-							buffer_t = tls_mem_alloc(1024);
-							if (buffer_t == NULL) 
+							
+							if (fwup->program_offset <= fwup->updated_len)
 							{
-								TLS_DBGPRT_ERR("unable to verify because of no memory\n");
-								request->status = TLS_FWUP_REQ_STATUS_FMEM;
-								fwup->current_state |= TLS_FWUP_STATE_ERROR_MEM;
-								goto request_finish;
-							} 
-							else 
-							{							
-								tls_crypto_crc_init(&crcContext, 0xFFFFFFFF, CRYPTO_CRC_TYPE_32, 3);
-								offset = 0;
+								if ((IMG_TYPE_OLD_PLAIN == booter.img_type) \
+									&& (0x200000 == flashtotalsize)\
+									&& (fwup->program_base < FLASH_1M_END_ADDR)\
+									&& ((fwup->program_base + fwup->updated_len) >= (FLASH_1M_END_ADDR - INSIDE_FLS_BLOCK_SIZE)))
+								{
+									isacrossflash = TRUE;									
+									fwup->program_base = FLASH_1M_END_ADDR;
+									fwup->program_offset = 0;
+								}
+
+								err = tls_fls_write(fwup->program_base + fwup->program_offset, fwupwritebuffer,	currentlen);
+								if(err != TLS_FLS_STATUS_OK) 
+								{
+									TLS_DBGPRT_ERR("failed to program flash!\n");
+									request->status = TLS_FWUP_REQ_STATUS_FIO;
+									fwup->current_state |= TLS_FWUP_STATE_ERROR_IO;
+									goto request_finish;
+								}
+							}
+
+
+							offset = 0;
+							fwup->program_base = booter.upd_img_addr | FLASH_BASE_ADDR;
+							if (TRUE == isacrossflash)
+							{
+								left = (FLASH_1M_END_ADDR - INSIDE_FLS_BLOCK_SIZE) - fwup->program_base;
+							}
+							else
+							{
 								left = fwup->total_len;
+							}
+
+							tls_crypto_crc_init(&crcContext, 0xFFFFFFFF, CRYPTO_CRC_TYPE_32, 3);
+							while (left > 0) 
+							{
+								len = left > INSIDE_FLS_SECTOR_SIZE ? INSIDE_FLS_SECTOR_SIZE : left;
+
+								err = tls_fls_read(fwup->program_base + offset, fwupwritebuffer, len);
+								if (err != TLS_FLS_STATUS_OK) 
+								{
+									request->status = TLS_FWUP_REQ_STATUS_FIO;
+									fwup->current_state |= TLS_FWUP_STATE_ERROR_IO;
+									goto request_finish;
+								}
+								tls_crypto_crc_update(&crcContext, fwupwritebuffer, len);
+								offset += len;
+								left -= len;
+							}
+
+							if (TRUE == isacrossflash)
+							{
+								left = fwup->total_len - offset;
+								fwup->program_base = FLASH_1M_END_ADDR;
+								offset = 0;
 								while (left > 0) 
 								{
-									len = left > 1024 ? 1024 : left;
-									err = tls_fls_read(fwup->program_base + offset, buffer_t, len);
+									len = left > INSIDE_FLS_SECTOR_SIZE ? INSIDE_FLS_SECTOR_SIZE : left;
+
+									err = tls_fls_read(fwup->program_base + offset, fwupwritebuffer, len);
 									if (err != TLS_FLS_STATUS_OK) 
 									{
 										request->status = TLS_FWUP_REQ_STATUS_FIO;
 										fwup->current_state |= TLS_FWUP_STATE_ERROR_IO;
 										goto request_finish;
 									}
-									tls_crypto_crc_update(&crcContext, buffer_t, len);
+									tls_crypto_crc_update(&crcContext, fwupwritebuffer, len);
 									offset += len;
 									left -= len;
-								}
-								tls_crypto_crc_final(&crcContext, &image_checksum);								
-								tls_mem_free(buffer_t);
+								}	
 							}
+							tls_crypto_crc_final(&crcContext, &image_checksum);								
 
 							if (org_checksum != image_checksum)			
 							{
-                                					TLS_DBGPRT_ERR("varify incorrect[0x%02x, but 0x%02x]\n", org_checksum, image_checksum);
+								TLS_DBGPRT_ERR("varify incorrect[0x%02x, but 0x%02x]\n", org_checksum, image_checksum);
 								request->status = TLS_FWUP_REQ_STATUS_FCRC;
 								fwup->current_state |= TLS_FWUP_STATE_ERROR_CRC;
 								goto request_finish;
@@ -341,7 +448,6 @@ u32 tls_fwup_enter(enum tls_fwup_image_src image_src)
 {
 	u32 session_id = 0;
 	u32 cpu_sr;
-	bool enable = FALSE;
 
 	tls_fwup_init();
 
@@ -362,9 +468,15 @@ u32 tls_fwup_enter(enum tls_fwup_image_src image_src)
 	{
 		session_id = rand();
 	}while(session_id == 0);
-	current_hdr = tls_mem_alloc(sizeof(struct tls_fwup_image_hdr));
-	if (current_hdr){
-		memset(current_hdr, 0, sizeof(struct tls_fwup_image_hdr));
+
+	if (NULL == fwupwritebuffer)
+	{
+		fwupwritebuffer = tls_mem_alloc(INSIDE_FLS_SECTOR_SIZE);
+		if (NULL == fwupwritebuffer)
+		{
+			tls_os_release_critical(cpu_sr);
+			return 0;
+		}	
 	}
 	
 	fwup->current_state = 0;
@@ -383,12 +495,9 @@ u32 tls_fwup_enter(enum tls_fwup_image_src image_src)
 	if (oneshotback == 1){
 		tls_wifi_set_oneshot_flag(0);	// 退出一键配置
 	}
-	tls_param_get(TLS_PARAM_ID_PSM, &enable, TRUE);	
-	if (TRUE == enable)
-	{
-		tls_wifi_set_psflag(FALSE, 0);
-	}
-	tls_fls_fast_write_init();
+
+	tls_wifi_set_psflag(FALSE, 0);
+
 	tls_os_release_critical(cpu_sr);
 	return session_id;
 }
@@ -414,8 +523,10 @@ int tls_fwup_exit(u32 session_id)
 	}
 
 	cpu_sr = tls_os_set_critical();
-	if (current_hdr){
-		memset(current_hdr, 0, sizeof(struct tls_fwup_image_hdr));
+	if (fwupwritebuffer)
+	{
+		tls_mem_free(fwupwritebuffer);
+		fwupwritebuffer = NULL;
 	}
 	fwup->current_state = 0;
 
@@ -434,19 +545,6 @@ int tls_fwup_exit(u32 session_id)
 	tls_param_get(TLS_PARAM_ID_PSM, &enable, TRUE);	
 	tls_wifi_set_psflag(enable, 0);
 	tls_os_release_critical(cpu_sr);
-#if 0
-	fwtask.prio = TLS_FWUP_TASK_PRIO;
-	osstatus = tls_os_task_del(&fwtask);
-	if (TLS_OS_SUCCESS == osstatus){
-		if (fwup_task_stk){
-			tls_mem_free(current_hdr);
-			tls_mem_free(fwup_task_stk);
-			tls_os_queue_delete(fwup_msg_queue);
-			tls_os_sem_delete(fwup->list_lock);
-			tls_mem_free(fwup);
-		}
-	}
-#endif
 	return TLS_FWUP_STATUS_OK;
 }
 
@@ -558,6 +656,8 @@ int tls_fwup_request_sync(u32 session_id, u8 *data, u32 data_len)
 	request.complete = fwup_request_complete;
 	request.arg = (void *)sem;
 
+	tls_wifi_set_psflag(FALSE, 0);
+	
 	err = tls_fwup_request_async(session_id, &request);
 	if(err == TLS_FWUP_STATUS_OK) 
 	{
@@ -620,9 +720,6 @@ int tls_fwup_reset(u32 session_id)
 	if (fwup->current_state & TLS_FWUP_STATE_BUSY) {return TLS_FWUP_STATUS_EBUSY;}
 
 	cpu_sr = tls_os_set_critical();
-	if (current_hdr){
-		memset(current_hdr, 0, sizeof(struct tls_fwup_image_hdr));
-	}
 
 	fwup->current_state = 0;
 
@@ -710,5 +807,137 @@ int tls_fwup_init(void)
 	}
 
 	return TLS_FWUP_STATUS_OK;
+}
+
+
+/**Run-time image area size*/
+unsigned int CODE_RUN_AREA_LEN = 0;
+
+/**Area can be used by User in 1M position*/
+unsigned int USER_ADDR_START = 0;
+unsigned int TLS_FLASH_PARAM_DEFAULT = 0;
+unsigned int USER_AREA_LEN = 0;
+unsigned int USER_ADDR_END = 0;
+
+
+/**Upgrade image header area & System parameter area */
+unsigned int CODE_UPD_HEADER_ADDR = 0;
+unsigned int TLS_FLASH_PARAM1_ADDR = 0;
+unsigned int TLS_FLASH_PARAM2_ADDR = 0;
+unsigned int TLS_FLASH_PARAM_RESTORE_ADDR = 0;
+
+/**Upgrade image area*/
+unsigned int CODE_UPD_START_ADDR = 0;
+unsigned int CODE_UPD_AREA_LEN = 0;
+
+/**Area can be used by User in 2M position*/
+unsigned int EX_USER_ADDR_START = 0;
+unsigned int EX_USER_AREA_LEN = 0;
+unsigned int EX_USER_ADDR_END = 0;
+
+unsigned int TLS_FLASH_END_ADDR = 0;
+
+void tls_fls_layout_init(void)
+{
+	T_BOOTER tbooter;
+
+	tls_fls_read(CODE_RUN_HEADER_ADDR, (u8 *)&tbooter, sizeof(tbooter));
+	switch (flashtotalsize)
+	{
+		case 0x200000: /*2M*/
+		{
+			if (IMG_TYPE_OLD_PLAIN == tbooter.img_type)
+			{
+				//printf("2M use old layout\r\n");
+				/**Run-time image area size*/
+				CODE_RUN_AREA_LEN				=		(896*1024 - 256);
+									
+				/**Area can be used by User in 1M position*/
+				USER_ADDR_START					=		(CODE_RUN_START_ADDR + CODE_RUN_AREA_LEN);
+				TLS_FLASH_PARAM_DEFAULT  		=		(USER_ADDR_START);
+				USER_AREA_LEN					=		(48*1024);
+				USER_ADDR_END					=		(USER_ADDR_START + USER_AREA_LEN - 1);
+									
+									
+				/**Upgrade image header area & System parameter area */
+				CODE_UPD_HEADER_ADDR			=		(USER_ADDR_START + USER_AREA_LEN);
+				TLS_FLASH_PARAM1_ADDR			=		(CODE_UPD_HEADER_ADDR + 0x1000);
+				TLS_FLASH_PARAM2_ADDR			=		(TLS_FLASH_PARAM1_ADDR + 0x1000);
+				TLS_FLASH_PARAM_RESTORE_ADDR	=		(TLS_FLASH_PARAM2_ADDR + 0x1000);
+									
+				/**Upgrade image area*/
+				CODE_UPD_START_ADDR				=		(TLS_FLASH_PARAM_RESTORE_ADDR + 0x1000);
+				CODE_UPD_AREA_LEN				=		(704*1024);
+									
+				/**Area can be used by User in 2M position*/
+				EX_USER_ADDR_START				=		(CODE_UPD_START_ADDR + CODE_UPD_AREA_LEN);
+				EX_USER_AREA_LEN				=		(320*1024);
+				EX_USER_ADDR_END				=		(EX_USER_ADDR_START + EX_USER_AREA_LEN - 1);
+									
+				TLS_FLASH_END_ADDR				=		(EX_USER_ADDR_END);
+
+			}
+			else
+			{
+				//printf("2M use new layout\r\n");				
+				/**Run-time image area size*/
+				CODE_RUN_AREA_LEN				=	(960*1024 - 256);
+				
+				/**Upgrade image area*/
+				CODE_UPD_START_ADDR				=	(CODE_RUN_START_ADDR + CODE_RUN_AREA_LEN);
+				CODE_UPD_AREA_LEN				=	(768*1024);
+				
+				/**Area can be used by User*/
+				USER_ADDR_START					=	(CODE_UPD_START_ADDR + CODE_UPD_AREA_LEN);
+				TLS_FLASH_PARAM_DEFAULT  		=	(USER_ADDR_START);
+				USER_AREA_LEN					=	(240*1024);
+				USER_ADDR_END					=	(USER_ADDR_START + USER_AREA_LEN - 1);
+
+				/**Area can be used by User in 2M position*/
+				EX_USER_ADDR_START				=		0;
+				EX_USER_AREA_LEN				=		0;
+				EX_USER_ADDR_END				=		0;
+
+				
+				/**Upgrade image header area & System parameter area */
+				CODE_UPD_HEADER_ADDR			=	(USER_ADDR_START + USER_AREA_LEN) ;
+				TLS_FLASH_PARAM1_ADDR			=	(CODE_UPD_HEADER_ADDR + 0x1000);
+				TLS_FLASH_PARAM2_ADDR			=	(TLS_FLASH_PARAM1_ADDR + 0x1000);
+				TLS_FLASH_PARAM_RESTORE_ADDR	=	(TLS_FLASH_PARAM2_ADDR + 0x1000);
+				TLS_FLASH_END_ADDR				=	(TLS_FLASH_PARAM_RESTORE_ADDR + 0x1000 -1);
+			}
+		}
+		break;
+		default:	/*1M*/
+		{
+			//printf("1M layout\r\n");			
+			/**Run-time image area size*/
+			CODE_RUN_AREA_LEN				=	(512*1024 - 256);
+			
+			/**Upgrade image area*/
+			CODE_UPD_START_ADDR				=	(CODE_RUN_START_ADDR + CODE_RUN_AREA_LEN);
+			CODE_UPD_AREA_LEN				=	(384*1024);
+							
+			/**Area can be used by User*/
+			USER_ADDR_START					=	(CODE_UPD_START_ADDR + CODE_UPD_AREA_LEN);
+			TLS_FLASH_PARAM_DEFAULT  		=	(USER_ADDR_START);
+			USER_AREA_LEN					=	(48*1024);
+			USER_ADDR_END					=	(USER_ADDR_START + USER_AREA_LEN - 1);
+
+			/**Area can be used by User in 2M position*/
+			EX_USER_ADDR_START				=		0;
+			EX_USER_AREA_LEN				=		0;
+			EX_USER_ADDR_END				=		0;
+						
+			/**Upgrade image header area & System parameter area */
+			CODE_UPD_HEADER_ADDR			=	(USER_ADDR_START + USER_AREA_LEN);
+			TLS_FLASH_PARAM1_ADDR			=	(CODE_UPD_HEADER_ADDR + 0x1000);
+			TLS_FLASH_PARAM2_ADDR			=	(TLS_FLASH_PARAM1_ADDR + 0x1000);
+			TLS_FLASH_PARAM_RESTORE_ADDR	=	(TLS_FLASH_PARAM2_ADDR + 0x1000);
+			TLS_FLASH_END_ADDR				=	(TLS_FLASH_PARAM_RESTORE_ADDR + 0x1000 - 1);
+			
+		}
+		break;
+	}
 }
 

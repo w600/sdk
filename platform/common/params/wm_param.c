@@ -414,7 +414,7 @@ int tls_param_init(void)
 				is_damage[0] = is_damage[1] = FALSE;
 				memset(&flash_param, 0, sizeof(flash_param));
 				memset(&sram_param, 0, sizeof(sram_param));
-				tls_fls_erase(TLS_FLASH_PARAM_RESTORE_ADDR);
+				tls_fls_erase(TLS_FLASH_PARAM_RESTORE_ADDR / INSIDE_FLS_SECTOR_SIZE);
 				tryrestore = 1;
 				i = -1;
 			}

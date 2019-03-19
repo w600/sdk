@@ -889,6 +889,25 @@ ip_addr_t *DHCPS_GetIpByMac(const INT8U *MacAddr)
     return IpAddr;
 } 
 
+INT8U *DHCPS_GetMacByIp(const ip_addr_t *ipaddr)
+{
+    INT8U i;
+    PDHCP_CLIENT pClient;
+    INT8U *macaddr = NULL;
+
+    for(i = 0; i < DHCPS_HISTORY_CLIENT_NUM; i++)
+    {
+        pClient = &DhcpServer.Clients[i];
+        if (pClient->IpAddr.addr == ipaddr->addr)
+        { 
+            macaddr = pClient->MacAddr;
+            break;
+        }
+    }
+
+    return macaddr;
+}
+
 /* numdns 0/1  --> dns 1/2 */
 void DHCPS_SetDns(INT8U numdns, INT32U dns)
 {

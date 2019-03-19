@@ -18,10 +18,10 @@
 /*
  *
  * Created by Filipe Varela on 09/10/16.
- * Copyright 2009 Caixa M谩gica Software. All rights reserved.
+ * Copyright 2009 Caixa Mágica Software. All rights reserved.
  *
- * Fork developed by Vicente Ruiz Rodr铆guez
- * Copyright 2012 Vicente Ruiz Rodr铆guez <vruiz2.0@gmail.com>. All rights reserved.
+ * Fork developed by Vicente Ruiz Rodríguez
+ * Copyright 2012 Vicente Ruiz Rodríguez <vruiz2.0@gmail.com>. All rights reserved.
  *
  */
 //#include ".h"

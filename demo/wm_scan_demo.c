@@ -119,7 +119,7 @@ static void wifi_scan_handler(void)
         goto end;
     }
 
-	wsr = (struct iw_scan_bss *)buf;
+	wsr = (struct tls_scan_bss_t *)buf;
 	bss_info = (struct tls_bss_info_t *)(buf + 8);	
 
 	printf("\n");

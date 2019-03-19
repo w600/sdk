@@ -50,6 +50,48 @@ void CRYPTION_IRQHandler(void)
 	crypto_complete = 1;
 }
 
+static void tls_crypto_clear_32reg(u32 base, u32 len)
+{
+    u32 i;
+
+    for (i = 0; i < len; i += 4)
+    {
+        tls_reg_write32(base + i, 0);
+    }
+
+    return;
+}
+
+static void tls_crypto_write_32reg(u32 base, void *data, u32 len)
+{
+    u32 i;
+    u32 *value;
+
+    value = (u32 *)data;
+
+    for (i = 0; i < len; i += 4)
+    {
+        tls_reg_write32(base + i, *value++);
+    }
+
+    return;
+}
+
+static void tls_crypto_read_32reg(void *data, u32 base, u32 len)
+{
+    u32 i;
+    u32 *value;
+
+    value = (u32 *)data;
+
+    for (i = 0; i < len; i += 4)
+    {
+        *value = tls_reg_read32(base + i);
+        value++;
+    }
+
+    return;
+}
 
 static int16 pstm_get_bit (pstm_int * a, int16 idx)
 {
@@ -201,8 +243,10 @@ int tls_crypto_rc4(psCipherContext_t * ctx, unsigned char *in, unsigned char *ou
 	unsigned int sec_cfg, val;
 	unsigned char *key = ctx->arc4.state;
 	u32 keylen = ctx->arc4.byteCount;
-	memset((void *)HR_CRYPTO_KEY0, 0, 16);
-	memcpy((void *)HR_CRYPTO_KEY0, key, keylen);
+	//memset((void *)HR_CRYPTO_KEY0, 0, 16);
+	tls_crypto_clear_32reg(HR_CRYPTO_KEY0, 16);
+	//memcpy((void *)HR_CRYPTO_KEY0, key, keylen);
+	tls_crypto_write_32reg(HR_CRYPTO_KEY0, key, keylen);
 	tls_reg_write32(HR_CRYPTO_SRC_ADDR, (unsigned int)in);
 	tls_reg_write32(HR_CRYPTO_DEST_ADDR, (unsigned int)out);
 	val = tls_reg_read32(HR_CRYPTO_SEC_CFG);
@@ -268,12 +312,24 @@ int tls_crypto_aes_encrypt_decrypt(psCipherContext_t * ctx, unsigned char *in, u
 	unsigned char *key = (unsigned char *)ctx->aes.key.eK;
 	unsigned char *IV = ctx->aes.IV;
 	CRYPTO_MODE cbc = (CRYPTO_MODE)(ctx->aes.key.Nr & 0xFF);
-	memset((void *)HR_CRYPTO_KEY0, 0, 16);
-	memcpy((void *)HR_CRYPTO_KEY0, key, keylen);
-	memset((void *)HR_CRYPTO_IV0, 0, 8);
-	memset((void *)HR_CRYPTO_IV1, 0, 8);
-	memcpy((void *)HR_CRYPTO_IV0, IV, 8);
-	memcpy((void *)HR_CRYPTO_IV1, IV+8, 8);
+
+	//memset((void *)HR_CRYPTO_KEY0, 0, 16);
+	tls_crypto_clear_32reg(HR_CRYPTO_KEY0, 16);
+
+	//memcpy((void *)HR_CRYPTO_KEY0, key, keylen);
+	tls_crypto_write_32reg(HR_CRYPTO_KEY0, key, keylen);
+	
+	//memset((void *)HR_CRYPTO_IV0, 0, 8);
+    tls_crypto_clear_32reg(HR_CRYPTO_IV0, 8);
+
+	//memset((void *)HR_CRYPTO_IV1, 0, 8);
+    tls_crypto_clear_32reg(HR_CRYPTO_IV1, 8);
+
+	//memcpy((void *)HR_CRYPTO_IV0, IV, 8);
+    tls_crypto_write_32reg(HR_CRYPTO_IV0, IV, 8);
+
+	//memcpy((void *)HR_CRYPTO_IV1, IV+8, 8);
+    tls_crypto_write_32reg(HR_CRYPTO_IV1, IV+8, 8);
 	
 	tls_reg_write32(HR_CRYPTO_SRC_ADDR, (unsigned int)in);
 	tls_reg_write32(HR_CRYPTO_DEST_ADDR, (unsigned int)out);
@@ -340,10 +396,14 @@ int tls_crypto_3des_encrypt_decrypt(psCipherContext_t * ctx, unsigned char *in, 
 	unsigned char *key = (unsigned char *)(unsigned char *)ctx->des3.key.ek[0];
 	unsigned char *IV = ctx->des3.IV;
 	CRYPTO_MODE cbc = (CRYPTO_MODE)(ctx->des3.key.ek[1][0] & 0xFF);
-	memset((void *)HR_CRYPTO_KEY0, 0, DES3_KEY_LEN);
-	memcpy((void *)HR_CRYPTO_KEY0, key, keylen);
-	memset((void *)HR_CRYPTO_IV0, 0, DES3_IV_LEN);
-	memcpy((void *)HR_CRYPTO_IV0, IV, DES3_IV_LEN);
+	//memset((void *)HR_CRYPTO_KEY0, 0, DES3_KEY_LEN);
+	tls_crypto_clear_32reg(HR_CRYPTO_KEY0, DES3_KEY_LEN);
+	//memcpy((void *)HR_CRYPTO_KEY0, key, keylen);
+	tls_crypto_write_32reg(HR_CRYPTO_KEY0, key, keylen);
+	//memset((void *)HR_CRYPTO_IV0, 0, DES3_IV_LEN);
+	tls_crypto_clear_32reg(HR_CRYPTO_IV0, DES3_IV_LEN);
+	//memcpy((void *)HR_CRYPTO_IV0, IV, DES3_IV_LEN);
+	tls_crypto_write_32reg(HR_CRYPTO_IV0, IV, DES3_IV_LEN);
 	tls_reg_write32(HR_CRYPTO_SRC_ADDR, (unsigned int)in);
 	tls_reg_write32(HR_CRYPTO_DEST_ADDR, (unsigned int)out);
 	val = tls_reg_read32(HR_CRYPTO_SEC_CFG);
@@ -409,10 +469,14 @@ int tls_crypto_des_encrypt_decrypt(psCipherContext_t * ctx, unsigned char *in, u
 	unsigned char *key = (unsigned char *)ctx->des3.key.ek[0];
 	unsigned char *IV = ctx->des3.IV;
 	CRYPTO_MODE cbc = (CRYPTO_MODE)(ctx->des3.key.ek[1][0] & 0xFF);
-	memset((void *)HR_CRYPTO_KEY0, 0, DES_KEY_LEN);
-	memcpy((void *)HR_CRYPTO_KEY0, key, keylen);
-	memset((void *)HR_CRYPTO_IV0, 0, DES3_IV_LEN);
-	memcpy((void *)HR_CRYPTO_IV0, IV, DES3_IV_LEN);
+	//memset((void *)HR_CRYPTO_KEY0, 0, DES_KEY_LEN);
+	tls_crypto_clear_32reg(HR_CRYPTO_KEY0, DES_KEY_LEN);
+	//memcpy((void *)HR_CRYPTO_KEY0, key, keylen);
+	tls_crypto_write_32reg(HR_CRYPTO_KEY0, key, keylen);
+	//memset((void *)HR_CRYPTO_IV0, 0, DES3_IV_LEN);
+	tls_crypto_clear_32reg(HR_CRYPTO_IV0, DES3_IV_LEN);
+	//memcpy((void *)HR_CRYPTO_IV0, IV, DES3_IV_LEN);
+	tls_crypto_write_32reg(HR_CRYPTO_IV0, IV, DES3_IV_LEN);
 	tls_reg_write32(HR_CRYPTO_SRC_ADDR, (unsigned int)in);
 	tls_reg_write32(HR_CRYPTO_DEST_ADDR, (unsigned int)out);
 	val = tls_reg_read32(HR_CRYPTO_SEC_CFG);
@@ -907,27 +971,33 @@ static void rsaMonMulWriteMc(const u32 mc)
 }
 static void rsaMonMulWriteA(const u32 *const in)
 {
-    memcpy((u32*)&RSAXBUF, in, RSAN * sizeof(u32));
+    //memcpy((u32*)&RSAXBUF, in, RSAN * sizeof(u32));
+    tls_crypto_write_32reg(RSA_BASE_ADDRESS + 0x0, (void *)in, RSAN * sizeof(u32));
 }
 static void rsaMonMulWriteB(const u32 *const in)
 {
-    memcpy((u32*)&RSAYBUF, in, RSAN * sizeof(u32));
+    //memcpy((u32*)&RSAYBUF, in, RSAN * sizeof(u32));
+    tls_crypto_write_32reg(RSA_BASE_ADDRESS + 0x100, (void *)in, RSAN * sizeof(u32));
 }
 static void rsaMonMulWriteM(const u32 *const in)
 {
-    memcpy((u32*)&RSAMBUF, in, RSAN * sizeof(u32));
+    //memcpy((u32*)&RSAMBUF, in, RSAN * sizeof(u32));
+    tls_crypto_write_32reg(RSA_BASE_ADDRESS + 0x200, (void *)in, RSAN * sizeof(u32));
 }
 static void rsaMonMulReadA(u32 *const in)
 {
-    memcpy(in, (u32*)&RSAXBUF, RSAN * sizeof(u32));
+    //memcpy(in, (u32*)&RSAXBUF, RSAN * sizeof(u32));
+    tls_crypto_read_32reg((void *)in, RSA_BASE_ADDRESS + 0x0, RSAN * sizeof(u32));
 }
 static void rsaMonMulReadB(u32 *const in)
 {
-    memcpy(in, (u32*)&RSAYBUF, RSAN * sizeof(u32));
+    //memcpy(in, (u32*)&RSAYBUF, RSAN * sizeof(u32));
+    tls_crypto_read_32reg((void *)in, RSA_BASE_ADDRESS + 0x100, RSAN * sizeof(u32));
 }
 static void rsaMonMulReadD(u32 *const in)
 {
-    memcpy(in, (u32*)&RSADBUF, RSAN * sizeof(u32));
+    //memcpy(in, (u32*)&RSADBUF, RSAN * sizeof(u32));
+    tls_crypto_read_32reg((void *)in, RSA_BASE_ADDRESS + 0x300, RSAN * sizeof(u32));
 }
 static int rsaMulModRead(unsigned char w, pstm_int * a)
 {

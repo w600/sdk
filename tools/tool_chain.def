@@ -34,7 +34,7 @@ ifeq ($(COMPILE), gcc)
 	OBJCOPY = arm-none-eabi-objcopy
 	OBJDUMP = arm-none-eabi-objdump
 else
-	KEIL_PATH =  /cygdrive/d/Keil/ARM
+	KEIL_PATH =  /cygdrive/d/Keil_V5/ARM
 	AR = $(KEIL_PATH)/ARMCC/bin/armar
 	ASM = $(KEIL_PATH)/ARMCC/bin/armasm
 	CC = $(KEIL_PATH)/ARMCC/bin/armcc

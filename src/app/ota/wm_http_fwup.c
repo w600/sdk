@@ -36,6 +36,8 @@ int http_fwup(HTTPParameters ClientParams)
     enum ota_state now_state = PREPARE_PACKET;
 
     Buffer = (char*)tls_mem_alloc(HTTP_CLIENT_BUFFER_SIZE);
+    if (!Buffer)
+        return HTTP_CLIENT_ERROR_NO_MEMORY;
     memset(Buffer, 0, HTTP_CLIENT_BUFFER_SIZE);    
 
     while(1)

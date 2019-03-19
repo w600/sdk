@@ -204,11 +204,16 @@ static int hspi_tx(struct hspi_tx_data *tx_data)
 #endif
     tx_desc = hspi->tls_slave_hspi->curr_tx_desc;
 
+    u32 wait_state = 0;
+
     while (tx_desc->valid_ctrl & BIT(31))
     {
-        ;
+        if(wait_state ++ > 10000)
+        {
+            printf("tx time out !\r\n");
+            break;
+        }
     }
-
     switch (tx_msg->type)
     {
         case HOSTIF_TX_MSG_TYPE_EVENT:
@@ -531,7 +536,7 @@ static int hspi_rx_cmd(void *data)
             printf("\nlen=%d\n", be_to_host16(len));
             for (i = 0; i < be_to_host16(len) + 8; i++)
             {
-                printf("[%x]", buf[i]);
+                printf("%02x ", buf[i]);
                 if (i > 0 && i % 32 == 0)
                     printf("\n");
             }

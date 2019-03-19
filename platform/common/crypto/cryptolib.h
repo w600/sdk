@@ -305,7 +305,9 @@ static inline unsigned ROR(unsigned word, int i)
 	#define CONST64(n) n ## ULL
 #endif
 #endif
-#define __LITTLE_ENDIAN__ 
+#ifndef __LITTLE_ENDIAN__
+#define __LITTLE_ENDIAN__
+#endif
 /******************************************************************************/
 /* Controls endianness and size of registers. */
 #if defined __LITTLE_ENDIAN__ || defined __i386__ || defined __x86_64__

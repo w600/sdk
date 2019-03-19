@@ -315,7 +315,7 @@ int ethernetif_input(const u8 *bssid, u8 *buf, u32 buf_len)
 ***/
 
 static err_t ethernetif_igmp_mac_filter(struct netif *netif,
-      const ip4_addr_t *group, u8_t action)
+      const ip4_addr_t *group, enum netif_mac_filter_action action)
 {
 	u8 m_addr[6] = {0x01, 0x00, 0x5E};
 	int ret = ERR_OK;

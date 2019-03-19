@@ -962,7 +962,11 @@ struct ieee80211_mgmt {
         } __attribute__ ((packed)) beacon;
 		struct {
         /* only variable items: SSID, Supported rates */
+#ifdef __ICCARM__
+            u8 *variable;
+#else
             u8 variable[0];
+#endif
         } __attribute__ ((packed)) probe_req;
 		struct {
             u64 timestamp;

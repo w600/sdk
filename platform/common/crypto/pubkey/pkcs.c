@@ -1003,7 +1003,7 @@ static int32 parseSafeContents(psPool_t *pool, unsigned char *password,
 				PKCS12Attribute ::= SEQUENCE { 
 					attrId ATTRIBUTE.&id ({PKCS12AttrSet}), 
 					attrValues SET OF ATTRIBUTE.&Type ({PKCS12AttrSet}{@attrId}) 
-				} -- This type is compatible with the X.500 type 鈥橝ttribute鈥?
+				} -- This type is compatible with the X.500 type ’Attribute’ 
 
 				PKCS12AttrSet ATTRIBUTE ::= {
 					PKCS 12 V1.0: PERSONAL INFORMATION EXCHANGE SYNTAX 9 

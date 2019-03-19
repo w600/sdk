@@ -22,10 +22,11 @@
 #include "wm_timer.h"
 #include "wm_cpu.h"
 #include "wm_irq.h"
+#include "wm_flash_map.h"
 
 extern void flashSRRW(unsigned long offset,unsigned char *buf,unsigned long sz, unsigned char *backbuf, unsigned int backlen, unsigned int rd);
 
-#define FLASH_BASE_ADDR			0x8000000UL
+
 #define FT_MAGICNUM_ADDR		(FLASH_BASE_ADDR)
 #define MAGICNUM_LEN			(4)
 #define FT_CHECKSUM_ADDR		(FT_MAGICNUM_ADDR + MAGICNUM_LEN)
@@ -51,7 +52,7 @@ extern void flashSRRW(unsigned long offset,unsigned char *buf,unsigned long sz, 
 #define FT_FIX_DATA_LEN (MAC_ADDR_LEN + TX_DC_OFFSET_LEN + RX_DC_OFFSET_LEN + TX_IQ_GAIN_LEN + RX_IQ_GAIN_LEN \
 	+ TX_IQ_PHASE_LEN \
 	+ RX_IQ_PHASE_LEN)
-#define SIGNATURE_WORD       0xA0FFFF9F
+
 
 /* key paramater area -- begin -- */
 /** PHY parameter area **/
@@ -84,6 +85,8 @@ typedef struct FT_PARAM
 	unsigned int		rx_iq_phase;	
 	unsigned char		tx_gain[FT_GAIN_LEN];
 }FT_PARAM_ST;
+
+static u8 default_mac[6] = {0x00,0x25,0x08,0x09,0x01,0x0F};
 
 FT_PARAM_ST gftParam;
 int tls_ft_param_init(void)
@@ -127,10 +130,7 @@ int tls_ft_param_init(void)
 			tls_crypto_crc_init(&ctx, 0xFFFFFFFF, CRYPTO_CRC_TYPE_32, INPUT_REFLECT | OUTPUT_REFLECT);
 			tls_crypto_crc_update(&ctx, (unsigned char *)pft + 12, sizeof(FT_PARAM_ST) - 12);
 			tls_crypto_crc_final(&ctx, &crcvalue);		
-			if ((pft->checksum != crcvalue)
-				/*
-				||(pft->mac_addr[0]&0x1)
-				||(0 == (pft->mac_addr[0]|pft->mac_addr[1]|pft->mac_addr[2]|pft->mac_addr[3]|pft->mac_addr[4]|pft->mac_addr[5]))*/)
+			if ((pft->checksum != crcvalue))
 			{
 				usedcnt[i] = -1;
 				continue;
@@ -140,6 +140,8 @@ int tls_ft_param_init(void)
 			{
 				memcpy(&gftParam, pft, sizeof(FT_PARAM_ST));
 			}
+		}else{
+			usedcnt[i] = -1;
 		}
 	}
 
@@ -179,7 +181,15 @@ int tls_ft_param_get(unsigned int opnum, void *data, unsigned int rdlen)
 	switch (opnum)
 	{
 		case CMD_MAC:	/*MAC*/
-			memcpy(data, gftParam.mac_addr, rdlen);
+			if ((gftParam.mac_addr[0]&0x1)
+				||(0 == (gftParam.mac_addr[0]|gftParam.mac_addr[1]|gftParam.mac_addr[2]|gftParam.mac_addr[3]|gftParam.mac_addr[4]|gftParam.mac_addr[5])))		
+			{
+				memcpy(data, default_mac, rdlen);
+			}
+			else
+			{
+				memcpy(data, gftParam.mac_addr, rdlen);
+			}
 		break;
 		
 		case CMD_TX_DC: /*tx_dcoffset*/

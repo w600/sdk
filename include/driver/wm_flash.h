@@ -93,12 +93,12 @@ struct tls_fls
  */
 
 /**
- * @defgroup FLASH_Driver_APIs FLASH Driver APIs
- * @brief FLASH driver APIs
+ * @defgroup SPIFLASH_Driver_APIs SPIFLASH Driver APIs
+ * @brief SPIFLASH driver APIs
  */
 
 /**
- * @addtogroup FLASH_Driver_APIs
+ * @addtogroup SPIFLASH_Driver_APIs
  * @{
  */
 

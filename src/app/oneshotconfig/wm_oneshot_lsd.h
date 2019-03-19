@@ -28,7 +28,9 @@ typedef enum
 
 	LSD_ONESHOT_CHAN_LOCKED_BW40 = 3,
 
-	LSD_ONESHOT_COMPLETE = 4
+	LSD_ONESHOT_COMPLETE = 4,
+
+	LSD_ONESHOT_ERR = 5
 
 } lsd_oneshot_status_t;
 

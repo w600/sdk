@@ -830,8 +830,8 @@ int tls_wps_start_pbc(void);
 void tls_ethernet_data_rx_callback(net_rx_data_cb callback);
 #if TLS_CONFIG_AP_OPT_FWD
 /**
- * @brief          This function is used to register IP data rx
- *                 callback function in APSTA mode
+ * @brief          This function is used to forward IP data packets
+ *                 by routing, only for APSTA mode.
  *
  * @param[in]      callback   point to receive ETHERNET data function
  *

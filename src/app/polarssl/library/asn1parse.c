@@ -26,7 +26,7 @@
 #include "polarssl/config.h"
 
 #if defined(POLARSSL_ASN1_PARSE_C)
-
+#include "aes.h"
 #include "polarssl/asn1.h"
 
 #include "polarssl/bignum.h"

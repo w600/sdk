@@ -22,8 +22,8 @@ typedef volatile unsigned long vu32;
 #define M16(adr)	(*((vu16*) (adr)))
 #define M32(adr)	(*((vu32*) (adr)))
 
-
-#define INSIDE_FLS_SECTOR_SIZE	0x1000
+#define INSIDE_FLS_BLOCK_SIZE	(0x10000UL)
+#define INSIDE_FLS_SECTOR_SIZE	(0x1000UL)
 #define INSIDE_FLS_PAGE_SIZE	256
 
 

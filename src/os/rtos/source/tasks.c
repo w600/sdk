@@ -67,7 +67,6 @@ task.h is included from an application file. */
 #include "lwip/timers.h"
 #include "StackMacros.h"
 #include "wm_config.h"
-#include "wm_watchdog.h"
 #undef MPU_WRAPPERS_INCLUDED_FROM_API_FILE
 
 #if TLS_OS_FREERTOS
@@ -1991,8 +1990,6 @@ static portTASK_FUNCTION( prvIdleTask, pvParameters )
 
 	for( ;; )
 	{
-	    /* clear watch dog interrupt */
-	    tls_watchdog_clr();
 		/* See if any tasks have been deleted. */
 		prvCheckTasksWaitingTermination();
 		//printf("\nidle task\n");

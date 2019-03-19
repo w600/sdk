@@ -22,7 +22,7 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-
+#include "aes.h"
 #include "polarssl/config.h"
 
 #if defined(POLARSSL_SSL_CLI_C)
