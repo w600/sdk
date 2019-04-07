@@ -1,6 +1,8 @@
-`1. 当前 sdk 版本 v3.0.0 final，首次从 v2.2.8 升级需先擦除 Flash 或下载 FLS 文件,`
+`1. 当前 sdk 版本 v3.2.0 ，建议首次升级时先下载 FLS 文件，固件参考请参考` http://docs.thingsturn.com/application_note/download_firmware/
 
 `2. 重点优化了低功耗模式，目前功耗有明显改善。`
+
+`3. 当前支持 2M flash 版本 W600，单用户区高达960KB。`
 
 # 更新说明
 
@@ -12,13 +14,15 @@
 
 使用 MDK 打开 WM_SDK/tools/Keil/Project/WM_W600.uvproj ，点击 Project -》Build Target 即可编译
 
+需要swd调试的用户请参考 http://docs.thingsturn.com/application_note/swd_debugging/
+
 ## 2. 使用 Eclipse 编译
 
-打开 Eclipse 环境，右键项目名称，执行 Build Project 即可。
+打开 Eclipse 环境，右键项目名称，执行 Build Project 即可。环境搭建请参考  http://docs.thingsturn.com/development/soc/start/
 
 ## 3. 使用控制台编译
 
-`使用linux平台编译时，需更新tools/makeimg 和 tools/makeimg_all 的执行权限，如 chmod 755 makeimg `
+`使用 Linux 平台编译时，需更新tools/makeimg 和 tools/makeimg_all 的执行权限，如 chmod 755 makeimg `
 
 ### 常用指令
 
@@ -51,6 +55,10 @@ make flash_all	//编译并烧录 w600.fls 固件
   make flash 进行固件烧录时使用的波特率，默认 2Mbps，部分型号的串口不支持。
 
   支持 2000000, 1000000, 921600, 460800, 115200等不同速率及进行下载.
+
+* FLASH_SIZE=1M 
+
+  编译时指定实际使用的flash大小，默认为1M
 
 #### 示例
 
