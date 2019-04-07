@@ -1,4 +1,4 @@
-`1. 当前 sdk 版本 v3.2.0 ，建议首次升级时先下载 FLS 文件，固件参考请参考` http://docs.thingsturn.com/application_note/download_firmware/
+`1. 当前 sdk 版本 v3.2.0 ，建议首次升级时先下载 FLS 文件，固件烧录请参考` http://docs.thingsturn.com/application_note/download_firmware/
 
 `2. 重点优化了低功耗模式，目前功耗有明显改善。`
 
