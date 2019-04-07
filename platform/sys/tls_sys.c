@@ -350,14 +350,20 @@ void tls_auto_reconnect(void)
 
                 if (bssid.bssid_enable)
                 {
-                    tls_wifi_connect_by_ssid_bssid(ssid.ssid, ssid.ssid_len, bssid.bssid, origin_key.psk,
-                        origin_key.key_length);
+                    if(ssid.ssid_len)
+                    {
+                        tls_wifi_connect_by_ssid_bssid(ssid.ssid, ssid.ssid_len, bssid.bssid, origin_key.psk, origin_key.key_length);
+                    }
+                    else
+                    {
+                        tls_wifi_connect_by_bssid(bssid.bssid, origin_key.psk, origin_key.key_length);
+                    }
                 }
-                else
+                else if(ssid.ssid_len)
                 {
-                    tls_wifi_connect(ssid.ssid, ssid.ssid_len, origin_key.psk,
-                        origin_key.key_length);
+                    tls_wifi_connect(ssid.ssid, ssid.ssid_len, origin_key.psk, origin_key.key_length);
                 }
+
             }
             break;
 #if TLS_CONFIG_AP

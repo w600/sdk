@@ -27,7 +27,17 @@ CFLAGS = $(CCFLAGS) $(DEFINES) $(EXTRA_CCFLAGS) $(INCLUDES)
 
 UNAME_O:=$(shell uname -o)
 UNAME_S:=$(shell uname -s)
-	
+
+# default use 1m flash
+
+ifeq ($(FLASH_SIZE), 2M)
+	IMG_TYPE:=3
+	IMG_START:=100000
+else
+	IMG_TYPE:=0
+	IMG_START:=90000
+endif
+
 define ShortcutRule
 $(1): .subdirs $(2)/$(1)
 endef
@@ -65,13 +75,15 @@ else
 	@$(FROMELF) --bin -o  $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin $(IMAGEODIR)/$(TARGET).out  
 endif
 	@echo "Generate  $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin successully"
+
+
 ifeq ($(UNAME_S),Linux)
 	@echo "linux platform"
 	@cp $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin.bk
 	@gzip -fv $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin
 	@mv $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin.bk $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin
-	@$(SDK_TOOLS)/makeimg  $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin "$(FIRMWAREDIR)/$(TARGET)/$(TARGET).img" 0 0 "$(FIRMWAREDIR)/version.txt" 90000 10100
-	@$(SDK_TOOLS)/makeimg  $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin.gz "$(FIRMWAREDIR)/$(TARGET)/$(TARGET)_gz.img" 0 1 "$(FIRMWAREDIR)/version.txt" 90000 10100 $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin
+	@$(SDK_TOOLS)/makeimg  $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin "$(FIRMWAREDIR)/$(TARGET)/$(TARGET).img" $(IMG_TYPE) 0 "$(FIRMWAREDIR)/version.txt" $(IMG_START) 10100
+	@$(SDK_TOOLS)/makeimg  $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin.gz "$(FIRMWAREDIR)/$(TARGET)/$(TARGET)_gz.img" $(IMG_TYPE) 1 "$(FIRMWAREDIR)/version.txt" $(IMG_START) 10100 $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin
 	@$(SDK_TOOLS)/makeimg_all "$(FIRMWAREDIR)/secboot.img" "$(FIRMWAREDIR)/$(TARGET)/$(TARGET).img" "$(FIRMWAREDIR)/$(TARGET)/$(TARGET).fls"
 else
 ifeq ($(UNAME_O),Darwin)
@@ -79,8 +91,8 @@ ifeq ($(UNAME_O),Darwin)
 else
 	@echo "windows platform"
 	@$(SDK_TOOLS)/wm_gzip.exe  $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin
-	@$(SDK_TOOLS)/makeimg.exe  $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin "$(FIRMWAREDIR)/$(TARGET)/$(TARGET).img" 3 0 "$(FIRMWAREDIR)/version.txt" 90000 10100
-	@$(SDK_TOOLS)/makeimg.exe  $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin.gz "$(FIRMWAREDIR)/$(TARGET)/$(TARGET)_gz.img" 3 1 "$(FIRMWAREDIR)/version.txt" 90000 10100 $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin
+	@$(SDK_TOOLS)/makeimg.exe  $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin "$(FIRMWAREDIR)/$(TARGET)/$(TARGET).img" $(IMG_TYPE) 0 "$(FIRMWAREDIR)/version.txt" $(IMG_START) 10100
+	@$(SDK_TOOLS)/makeimg.exe  $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin.gz "$(FIRMWAREDIR)/$(TARGET)/$(TARGET)_gz.img" $(IMG_TYPE) 1 "$(FIRMWAREDIR)/version.txt" $(IMG_START) 10100 $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin
 	@$(SDK_TOOLS)/makeimg_all.exe "$(FIRMWAREDIR)/secboot.img" "$(FIRMWAREDIR)/$(TARGET)/$(TARGET).img" "$(FIRMWAREDIR)/$(TARGET)/$(TARGET).fls"
 	@$(SDK_TOOLS)/makeimg_dbg.exe "$(FIRMWAREDIR)/$(TARGET)/$(TARGET).img" "$(IMAGEODIR)/$(TARGET).dbg"
 endif
@@ -89,8 +101,9 @@ endif
 #	@rm ./test.bin
 	@rm $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin.gz
 	@rm $(FIRMWAREDIR)/$(TARGET)/$(TARGET).img
-	@echo ""
+	@echo "use" $(FLASH_SIZE) "flash"
 	@echo "Build finish !!!"
+
 
 all: .subdirs $(BOOT_OBJS) $(OBJS) $(OLIBS) $(OIMAGES) $(OBINS) $(SPECIAL_MKTARGETS)
 

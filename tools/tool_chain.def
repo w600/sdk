@@ -15,6 +15,8 @@ DL_BAUD ?= 2000000
 
 COMPILE ?= gcc
 
+FLASH_SIZE ?= 1M
+
 ifeq ($(COMPILE), gcc)
 COMPILE = gcc
 else
@@ -45,10 +47,18 @@ else
 endif
 
 LDDIR = $(TOP_DIR)/ld
-ifeq ($(COMPILE), gcc)
-	LD_FILE = $(LDDIR)/w600.ld
+ifeq ($(FLASH_SIZE), 2M)
+	ifeq ($(COMPILE), gcc)
+		LD_FILE = $(LDDIR)/w600_2m.ld
+	else
+		LD_FILE = $(LDDIR)/w600_2m.sct
+	endif
 else
-	LD_FILE = $(LDDIR)/w600.sct
+	ifeq ($(COMPILE), gcc)
+		LD_FILE = $(LDDIR)/w600_1m.ld
+    else
+		LD_FILE = $(LDDIR)/w600_1m.sct
+	endif
 endif
 
 ifeq ($(COMPILE), gcc)
