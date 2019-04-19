@@ -21,3 +21,4 @@ Bin/*
 *.out
 *.map
 *.lst
+.vscode
