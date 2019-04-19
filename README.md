@@ -76,7 +76,7 @@ make flash_all	//编译并烧录 w600.fls 固件
 
 # Example 编译说明
 
-请查看 [README](./example/README.md)
+请查看 [README](./example/)
 
 # 其它
 

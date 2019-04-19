@@ -10,4 +10,5 @@
 示例：
 
 ./build.sh at   //编译at固件，生成的bin文件在 sdk/bin/at/目录下
-./build.sh at flash //编译at固件，并烧录，默认串口为 COM1，请自行修改 build.sh 中对应的 DL\_PORT和 DL\_BAUD
+
+./build.sh at flash COM3//编译at固件，并通过串口COM3烧录固件
