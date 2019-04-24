@@ -1,14 +1,41 @@
-# 编译说明
+# W600 Example 
 
-需使用控制台并输入 ./build.sh PRJ\_NAME 指令进行编译
+## Basic Example
 
-注意：
+* [at](at) : just compile the sdk, do nothing;
+* [adc](adc) : use internal adc for temperature measurement;
+* [blink](blink) : blink led using a task and os timer delay;
+* [blink_timer](blink_timer) : blink led using a hardware timer;
+* [flash](flash) : read flash and write flash test.
+* [hello world](helloworld): printf helloworld using a task and os timer delay;
+* [pwm](pwm) : breathing led using a hardware pwm;
 
-1. 固件默认生成路径为 sdk/bin/PRJ_NAME/ 文件夹下；
-2. 注意 PRJ\_NAME 输入时不要带文件夹后面的"/"，否则编译会出错。
+## Advance Example
 
-示例：
+* [beacon_spam](beacon_spam) : create multiple custom WiFi access points;
+* [sniffer_mac](sniffer_mac) : get the MAC address and RSSI, and even the SSID which sent by nearby devices;
 
-./build.sh at   //编译at固件，生成的bin文件在 sdk/bin/at/目录下
+ 
+## Compile
 
-./build.sh at flash COM3//编译at固件，并通过串口COM3烧录固件
+Open the Cygwin console and enter the ./build.sh PRJ\_NAME cmd
+
+``` 
+wch@wch-pc /cygdrive/d/Project/sdk/example
+$ ./build.sh at
+
+start...
+```
+Or download directly to the w600 device
+
+``` 
+wch@wch-pc /cygdrive/d/Project/sdk/example
+$ ./build.sh at flash COM3
+
+start...
+```
+
+Note:
+
+1. The default firmware generation path is in the sdk/bin/PRJ_NAME/ folder;
+2. Note that PRJ\_NAME should not be entered with "/" after the folder, otherwise the compilation will fail.

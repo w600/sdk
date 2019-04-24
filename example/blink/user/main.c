@@ -44,8 +44,8 @@ void blink_task(void *data)
 
 void UserMain(void)
 {
-	printf("task start !\r\n");
-
+    printf("\r\nw600 blink example, compile @%s %s\r\n", __DATE__, __TIME__);
+	printf("blink task start ...\r\n");
     /* create task */
     tls_os_task_create(NULL,
             "blink",
