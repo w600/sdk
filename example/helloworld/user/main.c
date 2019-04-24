@@ -22,7 +22,7 @@ void helloworld_task(void *data)
 {
     while(1)
     {
-        printf("hello world!\n");
+        printf("hello world!\r\n");
     //    tls_os_time_delay(1000/portTICK_RATE_MS);
         tls_os_time_delay(HZ);
     }
@@ -30,8 +30,7 @@ void helloworld_task(void *data)
 
 void UserMain(void)
 {
-	printf("task start !\r\n");
-
+    printf("\r\nw600 hello world example, compile @%s %s\r\n", __DATE__, __TIME__);
     /* create task */
     tls_os_task_create(NULL,
             "helloworld",
