@@ -52,24 +52,28 @@ extern int tls_filter_module_srcmac(u8 *mac);
 
 
 /** AIRKISS ONESHOT */
+#ifdef __ICCARM__
+#define TLS_CONFIG_AIRKISS_MODE_ONESHOT (ONESHOT_OFF && TLS_CONFIG_UDP_ONE_SHOT)
+#else
 #define TLS_CONFIG_AIRKISS_MODE_ONESHOT (ONESHOT_ON && TLS_CONFIG_UDP_ONE_SHOT)
+#endif
 #define AIRKISS_USE_SELF_WRITE                 0
 
 typedef enum{
 	ONESHOT_SCAN_START,
 	ONESHOT_SCAN_FINISHED,
 	ONESHOT_SWITCH_CHANNEL,
-	ONESHOT_STOP_TMP_CHAN_SWITCH,	
+	ONESHOT_STOP_TMP_CHAN_SWITCH,
 	ONESHOT_STOP_CHAN_SWITCH,
 	ONESHOT_HANDSHAKE_TIMEOUT,
-	ONESHOT_RECV_TIMEOUT,	
+	ONESHOT_RECV_TIMEOUT,
 	ONESHOT_RECV_ERR,
 	ONESHOT_STOP_DATA_CLEAR,
 	ONESHOT_NET_UP,
 	AP_SOCK_S_MSG_SOCKET_RECEIVE_DATA,
 	AP_WEB_S_MSG_RECEIVE_DATA,
 	AP_SOCK_S_MSG_SOCKET_CREATE,
-	AP_SOCK_S_MSG_WJOIN_FAILD,	
+	AP_SOCK_S_MSG_WJOIN_FAILD,
 }ONESHOT_MSG_ENUM;
 
 /**
@@ -242,10 +246,10 @@ void tls_wifi_set_oneshot_config_mode(u8 flag);
 /**
  * @brief		   This function is used to get oneshot config mode.
  *
- * @param[in]	  None 
+ * @param[in]	  None
  *
  * @param[out]    None
- * 
+ *
  * @retval	   0: one shot config
  *             1: softap socket config
  *             2: softap webserver config
@@ -258,10 +262,10 @@ u8 tls_wifi_get_oneshot_config_mode(void);
 /**
  * @brief		   This function is used to send web config msg to oneshot task.
  *
- * @param[in]	  None 
+ * @param[in]	  None
  *
  * @param[out]    None
- * 
+ *
  * @retval	   None
  *
  * @note		   None
