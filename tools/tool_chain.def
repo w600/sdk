@@ -23,27 +23,48 @@ else
 COMPILE = armcc
 endif
 
+# YES; NO
+VERBOSE ?= NO   
 
 CROSS_MAKE := make
 
 # select which tools to use as compiler, librarian and linker
 ifeq ($(COMPILE), gcc)
-	AR = arm-none-eabi-ar
-	ASM = arm-none-eabi-gcc
-	CC = arm-none-eabi-gcc
-	CPP = arm-none-eabi-c++
-	LINK = arm-none-eabi-ld.exe
-	OBJCOPY = arm-none-eabi-objcopy
-	OBJDUMP = arm-none-eabi-objdump
+	ifeq ($(VERBOSE),YES)
+		AR = arm-none-eabi-ar
+		ASM = arm-none-eabi-gcc
+		CC = arm-none-eabi-gcc
+		CPP = arm-none-eabi-c++
+		LINK = arm-none-eabi-ld.exe
+		OBJCOPY = arm-none-eabi-objcopy
+		OBJDUMP = arm-none-eabi-objdump
+	else
+		AR = @echo "GNU-AR $<"; arm-none-eabi-ar
+		ASM = @echo "GNU-ASM $<"; arm-none-eabi-gcc
+		CC = @echo "GNU-CC  $<"; arm-none-eabi-gcc
+		CPP = @echo "GNU-CPP $<"; arm-none-eabi-c++
+		LINK = @echo "GNU-LINK $<"; arm-none-eabi-ld.exe
+		OBJCOPY = @echo "GNU-OBJCOPY $<"; arm-none-eabi-objcopy
+		OBJDUMP = @echo "GNU-OBJDUMP $<"; arm-none-eabi-objdump
+	endif
 else
 	KEIL_PATH =  /cygdrive/d/Keil_V5/ARM
-	AR = $(KEIL_PATH)/ARMCC/bin/armar
-	ASM = $(KEIL_PATH)/ARMCC/bin/armasm
-	CC = $(KEIL_PATH)/ARMCC/bin/armcc
-	CPP = $(KEIL_PATH)/ARMCC/bin/armcc
-	LINK = $(KEIL_PATH)/ARMCC/bin/armlink
-	FROMELF = $(KEIL_PATH)/ARMCC/bin/fromelf
 	INC = -I $(KEIL_PATH)/CMSIS/Include -I $(KEIL_PATH)/RV31/INC
+	ifeq ($(VERBOSE),YES)
+		AR = $(KEIL_PATH)/ARMCC/bin/armar
+		ASM = $(KEIL_PATH)/ARMCC/bin/armasm
+		CC = $(KEIL_PATH)/ARMCC/bin/armcc
+		CPP = $(KEIL_PATH)/ARMCC/bin/armcc
+		LINK = $(KEIL_PATH)/ARMCC/bin/armlink
+		FROMELF = $(KEIL_PATH)/ARMCC/bin/fromelf
+	else
+		AR = @echo "ARM-AR $<"; $(KEIL_PATH)/ARMCC/bin/armar
+		ASM = @echo "ARM-ASM $<"; $(KEIL_PATH)/ARMCC/bin/armasm
+		CC = @echo "ARM-CC $<"; $(KEIL_PATH)/ARMCC/bin/armcc
+		CPP = @echo "ARM-CPP $<"; $(KEIL_PATH)/ARMCC/bin/armcc
+		LINK = @echo "ARM-LINK $<"; $(KEIL_PATH)/ARMCC/bin/armlink
+		FROMELF = @echo "ARM-FROMELF $<"; $(KEIL_PATH)/ARMCC/bin/fromelf
+	endif
 endif
 
 LDDIR = $(TOP_DIR)/ld
@@ -56,7 +77,7 @@ ifeq ($(FLASH_SIZE), 2M)
 else
 	ifeq ($(COMPILE), gcc)
 		LD_FILE = $(LDDIR)/w600_1m.ld
-    else
+	else
 		LD_FILE = $(LDDIR)/w600_1m.sct
 	endif
 endif

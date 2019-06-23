@@ -49,7 +49,7 @@ $$(LIBODIR)/$(1)$(LIB_EXT):  $$(BOOT_OBJS) $$(OBJS) $$(DEP_OBJS_$(1)) $$(DEP_LIB
 	@mkdir -p $$(LIBODIR)
 	$$(if $$(filter %$(LIB_EXT),$$?),mkdir -p $$(EXTRACT_DIR)_$(1))
 	$$(if $$(filter %$(LIB_EXT),$$?),cd $$(EXTRACT_DIR)_$(1); $$(foreach lib,$$(filter %$(LIB_EXT),$$?),$$(AR) $(ARFLAGS_2) $$(UP_EXTRACT_DIR)/$$(lib);))
-	@$$(AR) $(ARFLAGS) $$@ $$(filter %.o,$$?) $$(if $$(filter %$(LIB_EXT),$$?),$$(EXTRACT_DIR)_$(1)/*.o)
+	$$(AR) $(ARFLAGS) $$@ $$(filter %.o,$$?) $$(if $$(filter %$(LIB_EXT),$$?),$$(EXTRACT_DIR)_$(1)/*.o)
 	$$(if $$(filter %$(LIB_EXT),$$?),$$(RM) -r $$(EXTRACT_DIR)_$(1))
 endef
 
@@ -63,16 +63,16 @@ ifeq ($(COMPILE), gcc)
 else
 	$(LINK) $(LINKFLAGS)  $$(OBJS) $$(DEP_OBJS_$(1)) $$(DEP_LIBS_$(1)) $$(if $$(LINKFLAGS_$(1)),$$(LINKFLAGS_$(1)),$$(LINKFLAGS_DEFAULT)) $(MAP) $(INFO) $(LIST) -o $$@
 endif
-	#$$(CC) $$(LDFLAGS) $$(if $$(LINKFLAGS_$(1)),$$(LINKFLAGS_$(1)),$$(LINKFLAGS_DEFAULT) $$(OBJS) $$(DEP_OBJS_$(1)) $$(DEP_LIBS_$(1))) -o $$@
+#	$$(CC) $$(LDFLAGS) $$(if $$(LINKFLAGS_$(1)),$$(LINKFLAGS_$(1)),$$(LINKFLAGS_DEFAULT) $$(OBJS) $$(DEP_OBJS_$(1)) $$(DEP_LIBS_$(1))) -o $$@
 endef
 
 $(BINODIR)/%.bin: $(IMAGEODIR)/%.out
 	@mkdir -p $(FIRMWAREDIR)
 	@mkdir -p $(FIRMWAREDIR)/$(TARGET)
 ifeq ($(COMPILE), gcc)
-	@$(OBJCOPY) --output-target=binary -S -g -x -X -R .sbss -R .bss -R .reginfo -R .stack $(IMAGEODIR)/$(TARGET).out $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin	
+	$(OBJCOPY) --output-target=binary -S -g -x -X -R .sbss -R .bss -R .reginfo -R .stack $(IMAGEODIR)/$(TARGET).out $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin	
 else
-	@$(FROMELF) --bin -o  $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin $(IMAGEODIR)/$(TARGET).out  
+	$(FROMELF) --bin -o  $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin $(IMAGEODIR)/$(TARGET).out  
 endif
 	@echo "Generate  $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin successully"
 
