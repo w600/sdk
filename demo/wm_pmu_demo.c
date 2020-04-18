@@ -6,48 +6,48 @@
 
 
 
-#if DEMO_PMU //DEMO_TIMER
+#if DEMO_PMU //DEMO_PMU_TIMER
 
 
 static void pmu_timer0_irq(u8 *arg)
 {
-	tls_pmu_timer0_stop();
-	printf("pmu timer0 irq\n");
+    tls_pmu_timer0_stop();
+    printf("pmu timer0 irq\n");
 }
 
 static void pmu_timer1_irq(u8 *arg)
 {
-	tls_pmu_timer1_stop();
-	printf("pmu timer1 irq\n");
+    tls_pmu_timer1_stop();
+    printf("pmu timer1 irq\n");
 }
 
 int pmu_timer0_demo(u8 enterStandby)
 {
-	tls_pmu_timer0_isr_register(pmu_timer0_irq, NULL);
-	tls_pmu_timer0_start(10);
-	printf("pmu timer0 test start\n");	
+    tls_pmu_timer0_isr_register(pmu_timer0_irq, NULL);
+    tls_pmu_timer0_start(10);
+    printf("pmu timer0 test start\n");
 
-	if(enterStandby)
-	{
-		printf("pmu will standby\n");
-		tls_pmu_standby_start();
-		printf("pmu enter standby\n");
-	}
+    if(enterStandby)
+    {
+        printf("pmu will standby\n");
+        tls_pmu_standby_start();
+        printf("pmu enter standby\n");
+    }
     return 	WM_SUCCESS;
 }
 
 int pmu_timer1_demo(u8 enterStandby)
 {
-	tls_pmu_timer1_isr_register(pmu_timer1_irq, NULL);
-	tls_pmu_timer1_start(5000);
-	printf("pmu timer1 test start\n");	
+    tls_pmu_timer1_isr_register(pmu_timer1_irq, NULL);
+    tls_pmu_timer1_start(5000);
+    printf("pmu timer1 test start\n");
 
-	if(enterStandby)
-	{
-		printf("pmu will standby\n");
-		tls_pmu_standby_start();
-		printf("pmu enter standby\n");
-	}
+    if(enterStandby)
+    {
+        printf("pmu will standby\n");
+        tls_pmu_standby_start();
+        printf("pmu enter standby\n");
+    }
     return 	WM_SUCCESS;
 }
 

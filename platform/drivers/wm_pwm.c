@@ -654,9 +654,16 @@ int tls_pwm_capture_irq_type_config(u8 channel, enum tls_pwm_cap_int_type int_ty
 int tls_pwm_out_init(pwm_init_param pwm_param)
 {
     int ret=0;
+    int pwm_status = 0;
 
 	if (pwm_param.channel > (PWM_CHANNEL_MAX_NUM - 1))
 		return WM_FAILED;
+
+    if(tls_reg_read32(HR_PWM_CTL) & BIT(27 + pwm_param.channel))
+    {
+        tls_pwm_stop(pwm_param.channel);
+        pwm_status = 1;
+    }
 
     /* set output mode */
     ret = tls_pwm_out_mode_config(pwm_param.channel, pwm_param.mode);
@@ -695,6 +702,10 @@ int tls_pwm_out_init(pwm_init_param pwm_param)
         tls_pwm_output_en_cmd(pwm_param.channel, WM_PWM_OUT_EN_STATE_OUT);
     if (pwm_param.mode == WM_PWM_OUT_MODE_ALLSYC && pwm_param.channel == 0)
         tls_pwm_output_en_cmd(4, WM_PWM_OUT_EN_STATE_OUT);
+    if(pwm_status)
+    {
+        tls_pwm_start(pwm_param.channel);
+    }
     return WM_SUCCESS;
 }
 
@@ -729,8 +740,7 @@ int tls_pwm_cap_init(u8 channel, u16 clkdiv, bool inverse_en, enum tls_pwm_cap_i
     tls_pwm_cnt_type_config(channel, WM_PWM_CNT_TYPE_EDGE_ALLGN_CAP);
 
     /* set output status */
-    if(channel == 0)
-        tls_pwm_output_en_cmd(channel, WM_PWM_OUT_EN_STATE_TRI);
+    tls_pwm_output_en_cmd(channel, WM_PWM_OUT_EN_STATE_TRI);
 
     /* set cycle mode (must be set int the capture mode) */
     tls_pwm_loop_mode_config(channel, WM_PWM_LOOP_TYPE_LOOP);
@@ -782,7 +792,7 @@ int tls_pwm_stop(u8 channel)
 }
 
 /**
- * @brief          This function is used to stop pwm
+ * @brief          This function is used to set pwm's frequency
  *
  * @param[in]      channel    pwm channel no, range form 0 to 4
  * @param[in]      freq       frequency, range from 1 to 156250

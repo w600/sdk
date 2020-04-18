@@ -66,13 +66,14 @@ enum tls_gpio_irq_trig {
 /**
  * @brief          	This function is used to config gpio function
  *
- * @param[in]      	gpio_pin    	gpio pin num
+ * @param[in]      	gpio_pin    		gpio pin num
  * @param[in]      	dir         		gpio direction
  * @param[in]      	attr        		gpio attribute
  *
- * @return         None
+ * @return          None
  *
- * @note			None	
+ * @note
+ * All gpio's attribute can only be set as WM_GPIO_ATTR_FLOATING or WM_GPIO_ATTR_PULLHIGH on W600/W601.
  */
 void tls_gpio_cfg(enum tls_io_name gpio_pin, enum tls_gpio_dir dir, enum tls_gpio_attr attr);
 
@@ -82,8 +83,8 @@ void tls_gpio_cfg(enum tls_io_name gpio_pin, enum tls_gpio_dir dir, enum tls_gpi
  *
  * @param[in]      gpio_pin    gpio pin num
  *
- * @retval         0     power level is low
- * @retval         1     power level is high
+ * @retval         0     low level
+ * @retval         1     high level
  *
  * @note           None
  */
@@ -94,9 +95,9 @@ u8 tls_gpio_read(enum tls_io_name gpio_pin);
  * @brief          	This function is used to modify gpio status
  *
  * @param[in]      	gpio_pin    	gpio pin num
- * @param[in]      	value       	power level
- *                        	0: 			low  power level
- * 				1: 			high power level
+ * @param[in]      	value       	electrical level
+ *                  0: 				low  level
+ * 					1: 				high level
  *
  * @return         	None
  *

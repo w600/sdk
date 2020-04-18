@@ -13,6 +13,8 @@
 #define TLS_EFUSE_STATUS_OK      (0)
 #define TLS_EFUSE_STATUS_EINVALID      (1)
 #define TLS_EFUSE_STATUS_EIO      (2)
+#define TLS_EFUSE_STATUS_ERR      (-1)
+
 
 enum {
 	CMD_MAC = 0x01,
@@ -47,10 +49,10 @@ int tls_ft_param_init(void);
 *
 * @param[in]	opnum  ft cmd
 * @param[in]	data   data pointer
-* @param[in]	len  len to write data
+* @param[in]	len  the length written into "data"
 *
-* @retval	 	TLS_EFUSE_STATUS_OK			set success
-* @retval		TLS_EFUSE_STATUS_EIO			set failed
+* @retval	 	0		set success
+* @retval		-1		set failed
 */
 int tls_ft_param_set(unsigned int opnum, void *data, unsigned int len);
 
@@ -61,8 +63,8 @@ int tls_ft_param_set(unsigned int opnum, void *data, unsigned int len);
 * @param[in]	data   data pointer
 * @param[in]	len  len to read data
 *
-* @retval	 	TLS_EFUSE_STATUS_OK			get success
-* @retval		TLS_EFUSE_STATUS_EIO			get failed
+* @retval	 	0		get success
+* @retval		-1		get failed
 */
 int tls_ft_param_get(unsigned int opnum, void *data, unsigned int rdlen);
 
@@ -72,8 +74,8 @@ int tls_ft_param_get(unsigned int opnum, void *data, unsigned int rdlen);
 *
 * @param[in]	mac		mac addr,6 byte
 *
-* @retval	 	TLS_EFUSE_STATUS_OK			get success
-* @retval		TLS_EFUSE_STATUS_EIO			get failed
+* @retval	 	0		get success
+* @retval		-1		get failed
 */
 int tls_get_mac_addr(u8 *mac);
 
@@ -82,8 +84,8 @@ int tls_get_mac_addr(u8 *mac);
 *
 * @param[in]	mac		mac addr,6 byte
 *
-* @retval	 	TLS_EFUSE_STATUS_OK			set success
-* @retval		TLS_EFUSE_STATUS_EIO			set failed
+* @retval	 	0		set success
+* @retval		-1		set failed
 */
 int tls_set_mac_addr(u8 *mac);
 
@@ -92,8 +94,8 @@ int tls_set_mac_addr(u8 *mac);
 *
 * @param[in]	txgain		tx gain,12 byte
 *
-* @retval	 	TLS_EFUSE_STATUS_OK			get success
-* @retval		TLS_EFUSE_STATUS_EIO		get failed
+* @retval	 	0		get success
+* @retval		-1		get failed
 */
 int tls_get_tx_gain(u8 *txgain);
 
@@ -102,8 +104,8 @@ int tls_get_tx_gain(u8 *txgain);
 *
 * @param[in]	txgain		tx gain,12 byte
 *
-* @retval	 	TLS_EFUSE_STATUS_OK			set success
-* @retval		TLS_EFUSE_STATUS_EIO		set failed
+* @retval	 	0		set success
+* @retval		-1		set failed
 */
 int tls_set_tx_gain(u8 *txgain);
 
@@ -112,8 +114,8 @@ int tls_set_tx_gain(u8 *txgain);
 *
 * @param[in]	txlo		tx lod
 *
-* @retval	 	TLS_EFUSE_STATUS_OK			get success
-* @retval		TLS_EFUSE_STATUS_EIO		get failed
+* @retval	 	0		get success
+* @retval		-1		get failed
 */
 int tls_get_tx_lo(u8 *txlo);
 
@@ -122,10 +124,9 @@ int tls_get_tx_lo(u8 *txlo);
 *
 * @param[in]	txlo		tx lod
 *
-* @retval	 	TLS_EFUSE_STATUS_OK			set success
-* @retval		TLS_EFUSE_STATUS_EIO		set failed
+* @retval	 	0		set success
+* @retval		-1		set failed
 */
-
 int tls_set_tx_lo(u8 *txlo);
 
 /**
@@ -133,8 +134,8 @@ int tls_set_tx_lo(u8 *txlo);
 *
 * @param[in]	txGain		
 *
-* @retval	 	TLS_EFUSE_STATUS_OK			get success
-* @retval		TLS_EFUSE_STATUS_EIO		get failed
+* @retval	 	0		get success
+* @retval		-1		get failed
 */
 int tls_get_tx_iq_gain(u8 *txGain);
 
@@ -143,8 +144,8 @@ int tls_get_tx_iq_gain(u8 *txGain);
 *
 * @param[in]	txGain		
 *
-* @retval	 	TLS_EFUSE_STATUS_OK			set success
-* @retval		TLS_EFUSE_STATUS_EIO		set failed
+* @retval	 	0		set success
+* @retval		-1		set failed
 */
 int tls_set_tx_iq_gain(u8 *txGain);
 
@@ -153,18 +154,18 @@ int tls_set_tx_iq_gain(u8 *txGain);
 *
 * @param[in]	rxGain		
 *
-* @retval	 	TLS_EFUSE_STATUS_OK			get success
-* @retval		TLS_EFUSE_STATUS_EIO		get failed
+* @retval	 	0		get success
+* @retval		-1		get failed
 */
 int tls_get_rx_iq_gain(u8 *rxGain);
 
 /**
-* @brief 	This function is used to get rx iq gain
+* @brief 	This function is used to set rx iq gain
 *
 * @param[in]	rxGain		
 *
-* @retval	 	TLS_EFUSE_STATUS_OK			set success
-* @retval		TLS_EFUSE_STATUS_EIO		set failed
+* @retval	 	0		set success
+* @retval		-1		set failed
 */
 int tls_set_rx_iq_gain(u8 *rxGain);
 
@@ -173,8 +174,8 @@ int tls_set_rx_iq_gain(u8 *rxGain);
 *
 * @param[in]	txPhase		
 *
-* @retval	 	TLS_EFUSE_STATUS_OK			get success
-* @retval		TLS_EFUSE_STATUS_EIO		get failed
+* @retval	 	0		get success
+* @retval		-1		get failed
 */
 int tls_get_tx_iq_phase(u8 *txPhase);
 
@@ -183,8 +184,8 @@ int tls_get_tx_iq_phase(u8 *txPhase);
 *
 * @param[in]	txPhase		
 *
-* @retval	 	TLS_EFUSE_STATUS_OK			set success
-* @retval		TLS_EFUSE_STATUS_EIO		set failed
+* @retval	 	0		set success
+* @retval		-1		set failed
 */
 int tls_set_tx_iq_phase(u8 *txPhase);
 
@@ -193,8 +194,8 @@ int tls_set_tx_iq_phase(u8 *txPhase);
 *
 * @param[in]	rxPhase		
 *
-* @retval	 	TLS_EFUSE_STATUS_OK			get success
-* @retval		TLS_EFUSE_STATUS_EIO		get failed
+* @retval	 	0		get success
+* @retval		-1		get failed
 */
 int tls_get_rx_iq_phase(u8 *rxPhase);
 
@@ -203,8 +204,8 @@ int tls_get_rx_iq_phase(u8 *rxPhase);
 *
 * @param[in]	rxPhase		
 *
-* @retval	 	TLS_EFUSE_STATUS_OK			set success
-* @retval		TLS_EFUSE_STATUS_EIO		set failed
+* @retval	 	0		set success
+* @retval		-1		set failed
 */
 int tls_set_rx_iq_phase(u8 *rxPhase);
 
@@ -213,8 +214,6 @@ int tls_set_rx_iq_phase(u8 *rxPhase);
 *
 * @param[in]	freqerr	
 * @param[in]    flag  1-set  0-get
-* @retval	 	TLS_EFUSE_STATUS_OK			set/get success
-* @retval		TLS_EFUSE_STATUS_EIO		set/get failed
 */
 int tls_freq_err_op(u8 *freqerr, u8 flag);
 
@@ -224,8 +223,6 @@ int tls_freq_err_op(u8 *freqerr, u8 flag);
 * @param[in]	vcg	
 * @param[in]    flag  1-set  0-get
 *
-* @retval	 	TLS_EFUSE_STATUS_OK			set/get success
-* @retval		TLS_EFUSE_STATUS_EIO		set/get failed
 */
 int tls_rf_vcg_ctrl_op(u8 *vcg, u8 flag);
 
@@ -234,34 +231,32 @@ int tls_rf_vcg_ctrl_op(u8 *vcg, u8 flag);
 *
 * @param[out]	chip_id
 *
-* @retval	 	TLS_EFUSE_STATUS_OK			get success
-* @retval		TLS_FLS_STATUS_EPERM		flash driver module not beed installed
 */
 int tls_get_chipid(u8 chip_id[16]);
 
 /**
-* @brief 	This function is used to get chip ID
+* @brief 		This function is used for a delay of several seconds 		
 *
 * @param[in]	seconds
 *
-* @retval	 	TLS_EFUSE_STATUS_OK			success
+* @retval	 	0
 */
 unsigned int tls_sleep(unsigned int seconds);
 
 /**
-* @brief 	This function is used to get chip ID
+* @brief 		This function is used for a delay of several milliseconds
 *
 * @param[in]	msec
 *
-* @retval	 	TLS_EFUSE_STATUS_OK			success
+* @retval	 	0
 */
 int tls_msleep(unsigned int msec);
 /**
-* @brief 	This function is used to get chip ID
+* @brief 		This function is used for a delay of several microseconds
 *
 * @param[in]	usec
 *
-* @retval	 	TLS_EFUSE_STATUS_OK			success
+* @retval	 	0
 */
 int tls_usleep(unsigned int usec);
 

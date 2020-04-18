@@ -21,6 +21,11 @@ static void sniffer_callback(struct ieee80211_hdr *hdr, u32 data_len, struct tls
 static void printDataSpan(uint16_t start, uint16_t size, uint8_t* data);
 static uint8_t _current_channel = 1;
 
+void pre_gpio_config()
+{
+	
+}
+
 static void wifi_set_channel(uint8_t chan)
 {
     if(chan > 14) chan = 14;
@@ -84,7 +89,7 @@ static void sniffer_callback(struct ieee80211_hdr *hdr, u32 data_len, struct tls
             printf("TYPE:%02X|", hdr->frame_control & IEEE80211_FCTL_FTYPE);
             printf("SUB:%02X|", hdr->frame_control & IEEE80211_FCTL_STYPE);
 //            printf("RET:%02X|", hdr->frame_control & IEEE80211_FCTL_RETRY);
-            printf("RSSI:%03d", ext->rssi/2-110);
+            printf("RSSI:%03d", ext->rssi-0x100);
             printf("\r\n");
         }
     }

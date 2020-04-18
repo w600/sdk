@@ -1584,6 +1584,53 @@ tcp_kill_timewait(void)
   }
 }
 
+static void
+tcp_kill_finwait2(void)
+{
+  struct tcp_pcb *pcb, *inactive;
+  u32_t inactivity;
+
+  inactivity = 0;
+  inactive = NULL;
+  /* Go through the list of TIME_WAIT pcbs and get the oldest pcb. */
+  for (pcb = tcp_active_pcbs; pcb != NULL; pcb = pcb->next) {
+  	if (pcb->state == FIN_WAIT_1 || pcb->state == FIN_WAIT_2) {
+	    if ((u32_t)(tcp_ticks - pcb->tmr) >= inactivity) {
+	      inactivity = tcp_ticks - pcb->tmr;
+	      inactive = pcb;
+    	}
+  	}
+  }
+  if (inactive != NULL) {
+	tcp_pcb_remove(&tcp_active_pcbs, inactive);
+	memp_free(MEMP_TCP_PCB, inactive);
+  }
+}
+
+static void
+tcp_kill_lastack(void)
+{
+  struct tcp_pcb *pcb, *inactive;
+  u32_t inactivity;
+
+  inactivity = 0;
+  inactive = NULL;
+  /* Go through the list of TIME_WAIT pcbs and get the oldest pcb. */
+  for (pcb = tcp_active_pcbs; pcb != NULL; pcb = pcb->next) {
+  	if (pcb->state == LAST_ACK ) {
+	    if ((u32_t)(tcp_ticks - pcb->tmr) >= inactivity) {
+	      inactivity = tcp_ticks - pcb->tmr;
+	      inactive = pcb;
+    	}
+  	}
+  }
+  if (inactive != NULL) {
+	tcp_pcb_remove(&tcp_active_pcbs, inactive);
+	memp_free(MEMP_TCP_PCB, inactive);
+  }
+}
+
+
 /**
  * Allocate a new tcp_pcb structure.
  *
@@ -1603,7 +1650,31 @@ tcp_alloc(u8_t prio)
 	pcb_tw = pcb_tw->next;
   }
   if (n > TCP_DEFAULT_LISTEN_BACKLOG)
-  	tcp_kill_timewait();    
+  	tcp_kill_timewait();  
+
+  pcb_tw = tcp_active_pcbs;
+  while (pcb_tw != NULL) {
+  	if (pcb_tw->state == FIN_WAIT_2 || pcb_tw->state == FIN_WAIT_1)
+  	{
+  		n++;
+  	}
+	pcb_tw = pcb_tw->next;
+  }
+
+  if (n > MEMP_NUM_TCP_PCB)
+  	tcp_kill_finwait2(); 
+
+  pcb_tw = tcp_active_pcbs;
+  while (pcb_tw != NULL) {
+    if (pcb_tw->state == LAST_ACK)
+    {
+      n++;
+    }
+	pcb_tw = pcb_tw->next;
+  }
+  if (n > MEMP_NUM_TCP_PCB)
+  	tcp_kill_lastack();  
+
   
   pcb = (struct tcp_pcb *)memp_malloc(MEMP_TCP_PCB);
   if (pcb == NULL) {

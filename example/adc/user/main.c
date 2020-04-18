@@ -20,6 +20,12 @@
 
 static u32 user_task_stk[USER_TASK_STK_SIZE];
 
+
+void pre_gpio_config()
+{
+	
+}
+
 void adc_task(void *data)
 {
     char temperature[8] = {0};

@@ -52,6 +52,7 @@
 #include "fsdata.h"
 #include "wm_flash.h"
 #include "lwip/memp.h"
+#include "wm_wifi_oneshot.h"
 
 #include "httpd.h"
 
@@ -65,14 +66,10 @@
 #define FS_ROOT  (FSDATA_BASE_ADDR+4)
 #else
 
-#if WEB_SERVER_RUSSIAN 
-#include "fsdata_lwip_russian.c"
-#elif WEB_SERVER_BASIC
-#include "fsdata_lwip_basic.c"
-#elif WEB_SERVER_RUIGONG
-#include "fsdata_lwip_ruigong.c"
+#if TLS_CONFIG_AP_MODE_ONESHOT
+#include "fsdata_ap_config_html.h"
 #else
-#include "fsdata_lwip.h"
+#include "fsdata_html.h"
 #endif
 
 #endif
@@ -212,11 +209,11 @@ struct fs_file *fs_open(char *name)
 		return NULL;
 	}
 #if WEB_SERVER_RUSSIAN  
-	if(!strcmp(name, "/hed_basic_ru.html"))
+	if(!strcmp(name, "/basic_ru.html"))
 	{
 		gCurHtmlFile = 1;
 	}
-	else if(!strcmp(name, "/hed_basic_en.html"))
+	else if(!strcmp(name, "/basic_en.html"))
 	{
 		gCurHtmlFile = 0;
 	}

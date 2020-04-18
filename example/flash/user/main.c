@@ -22,6 +22,11 @@
 
 #define FLASH_TEST_LENGTH   100
 
+void pre_gpio_config()
+{
+	
+}
+
 static void read_data(void)
 {
     u8 buf[100];

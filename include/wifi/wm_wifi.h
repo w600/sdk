@@ -110,7 +110,7 @@ enum tls_wifi_auth_mode {
     WM_WIFI_AUTH_MODE_WPA_WPA2_PSK_TKIP = (WM_WIFI_AUTH_MODE_WPA_PSK_TKIP | WM_WIFI_AUTH_MODE_WPA2_PSK_TKIP),
     WM_WIFI_AUTH_MODE_WPA_WPA2_PSK_CCMP = (WM_WIFI_AUTH_MODE_WPA_PSK_CCMP | WM_WIFI_AUTH_MODE_WPA2_PSK_CCMP),
     WM_WIFI_AUTH_MODE_WPA_WPA2_PSK_AUTO = (WM_WIFI_AUTH_MODE_WPA_PSK_AUTO | WM_WIFI_AUTH_MODE_WPA2_PSK_AUTO), /**< authenticate mode : wpa and wpa2, tkip and aes */
-    WM_WIFI_AUTH_MODE_UNKNOWN
+    WM_WIFI_AUTH_MODE_UNKNOWN           = 128
 };
 
 /** Wi-Fi states */
@@ -182,7 +182,7 @@ enum tls_wifi_client_event_type {
 
 enum tls_wifi_op_mode{
     STATION_MODE = 1,
-    SOFTAP_MODE,        
+    SOFTAP_MODE,
     STATIONAP_MODE
 };
 
@@ -217,8 +217,7 @@ struct tls_softap_info_t{
 	u8 encrypt;     /**< encryption mode of softap, value is: IEEE80211_ENCRYT_NONE,
 	                     IEEE80211_ENCRYT_WEP40,     IEEE80211_ENCRYT_WEP104,
 	                     IEEE80211_ENCRYT_TKIP_WPA,  IEEE80211_ENCRYT_CCMP_WPA,
-	                     IEEE80211_ENCRYT_TKIP_WPA2, IEEE80211_ENCRYT_CCMP_WPA2,
-	                     IEEE80211_ENCRYT_AUTO_WPA,  IEEE80211_ENCRYT_AUTO_WPA2 */
+	                     IEEE80211_ENCRYT_TKIP_WPA2, IEEE80211_ENCRYT_CCMP_WPA2 */
 	u8 channel;     /**< channel of softap */
 	struct tls_key_info_t keyinfo;  /**< Password (key) of softap */
 };
@@ -258,7 +257,7 @@ struct tls_bss_info_t {
     u8 channel;            /**< channel of AP */
     u8 privacy;            /**< encryption type, @ref enum tls_wifi_auth_mode */
     u8 ssid_len;           /**< SSID length */
-    u8 rssi;               /**< single strength of AP, real rssi = -(char)(0x100 - rssi) */
+    u8 rssi;               /**< signal strength of AP, real rssi = (signed char)rssi */
     u8 ssid[32];           /**< SSID of AP */
     u32 max_data_rate;     /**< maximum rate of AP, the unit is Mbps */
     bool wps_support;      /**< is support WPS function */
@@ -278,7 +277,7 @@ struct tls_sta_info_t {
 
 /** 802.11 packet information from the physical layer */
 struct tls_wifi_ext_t {
-    u8 rssi;    /**< single strength */
+    u8 rssi;    /**< signal strength */
 };
 
 /** 802.11 mac address */
@@ -291,8 +290,8 @@ struct tls_wifi_hdr_mac_t {
 /** transport rate and gain */
 struct tls_wifi_tx_rate_t {
     enum tls_wifi_tx_rate tx_rate;    /**< Wi-Fi ransport rate */
-    u8 tx_gain;                       /**< Wi-Fi ransport gain, 
-                                           The caller can get the maximum gain 
+    u8 tx_gain;                       /**< Wi-Fi ransport gain,
+                                           The caller can get the maximum gain
                                            by using the tls_wifi_get_tx_gain_max function. */
 };
 
@@ -378,7 +377,7 @@ u8 tls_wifi_get_special_mode(void);
 *
 * @param receive: 1, receive this multicast frame
 *                 0, filter this multicast frame
-* 
+*
 * @note usage:    For example: u8 mac[6]={01, 00, 5e, 7f, ff, fa},if receive
 *                 is set to 0,the 802.11 multicast frames whose hdr->addr1 is
 *                 [01 00 5e 7f ff fa] will be filtered.
@@ -393,10 +392,10 @@ u8 tls_filter_mcast_mac(u8 *mac, u8 receive);
  *
  * @param[in] clear:   1:clear all, 0:do not clear, only add new filter
  *
- * @return 		None 
- * 
+ * @return 		None
+ *
  * @note usage:    normally, it is used to oneshot config
- */ 
+ */
 void tls_wifi_set_bcast_mac_filter(u8 *mac, u8 receive, u8 clear);
 
 /**
@@ -459,12 +458,12 @@ int     tls_wifi_get_oneshot_flag(void);
 
 
 /*********************************************************************************************************
-* Description: 	before calling tls_wifi_get_oneshot_ssidpwd or tls_wifi_get_oneshot_customdata, 
+* Description: 	before calling tls_wifi_get_oneshot_ssidpwd or tls_wifi_get_oneshot_customdata,
 *                 application should call this function to register the call back function;
-* 
+*
 * Arguments: 		callback function pointer:
-* 
-* Return: 		None 
+*
+* Return: 		None
 * Note:    		callback function, suggest user send out a MSG and return immediately.
 *********************************************************************************************************/
 typedef void (*tls_wifi_oneshot_result_callback)(enum tls_wifi_oneshot_result_type type);
@@ -543,8 +542,8 @@ void tls_wifi_scan_result_cb_register(void (*callback)(void));
  *                 One item of scan result is @ref struct tls_bss_info_t.
  *                 Size for one item of scan result is 48Bytes;
  *				   The buffer size depends how many items user wants.
- *                 Compared with the previous scanning results, 
- *                 max_data_rate and wps_support fields were added, 
+ *                 Compared with the previous scanning results,
+ *                 max_data_rate and wps_support fields were added,
  *                 and the meaning of the privacy field was extended.
  */
 int tls_wifi_get_scan_rslt(u8* buf, u32 buffer_size);
@@ -919,7 +918,7 @@ int tls_wifi_send_mgmt(enum tls_wifi_mgmt_type type, struct tls_wifi_hdr_mac_t *
  * @retval         other        failed
  *
  * @note     If the @*mac is NULL, @*data should be an entire 802.11 frame.
- *           If the @*mac is not NULL, this function will build an 802.11 frame 
+ *           If the @*mac is not NULL, this function will build an 802.11 frame
  *           with @*mac as destination mac address and @*data as the data body.
  *           If the @*tx is NULL, the packet will be sent at 11B 1Mbps.
  */
@@ -999,17 +998,42 @@ u8 tls_wifi_get_opmode(void);
  * @brief          This function is used to customize wifi tx&rx memory
  *
  * @param[in]      startmem: memory addr, only used from 0x20028000 to 0x20048000
- *                       
+ *
  * @param[in]      txcnt: wifi tx buf cnt, non -zero value
- *                       
+ *
  * @param[in]      rxcnt: wifi rx buf cnt, greater than 2 && lower than 30
- *                       
+ *
  * @retval         0  :successfullly
  *                    <0:failure
  *
  * @note           None
  */
 int tls_wifi_mem_cfg(u32 startmem, u8 txcnt, u8 rxcnt);
+
+/**
+ * @brief          This function is used to set max sta num
+ *
+ * @param[in]      ap_sta_num: can be accepted num for sta
+ *                       
+ * @retval         0  :successfullly
+ *                    <0:failure if ap_sta_num is 0
+ *
+ * @note          max sta num is 8, this function must be called before ap created.
+ */
+int tls_wifi_softap_set_sta_num(unsigned char ap_sta_num);
+
+/**
+ * @brief          This function is used to deauth sta connected to softap
+ *
+ * @param[in]      hwaddr: sta's mac to deauth
+ *                       
+ * @retval         0  :successfullly
+ *                    <0:failure if hwaddr is null
+ *
+ * @note           None
+ */ 
+int tls_wifi_softap_del_station(unsigned char* hwaddr);
+
 
 /**
  * @}

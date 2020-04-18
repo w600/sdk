@@ -110,6 +110,7 @@ void tls_irq_enable(u8 vec_no)
 void tls_irq_disable(u8 vec_no)
 {
     NVIC_Configration(vec_no, DISABLE);
+    NVIC_ClearPendingIRQ((IRQn_Type)vec_no);	
 }
 
 void OS_CPU_IRQ_ISR_Handler(void)

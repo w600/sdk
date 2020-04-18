@@ -16,6 +16,11 @@
 
 static u8 timer_id = 0;
 
+void pre_gpio_config()
+{
+	
+}
+
 static void blink_timer_cb(u8 *arg)
 {
     static u8 gpio_level = 0;

@@ -160,4 +160,6 @@ typedef unsigned int mem_ptr_t;
 #define IGNORE_PARAMETER(x)     ((x) = (x))
 #endif
 
+int wm_printf(const char *fmt,...);
+
 #endif

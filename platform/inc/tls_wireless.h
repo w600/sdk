@@ -339,6 +339,9 @@ struct tls_wif {
     struct ieee80211_if_data *priv;
     struct wpa_supplicant *wpa_s;
     struct tls_wl_event_ops *ops;
+#if TLS_CONFIG_SOFTAP_11N
+    struct hostapd_iface *apif;
+#endif
 
     //struct netif *ethif;
     //bool   net_up;
@@ -380,6 +383,10 @@ void tls_wl_if_set_sta_flags(struct tls_wif *wif, u8 *addr, u32 flags);
 int tls_wl_if_send_channel_switch(struct tls_wif *wif, u8 *ownaddr, u8 newch);
 void tls_wl_if_switch_channel_width(struct tls_wif *wif, u8 *ownaddr);
 void tls_wl_if_channel_info_updata(struct tls_wif *wif);
+#if TLS_CONFIG_SOFTAP_11N
+void tls_wl_if_get_ht_param(struct tls_wif *wif, u16 *cap, u8 *mcs, u8 *mpdu);
+void tls_wl_if_set_sta_ht_param(struct tls_wif *wif, u8 *mac, u8 *ht);
+#endif
 #endif
 int tls_wl_if_set_mode(struct tls_wif *wif, u16 mode);
 int tls_wl_if_clear_mode(struct tls_wif *wif, u16 mode);

@@ -60,7 +60,7 @@ void wm_sc_io_clk_config(uint8_t mode)
 
 /**
  * @brief
- *	This function is used to config the block guard time param in 7816 mode
+ * This function is used to config the block guard time param in 7816 mode
  * @param[in] bgt : the value of blcok guard time will be set	
  * @retval
  */
@@ -76,7 +76,7 @@ void wm_sc_set_bgt(uint8_t bgt)
 
 /**
  * @brief
- *	This function is used to config the tx retry count when detect err signal
+ * This function is used to config the tx retry count when detect err signal
  * @param[in] count : the value of retry time will be set 7 for max
  * @retval
  */
@@ -86,7 +86,7 @@ void wm_sc_tx_retry_times(uint8_t count)
 	reg = tls_reg_read32(HR_UART2_LINE_CTRL);
 	reg &= ~(0x7 << 16);
 	tls_reg_write32(HR_UART2_LINE_CTRL, reg|(count<<16));
-	tls_bitband_write(HR_UART2_LINE_CTRL, 23, 1);
+	tls_bitband_write(HR_UART2_LINE_CTRL, 19, 1);
 }
 
 /**
@@ -101,7 +101,7 @@ void wm_sc_rx_retry_times(uint8_t count)
 	reg = tls_reg_read32(HR_UART2_LINE_CTRL);
 	reg &= ~(0x7 << 20);
 	tls_reg_write32(HR_UART2_LINE_CTRL, reg|(count<<20));
-	tls_bitband_write(HR_UART2_LINE_CTRL, 19, 1);	
+	tls_bitband_write(HR_UART2_LINE_CTRL, 23, 1);	
 }
 
 /**

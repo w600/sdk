@@ -86,7 +86,7 @@ u32 TaskStartStk[TASK_START_STK_SIZE];
 
 
 #define FW_MAJOR_VER           0x03
-#define FW_MINOR_VER           0x02
+#define FW_MINOR_VER           0x04
 #define FW_PATCH_VER           0x00
 
 const char FirmWareVer[4] = {
@@ -111,6 +111,7 @@ extern void tls_sys_auto_mode_run(void);
 extern void tls_spi_slave_sel(u16 slave);
 extern void UserMain(void);
 extern void tls_fls_layout_init(void);
+extern void Debug_UartInit(void);
 
 
 void task_start (void *data);
@@ -141,11 +142,56 @@ void vApplicationIdleHook( void )
     return;
 }
 
-void SystemInit()
+void tls_exception_handler(unsigned int *sp, unsigned int exceptinfo)
 {
-	//SCB->VTOR = (unsigned int)&$$Image$$LR$$LR_IROM1$$Base;
-}
+	u32 SR = 0;
+	u32 HardSR = 0 ;
+	int i = 0;
+	u32 value = 0;
+	value = (*(volatile int *)0xE000ED28);
+	switch(exceptinfo)
+	{
+		case 1:
+			printf("mem fault:\n");
+			if (value&0xFF)
+			{
+				printf("E000_ED28 Val:%x\n", value&0xFF);
+			}
+			break;
+		case 2:
+			printf("bus fault:\n");
+			if ((value>>8)&0xFF)
+			{
+				printf("E000_ED29 Val:%x\n", ((value>>8)&0xFF));
+			}
+			break;
+		case 3:
+			printf("usage fault:\n");
+			if ((value>>16)&0x3FF)
+			{
+				printf("E000_ED2A Val:%x\n", ((value>>16)&0x3FF));
+			}
+			break;
+		case 0:
+		default:
+			printf("hard fault:\n");
+			value = *(volatile int *)0xE000ED2C;
+			if (value)
+			{
+				printf("E000_ED2C Val:%x\n", value);
+			}
+			break;
+	}
 
+	printf("Stack:%08x\n", sp);
+	printf("StackInfo:\n");
+	for (i = 0; i < 16; i++)
+	{
+		printf("%08x\n", *sp++);
+	}	
+
+	while(1);
+}
 void wm_gpio_config()
 {
 	/* must call first */
@@ -158,24 +204,31 @@ void wm_gpio_config()
 	/* UART1_RX-PB11  UART1_TX-PB12 */	
 	wm_uart1_rx_config(WM_IO_PB_11);
 	wm_uart1_tx_config(WM_IO_PB_12);	
+#if WM_CONFIG_DEBUG_UART2	
+	/* UART2_RX-PA00  UART2_TX-PA01 */
+	wm_uart2_rx_config(WM_IO_PA_00);
+	wm_uart2_tx_scio_config(WM_IO_PA_01);	
+#endif
 
+	extern void pre_gpio_config();
+	pre_gpio_config();
 	/*MASTER SPI configuratioin*/
-	wm_spi_cs_config(WM_IO_PA_02);
-	wm_spi_ck_config(WM_IO_PA_11);
-	wm_spi_di_config(WM_IO_PA_03);
-	wm_spi_do_config(WM_IO_PA_09);
+	//wm_spi_cs_config(WM_IO_PB_15);
+	//wm_spi_ck_config(WM_IO_PB_16);
+	//wm_spi_di_config(WM_IO_PB_17);
+	//wm_spi_do_config(WM_IO_PB_18);
 }
 
 int main(void)
 {
-	SystemInit();
-
 	tls_sys_clk_set(CPU_CLK_80M);
 	
 	tls_pmu_clk_select(0);
 
 	tls_os_init(NULL);
 
+	Debug_UartInit();/*initialize debug uart for mapping to printf*/
+	
     /* before use malloc() function, must create mutex used by c_lib */
     tls_os_sem_create(&libc_sem, 1);
 
@@ -184,8 +237,8 @@ int main(void)
 		tls_os_task_create(NULL, NULL,
 	                    task_start,
 	                    (void *)0,
-	                    (void *)&TaskStartStk[0],          /* 任务栈的起始地址 */
-	                    TASK_START_STK_SIZE * sizeof(u32), /* 任务栈的大小     */
+	                    (void *)&TaskStartStk[0],          /* task's stack start address */
+	                    TASK_START_STK_SIZE * sizeof(u32), /* task's stack size, unit:byte */
 	                    1,
 	                    0);
 	}
@@ -230,7 +283,6 @@ void disp_version_info(void)
 void task_start (void *data)
 {
     u8 mac_addr[6] = {0x00,0x25,0x08,0x09,0x01,0x0F};
-	bool enable = FALSE;
 	/* must call first to configure gpio Alternate functions according the hardware design */
 	wm_gpio_config();
 
@@ -293,14 +345,8 @@ void task_start (void *data)
 #endif
 
 #endif
-    /* open low power mode */
-	tls_param_get(TLS_PARAM_ID_PSM, &enable, TRUE);	
-	if (enable != TRUE)
-	{
-	    enable = TRUE;
-	    tls_param_set(TLS_PARAM_ID_PSM, &enable, TRUE);	  
-	}
 
+    /* call user main function */
 	UserMain();
 	tls_sys_auto_mode_run();
 

@@ -128,6 +128,7 @@
 #define HOSTIF_CMD_AP_NIP               0x6E
 #define HOSTIF_CMD_AP_WBGR          0x6F
 #define HOSTIF_CMD_STA_LIST          0x70
+#define HOSTIF_CMD_APWJOIN          0x71
 
 
 #define HOSTIF_CMD_DBG                 0xF0

@@ -20,6 +20,7 @@ GEN_LIBS = libapp$(LIB_EXT)
 COMPONENTS_libapp =  cjson/libcjson$(LIB_EXT) 	\
 						dhcpserver/libdhcpserver$(LIB_EXT) 	\
 						dnsserver/libdnsserver$(LIB_EXT) 	\
+						easylogger/libelog$(LIB_EXT) 	\
 						httpclient/libhttpclient$(LIB_EXT) 	\
 						iperf/libiperf$(LIB_EXT) 	\
 						libcoap/libcoap$(LIB_EXT) 	\

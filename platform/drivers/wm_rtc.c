@@ -161,9 +161,9 @@ void tls_rtc_timer_start(struct tm *tblock)
  */
 void tls_rtc_timer_stop(void)
 {
+	tls_irq_disable(PMU_RTC_INT);
+		
     tls_reg_write32(HR_PMU_RTC_CTRL1, tls_reg_read32(HR_PMU_RTC_CTRL1) & (~BIT(31)));
-
-    tls_irq_disable(PMU_RTC_INT);
 
     return;
 }

@@ -223,7 +223,7 @@ int tls_pwm_output_en_cmd(u8 channel, bool en);
  * @brief          This function is used to set the dead time
  *
  * @param[in]      channel     pwm channel NO.,channel 0 or channel 2
- * @param[in]      dten        whether enalbe the deat time, ENABLE or DISABLE
+ * @param[in]      dten        whether enalbe the dead time, ENABLE or DISABLE
  * @param[in]      dtclkdiv    dead zone clock divider, range 0 to 3
  * @param[in]      dtcnt       the number of the counting clock cycle, range 0 to 255
  *
@@ -287,8 +287,7 @@ int tls_pwm_capture_mode_config(u8 channel);
 int tls_pwm_stoptime_irq_cmd(u8 channel, bool en);
 
 /**
- * @brief          This function is used to set the interrupt about the
-                   capture
+ * @brief          This function is used to set the interrupt about the capture
  *
  * @param[in]      channel     pwm channel,channel 0 or channel 4
  * @param[in]      int_type    interrupt type
@@ -340,7 +339,7 @@ int tls_pwm_cap_init(u8 channel, u16 clkdiv, bool inverse_en, enum tls_pwm_cap_i
 int tls_pwm_start(u8 channel);
 
 /**
- * @brief          This function is used to stop pwm
+ * @brief          This function is used to set pwm's frequency
  *
  * @param[in]      channel    pwm channel no, range form 0 to 4
  * @param[in]      freq       frequency, range from 1 to 156250
@@ -369,6 +368,7 @@ void tls_pwm_duty_set(u8 channel, u8 duty);
  * @param[in]      channel    pwm channel, range from 0 to 4
  * @param[in]      freq       is a pointer to frequency, freq range from 1 to 156250
  * @param[in]      duty       is a pointer to duty radio, duty range from 0 to 255
+ * @param[in]      pnum       period num,range from 0 to 255
  *
  * @retval         WM_SUCCESS success
  * @retval         WM_FAILED  failed

@@ -16,7 +16,6 @@
 #include "wm_fls_gd25qxx.h"
 #include "wm_debug.h"
 #include "wm_gpio.h"
-#include "VS10XX.h"
 
 static int tls_spifls_drv_read(u32 addr, u8 * buf, u32 len);
 static int tls_spifls_drv_fast_read(u32 addr, u8 * buf, u32 len);

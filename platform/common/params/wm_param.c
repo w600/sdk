@@ -1,16 +1,16 @@
-/***************************************************************************** 
-* 
-* File Name : wm_param.c 
-* 
-* Description: param manager Module 
-* 
-* Copyright (c) 2014 Winner Micro Electronic Design Co., Ltd. 
-* All rights reserved. 
-* 
+/*****************************************************************************
+*
+* File Name : wm_param.c
+*
+* Description: param manager Module
+*
+* Copyright (c) 2014 Winner Micro Electronic Design Co., Ltd.
+* All rights reserved.
+*
 * Author : dave
-* 
+*
 * Date : 2014-6-12
-*****************************************************************************/ 
+*****************************************************************************/
 #include <string.h>
 #include "wm_debug.h"
 #include "wm_efuse.h"
@@ -67,7 +67,7 @@ static int param_to_flash(int id, int modify_count, int partition_num)
 	err = TLS_PARAM_STATUS_OK;
 	src = &sram_param;
 	dest = &flash_param.parameters;
-	
+
 	switch (id) {
 		case TLS_PARAM_ID_ALL:
 			MEMCPY(dest, src, sizeof(struct tls_sys_param));
@@ -256,7 +256,7 @@ static int param_to_flash(int id, int modify_count, int partition_num)
         case TLS_PARAM_ID_SOFTAP_WBGR:
 			MEMCPY(&dest->wbgr4softap, &src->wbgr4softap, sizeof(struct tls_param_bgr));
             break;
-#endif		
+#endif
 		case TLS_PARAM_ID_SNTP_SERVER1:
 			strncpy(dest->sntp_service1, src->sntp_service1, strlen(src->sntp_service1)+1);
 			break;
@@ -275,10 +275,10 @@ static int param_to_flash(int id, int modify_count, int partition_num)
 			err = TLS_PARAM_STATUS_EINVALIDID;
 			goto exit;
 	}
-	
+
 	flash_param.magic = TLS_PARAM_MAGIC;
 	flash_param.length = sizeof(flash_param);
-    
+
 	if (modify_count < 0){
 		flash_param.modify_count ++;
 		TLS_DBGPRT_INFO("update the \"modify count(%d)\".\n", flash_param.modify_count);
@@ -286,7 +286,7 @@ static int param_to_flash(int id, int modify_count, int partition_num)
 		flash_param.modify_count  = modify_count;
 		TLS_DBGPRT_INFO("initialize the \"modify count(%d)\".\n", flash_param.modify_count);
 	}
-	
+
 	if (partition_num < 0) {
 		flash_param.partition_num = (flash_param.partition_num + 1) & 0x01;
 		TLS_DBGPRT_INFO("switch the parameter patition number(%d).\n", flash_param.partition_num);
@@ -298,22 +298,22 @@ static int param_to_flash(int id, int modify_count, int partition_num)
 	flash_param.crc32 = get_crc32((u8 *)&flash_param, sizeof(flash_param) - 4);
 
 	TLS_DBGPRT_INFO("update the parameters to parameter patition(%d) in spi flash.\n", flash_param.partition_num);
-    
-	err = tls_fls_write((flash_param.partition_num == 0) ? TLS_FLASH_PARAM1_ADDR : TLS_FLASH_PARAM2_ADDR, 
+
+	err = tls_fls_write((flash_param.partition_num == 0) ? TLS_FLASH_PARAM1_ADDR : TLS_FLASH_PARAM2_ADDR,
 		(u8 *)&flash_param, sizeof(flash_param));
 	if (err != TLS_FLS_STATUS_OK) {
 		TLS_DBGPRT_ERR("write to spi flash fail(%d)!\n", err);
 		err = TLS_PARAM_STATUS_EIO;
 		goto exit;
 	}
-	if (param_flash_verify((flash_param.partition_num == 0) ? TLS_FLASH_PARAM1_ADDR : TLS_FLASH_PARAM2_ADDR, 
+	if (param_flash_verify((flash_param.partition_num == 0) ? TLS_FLASH_PARAM1_ADDR : TLS_FLASH_PARAM2_ADDR,
 		(u8 *)&flash_param, sizeof(flash_param)) == 1) {err = TLS_PARAM_STATUS_OK;}
 	else {
 		TLS_DBGPRT_ERR("verify the parameters in spi flash fail(%d)!\n", err);
 		err = TLS_PARAM_STATUS_EIO;
 	}
 exit:
-	
+
 	return err;
 }
 
@@ -321,12 +321,12 @@ exit:
 * Description: 	This function is used to initial system param.
 *
 * Arguments  : 	sys_param		is the system param addr
-*				
+*
 
-* Returns    :		TLS_PARAM_STATUS_OK		init success	
-*				TLS_PARAM_STATUS_EMEM		memory error		
+* Returns    :		TLS_PARAM_STATUS_OK		init success
+*				TLS_PARAM_STATUS_EMEM		memory error
 *				TLS_PARAM_STATUS_EIO		io error
-*				TLS_PARAM_STATUS_EPERM		
+*				TLS_PARAM_STATUS_EPERM
 **********************************************************************************************************/
 int tls_param_init(void)
 {
@@ -336,15 +336,15 @@ int tls_param_init(void)
 	signed short i;
 	u16 tryrestore = 0;
 	struct tls_param_flash *flash;
-	
-	if(flash_param.magic == TLS_PARAM_MAGIC) 
+
+	if(flash_param.magic == TLS_PARAM_MAGIC)
 	{
 		TLS_DBGPRT_ERR("parameter management module has been initialized!\n");
 		return TLS_PARAM_STATUS_EPERM;
 	}
 
 	err = tls_os_sem_create(&sys_param_lock, 1);
-	if (err != TLS_OS_SUCCESS) 
+	if (err != TLS_OS_SUCCESS)
 	{
 		TLS_DBGPRT_ERR("create semaphore @sys_param_lock fail!\n");
 		return TLS_PARAM_STATUS_EMEM;
@@ -359,10 +359,10 @@ int tls_param_init(void)
 	memset(&flash_param, 0, sizeof(flash_param));
 	memset(&sram_param, 0, sizeof(sram_param));
 	tryrestore = 0;
-	do 
+	do
 	{
 		flash = tls_mem_alloc(sizeof(*flash));
-		if (flash == NULL) 
+		if (flash == NULL)
 		{
 			TLS_DBGPRT_ERR("allocate \"struct tls_param_flash\" fail!\n");
 			err = TLS_PARAM_STATUS_EMEM;
@@ -370,12 +370,12 @@ int tls_param_init(void)
 		}
 		memset(flash, 0, sizeof(*flash));
 
-		for (i = 0; i < TLS_PARAM_PARTITION_NUM; i++) 
+		for (i = 0; i < TLS_PARAM_PARTITION_NUM; i++)
 		{
 			TLS_DBGPRT_INFO("read parameter partition - %d.\n", i);
 			tls_fls_read((i == 0) ? TLS_FLASH_PARAM1_ADDR : TLS_FLASH_PARAM2_ADDR, (u8 *)flash, sizeof(*flash));
 			TLS_DBGPRT_INFO("patition %d magic - 0x%x, crc -0x%x .\n", i, flash->magic, flash->crc32);
-			if (flash->magic != TLS_PARAM_MAGIC) 
+			if (flash->magic != TLS_PARAM_MAGIC)
 			{
 				TLS_DBGPRT_WARNING("parameter partition - %d has been damaged.\n", i);
 				is_damage[i] = TRUE;
@@ -393,18 +393,18 @@ int tls_param_init(void)
 				/* Load the latest parameters */
 				TLS_DBGPRT_INFO("read parameter partition modify count - %d.\n", flash->modify_count);
 				TLS_DBGPRT_INFO("current parameter partition modify count - %d.\n", flash_param.modify_count);
-				if ((flash_param.magic == 0) || (flash_param.modify_count < flash->modify_count)) 
+				if ((flash_param.magic == 0) || (flash_param.modify_count < flash->modify_count))
 				{
 					TLS_DBGPRT_INFO("update the parameter in sram using partition - %d,%d,%d.\n", i, flash->length,sizeof(*flash));
 					if (flash->length != sizeof(*flash)){
 						MEMCPY(&flash_param, flash, (flash->length-4));
-						MEMCPY(&sram_param, &flash_param.parameters, sizeof(sram_param));	
+						MEMCPY(&sram_param, &flash_param.parameters, sizeof(sram_param));
 					}else{
 						MEMCPY(&flash_param, flash, sizeof(*flash));
 						MEMCPY(&sram_param, &flash_param.parameters, sizeof(sram_param));
 					}
 				}
-				memset(flash, 0, sizeof(*flash)); 
+				memset(flash, 0, sizeof(*flash));
 			}
 
 			/* try to erase one sector at the same block to restore parameter area*/
@@ -420,22 +420,22 @@ int tls_param_init(void)
 			}
 		}
 
-		if (damaged >= TLS_PARAM_PARTITION_NUM) 
+		if (damaged >= TLS_PARAM_PARTITION_NUM)
 		{
 			TLS_DBGPRT_INFO("all the parameter partitions has been demaged and load the default parameters.\n");
 			tls_param_load_factory_default();
 
 			TLS_DBGPRT_INFO("write the default parameters to all the partitions.\n");
 			err = param_to_flash(TLS_PARAM_ID_ALL, 1, 0);
-			if (err != TLS_PARAM_STATUS_OK) 
+			if (err != TLS_PARAM_STATUS_OK)
 			{
 				TLS_DBGPRT_ERR("write the default parameters to the partitions - 0 fail!\n");
 				err = TLS_PARAM_STATUS_EIO;
 				break;
 			}
-			
+
 			err = param_to_flash(TLS_PARAM_ID_ALL, 1, 1);
-			if (err != TLS_PARAM_STATUS_OK) 
+			if (err != TLS_PARAM_STATUS_OK)
 			{
 				TLS_DBGPRT_ERR("write the default parameters to the partitions - 1 fail!\n");
 				err = TLS_PARAM_STATUS_EIO;
@@ -443,17 +443,17 @@ int tls_param_init(void)
 			}
 
 			//MEMCPY(&flash_param, flash, sizeof(*flash));
-		} 
-		else 
+		}
+		else
 		{
 			/* restore damaged partitions */
-			for (i = 0; i < TLS_PARAM_PARTITION_NUM; i++) 
+			for (i = 0; i < TLS_PARAM_PARTITION_NUM; i++)
 			{
-				if (is_damage[i]) 
+				if (is_damage[i])
 				{
 					TLS_DBGPRT_INFO(" restore damaged partitions - %d.\n", i);
 					err = param_to_flash(TLS_PARAM_ID_ALL, -1, i);
-					if (err != TLS_PARAM_STATUS_OK) 
+					if (err != TLS_PARAM_STATUS_OK)
 					{
 						TLS_DBGPRT_ERR("write the default parameters to the partitions - %d fail!\n", i);
 						err = TLS_PARAM_STATUS_EIO;
@@ -462,28 +462,28 @@ int tls_param_init(void)
 				}
 			}
 
-			if (err == TLS_PARAM_STATUS_OK) 
+			if (err == TLS_PARAM_STATUS_OK)
 			{
 				break;
 			}
 		}
 	}while (0);
-	
+
 	tls_os_sem_release(sys_param_lock);
 
-	if (flash) 
+	if (flash)
 	{
 		tls_mem_free(flash);
 	}
 
 #if 0
  	TLS_DBGPRT_INFO("sys_param = 0x%x, *sys_param = 0x%x\n", sys_param, *sys_param);
-	if (sys_param) 
+	if (sys_param)
 	{
 		*sys_param = &sram_param;
 	}
 	TLS_DBGPRT_INFO("sys_param = 0x%x, *sys_param = 0x%x\n", sys_param, *sys_param);
-#endif	
+#endif
 	return err;
 }
 
@@ -516,20 +516,20 @@ int tls_param_load_user(struct tls_sys_param *param)
 * Description: 	This function is used to load the system default parameters.
 *
 * Arguments  : 	param		is the param point
-*				
+*
 
 * Returns    :
 *
 * Notes	:		This function read user defined parameters first, if wrong, all the parameters restore factory settings.
 **********************************************************************************************************/
 void tls_param_load_factory_default(void)
-{	
+{
 	struct tls_sys_param *param = &sram_param;
 
 	if (param == NULL) {return;}
 
 	TLS_DBGPRT_INFO("load the default parameters.\n");
-	
+
 	memset(param, 0, sizeof(*param));
 	MEMCPY(&param->hardware_version, factory_default_hardware, 8);
 
@@ -538,21 +538,21 @@ void tls_param_load_factory_default(void)
 	param->channellist = 0x3FFF;
 #if TLS_CONFIG_11N
     param->wbgr.bg = TLS_PARAM_PHY_11BGN_MIXED;
-    param->wbgr.max_rate = TLS_PARAM_TX_RATEIDX_MCS13;
+    param->wbgr.max_rate = TLS_PARAM_TX_RATEIDX_MCS5;
 #else
 	param->wbgr.bg = TLS_PARAM_PHY_11BG_MIXED;
     param->wbgr.max_rate = TLS_PARAM_TX_RATEIDX_36M;
 #endif
 	param->ssid_broadcast_enable = TLS_PARAM_SSIDBRD_ENABLE;
 	param->encry = TLS_PARAM_ENCRY_OPEN;
-#if 0 //def CONFIG_AP	
+#if 0 //def CONFIG_AP
 	param->wireless_protocol = TLS_PARAM_IEEE80211_SOFTAP;
 	tls_efuse_read(TLS_EFUSE_MACADDR_OFFSET, mac_addr, 6);
 	ssid_len = sprintf((char *)&param->ssid.ssid, "cuckoo_softap_%02x%02x%02x", mac_addr[3], mac_addr[4], mac_addr[5]);
 	param->ssid.ssid_len = ssid_len;
 #else
 	param->wireless_protocol = TLS_PARAM_IEEE80211_INFRA;
-	
+
 #endif
 
 	param->auto_retrycnt = 255;
@@ -563,7 +563,7 @@ void tls_param_load_factory_default(void)
 
 	param->auto_mode = TLS_PARAM_MANUAL_MODE;
 	param->transparent_trigger_length = 512;
-	
+
 	param->uart_cfg.baudrate = TLS_PARAM_UART_BAUDRATE_B115200;
 	param->uart_cfg.stop_bits = TLS_PARAM_UART_STOPBITS_1BITS;
 	param->uart_cfg.parity = TLS_PARAM_UART_PARITY_NONE;
@@ -608,7 +608,7 @@ void tls_param_load_factory_default(void)
 
 	param->debug_mode = 0;
 	memset(param->PassWord, '0', 6);
-	
+
     param->channel4softap = 11;
     param->encry4softap = TLS_PARAM_ENCRY_OPEN;
     param->ipcfg4softap.dhcp_enable = TLS_PARAM_DHCP_ENABLE;
@@ -632,8 +632,13 @@ void tls_param_load_factory_default(void)
 	param->ipcfg4softap.dns2[1] = 0;
 	param->ipcfg4softap.dns2[2] = 0;
 	param->ipcfg4softap.dns2[3] = 0;
+#if TLS_CONFIG_SOFTAP_11N
+    param->wbgr4softap.bg = TLS_PARAM_PHY_11BGN_MIXED;
+    param->wbgr4softap.max_rate = TLS_PARAM_TX_RATEIDX_36M;
+#else
     param->wbgr4softap.bg = TLS_PARAM_PHY_11BG_MIXED;
     param->wbgr4softap.max_rate = TLS_PARAM_TX_RATEIDX_36M;
+#endif
 
 	strcpy(param->sntp_service1, "cn.ntp.org.cn");
 	strcpy(param->sntp_service2, "ntp.sjtu.edu.cn");
@@ -803,7 +808,7 @@ int tls_param_set(int id, void *argv, bool to_flash)
 		case TLS_PARAM_ID_WPS:
 			MEMCPY(&param->wps, argv, sizeof(struct tls_param_wps));
 			break;
-#endif			
+#endif
 		case TLS_PARAM_ID_ONESHOT_CFG:
 			param->oneshotflag = *((u8 *)argv);
 			break;
@@ -877,7 +882,7 @@ int tls_param_set(int id, void *argv, bool to_flash)
 	}
 exit:
 	tls_os_sem_release(sys_param_lock);
-	
+
 	return err;
 }
 
@@ -903,7 +908,7 @@ int tls_param_get(int id, void *argv, bool from_flash)
 	else {src = &sram_param;}
 
 	tls_os_sem_acquire(sys_param_lock, 0);
-	
+
 	switch (id) {
 		case TLS_PARAM_ID_ALL:
 			MEMCPY(argv, src, sizeof(struct tls_sys_param));
@@ -986,7 +991,7 @@ int tls_param_get(int id, void *argv, bool from_flash)
 		case TLS_PARAM_ID_ESCAPE_CHAR:
 			*((u8 *)argv) = src->EscapeChar;
 			break;
-		
+
 		case TLS_PARAM_ID_ESCAPE_PERIOD:
 			*((u16 *)argv) = src->EscapePeriod;
 			break;
@@ -996,7 +1001,7 @@ int tls_param_get(int id, void *argv, bool from_flash)
 		case TLS_PARAM_ID_CMD_MODE:
 			*((u8 *)argv) = src->CmdMode;
 			break;
-		
+
 		case TLS_PARAM_ID_PASSWORD:
 			MEMCPY((u8 *)argv, src->PassWord, sizeof(src->PassWord));
 			break;
@@ -1044,7 +1049,7 @@ int tls_param_get(int id, void *argv, bool from_flash)
 		case TLS_PARAM_ID_WPS:
 			MEMCPY(argv, &src->wps, sizeof(struct tls_param_wps));
 			break;
-#endif			
+#endif
 		case TLS_PARAM_ID_ONESHOT_CFG:
 			*((u8 *)argv) = src->oneshotflag;
 			break;
@@ -1114,7 +1119,7 @@ int tls_param_get(int id, void *argv, bool from_flash)
 	}
 
 	tls_os_sem_release(sys_param_lock);
-	
+
 	return err;
 }
 
@@ -1145,19 +1150,19 @@ int tls_param_to_flash(int id)
 	err = param_to_flash(id, -1, -1);
 
 	tls_os_sem_release(sys_param_lock);
-	
+
 	return err;
 }
 
 
 /**********************************************************************************************************
-* Description: 	This function is used to load default parametes to memory. 
+* Description: 	This function is used to load default parametes to memory.
 *
-* Arguments  : 	
+* Arguments  :
 *
 * Returns    :
 *
-* Notes		:	This function read user defined parameters first, if wrong, all the parameters restore factory settings.				
+* Notes		:	This function read user defined parameters first, if wrong, all the parameters restore factory settings.
 **********************************************************************************************************/
 int tls_param_to_default(void)
 {
@@ -1175,22 +1180,22 @@ int tls_param_to_default(void)
 #define WM_BACKUP_PARM_ADDR			0xF0000
 
 /**********************************************************************************************************
-* Description: 	This function is used to recovery the parameters from the backup area to the parameter area, 
+* Description: 	This function is used to recovery the parameters from the backup area to the parameter area,
 *				and read to memory.
 *
-* Arguments  : 	
+* Arguments  :
 *
 * Returns    :
 **********************************************************************************************************/
 void tls_restore_param_from_backup(void)
 {
 	u8 buff[32];
-	
+
 	tls_fls_read(WM_BACKUP_PARM_ADDR, (u8 *)&flash_param, 408);
 	if(TLS_PARAM_MAGIC == flash_param.magic)
 	{
 		u8 tmp[5];
-		
+
 		TLS_DBGPRT_INFO("tls_restore_param_from_backup...\n");
 		MEMCPY(&sram_param, &flash_param.parameters, 408);
 		param_to_flash(TLS_PARAM_ID_ALL, 1, 0);
@@ -1209,7 +1214,7 @@ void tls_restore_param_from_backup(void)
 /**********************************************************************************************************
 * Description: 	This function is used to modify user default parameters,then write to flash.
 *
-* Arguments  : 	
+* Arguments  :
 *
 * Returns    :
 **********************************************************************************************************/
@@ -1234,8 +1239,8 @@ int tls_param_save_user(struct tls_user_param *user_param)
 	param->remote_socket_cfg.client_or_server = user_param->socket_client_or_server;
 	param->remote_socket_cfg.port_num = user_param->socket_port_num;
 	MEMCPY(param->remote_socket_cfg.host, user_param->socket_host, 32);
-	MEMCPY(param->PassWord, user_param->PassWord, 6);	
-	
+	MEMCPY(param->PassWord, user_param->PassWord, 6);
+
 	MEMCPY(&param->hardware_version, factory_default_hardware, 8);
 	param->wireless_region = TLS_PARAM_REGION_1_BG_BAND;
 	param->channel = 1;
@@ -1250,7 +1255,7 @@ int tls_param_save_user(struct tls_user_param *user_param)
 	//param->wps.wps_enable = TLS_PARAM_WPS_DISABLE;
 
 	param->transparent_trigger_length = 512;
-	
+
 	param->uart_cfg.stop_bits = TLS_PARAM_UART_STOPBITS_1BITS;
 	param->uart_cfg.parity = TLS_PARAM_UART_PARITY_NONE;
 
@@ -1270,7 +1275,7 @@ int tls_param_save_user(struct tls_user_param *user_param)
 /**********************************************************************************************************
 * Description: 	This function is used to save user parameters to the flash.
 *
-* Arguments  : 	
+* Arguments  :
 *
 * Returns    :
 **********************************************************************************************************/

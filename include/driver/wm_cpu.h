@@ -55,9 +55,9 @@ typedef struct{
 /**
  * @brief          This function is used to set cpu clock
  *
- * @param[in]      	clk    select cpu clock
- *                        	clk == CPU_CLK_80M	80M
- *				clk == CPU_CLK_40M	40M
+ * @param[in]      clk    select cpu clock
+                   clk == CPU_CLK_80M    80M
+                   clk == CPU_CLK_40M    40M
  *
  * @return         None
  *

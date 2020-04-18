@@ -237,8 +237,8 @@ unsigned char tls_dma_start_by_wrap(unsigned char ch, struct tls_dma_descriptor 
  * @param[in]      dma_desc       pointer to DMA channel descriptor structure
  * @param[in]      auto_reload    does restart when current transfer complete
  *
- * @retval         1     success
- * @retval         0     failed
+ * @retval         0     success
+ * @retval         1     failed
  *
  * @note
  *                  DMA Descriptor:

@@ -169,6 +169,11 @@ void wm_sdio_config(uint8_t numsel)
 			tls_io_cfg_set(WM_IO_PB_10, WM_IO_OPTION3);
 			tls_io_cfg_set(WM_IO_PB_11, WM_IO_OPTION3);
 			tls_io_cfg_set(WM_IO_PB_12, WM_IO_OPTION3);
+            tls_bitband_write(HR_GPIOB_DATA_PULLEN, 8, 0);
+            tls_bitband_write(HR_GPIOB_DATA_PULLEN, 9, 0);
+            tls_bitband_write(HR_GPIOB_DATA_PULLEN, 10, 0);
+            tls_bitband_write(HR_GPIOB_DATA_PULLEN, 11, 0);
+            tls_bitband_write(HR_GPIOB_DATA_PULLEN, 12, 0);
 			break;
 
 		default:
@@ -183,14 +188,17 @@ void wm_sdio_cmd_config(enum tls_io_name io_name)
 	{
 		case WM_IO_PA_06:
 			tls_io_cfg_set(WM_IO_PA_06, WM_IO_OPTION3);
+            tls_bitband_write(HR_GPIOA_DATA_PULLEN, 6, 0);
 			break;
 			
 		case WM_IO_PB_07:
 			tls_io_cfg_set(WM_IO_PB_07, WM_IO_OPTION3);
+            tls_bitband_write(HR_GPIOB_DATA_PULLEN, 7, 0);
 			break;
 			
 		case WM_IO_PB_13:
 			tls_io_cfg_set(WM_IO_PB_13, WM_IO_OPTION4);
+            tls_bitband_write(HR_GPIOB_DATA_PULLEN, 13, 0);
 			break;
 			
 		default:
@@ -230,23 +238,23 @@ void wm_uart0_rx_config(enum tls_io_name io_name)
 	switch(io_name)
 	{
 		case WM_IO_PA_05:
+			tls_gpio_cfg(WM_IO_PA_05, WM_GPIO_DIR_OUTPUT, WM_GPIO_ATTR_PULLHIGH);
 			tls_io_cfg_set(WM_IO_PA_05, WM_IO_OPTION1);
-			tls_bitband_write(HR_GPIOA_DATA_PULLEN, 5, 0);
 			break;
 
 		case WM_IO_PA_09:
+			tls_gpio_cfg(WM_IO_PA_09, WM_GPIO_DIR_OUTPUT, WM_GPIO_ATTR_PULLHIGH);
 			tls_io_cfg_set(WM_IO_PA_09, WM_IO_OPTION3);
-			tls_bitband_write(HR_GPIOA_DATA_PULLEN, 9, 0);
 			break;
 
 		case WM_IO_PB_06:
+			tls_gpio_cfg(WM_IO_PB_06, WM_GPIO_DIR_OUTPUT, WM_GPIO_ATTR_PULLHIGH);
 			tls_io_cfg_set(WM_IO_PB_06, WM_IO_OPTION2);
-			tls_bitband_write(HR_GPIOB_DATA_PULLEN, 6, 0);
 			break;
 
 		case WM_IO_PB_25:
+			tls_gpio_cfg(WM_IO_PB_25, WM_GPIO_DIR_OUTPUT, WM_GPIO_ATTR_PULLHIGH);
 			tls_io_cfg_set(WM_IO_PB_25, WM_IO_OPTION2);
-			tls_bitband_write(HR_GPIOB_DATA_PULLEN, 25, 0);
 			break;
 
 		default:
@@ -322,13 +330,13 @@ void wm_uart1_rx_config(enum tls_io_name io_name)
 	switch(io_name)
 	{
 		case WM_IO_PB_11:
+			tls_gpio_cfg(WM_IO_PB_11, WM_GPIO_DIR_OUTPUT, WM_GPIO_ATTR_PULLHIGH);
 			tls_io_cfg_set(WM_IO_PB_11, WM_IO_OPTION1);
-			tls_bitband_write(HR_GPIOB_DATA_PULLEN, 11, 0);
 			break;
 
 		case WM_IO_PB_17:
+			tls_gpio_cfg(WM_IO_PB_17, WM_GPIO_DIR_OUTPUT, WM_GPIO_ATTR_PULLHIGH);
 			tls_io_cfg_set(WM_IO_PB_17, WM_IO_OPTION4);
-			tls_bitband_write(HR_GPIOB_DATA_PULLEN, 17, 0);
 			break;
 
 		default:
@@ -396,28 +404,28 @@ void wm_uart2_rx_config(enum tls_io_name io_name)
 	switch(io_name)
 	{
 		case WM_IO_PA_00:
+			tls_gpio_cfg(WM_IO_PA_00, WM_GPIO_DIR_OUTPUT, WM_GPIO_ATTR_PULLHIGH);
 			tls_io_cfg_set(WM_IO_PA_00, WM_IO_OPTION1);
-			tls_bitband_write(HR_GPIOA_DATA_PULLEN, 0, 0);
 			break;
 
 		case WM_IO_PA_10:
+			tls_gpio_cfg(WM_IO_PA_10, WM_GPIO_DIR_OUTPUT, WM_GPIO_ATTR_PULLHIGH);
 			tls_io_cfg_set(WM_IO_PA_10, WM_IO_OPTION3);
-			tls_bitband_write(HR_GPIOA_DATA_PULLEN, 10, 0);
 			break;
 
 		case WM_IO_PB_03:
+			tls_gpio_cfg(WM_IO_PB_03, WM_GPIO_DIR_OUTPUT, WM_GPIO_ATTR_PULLHIGH);
 			tls_io_cfg_set(WM_IO_PB_03, WM_IO_OPTION2);
-			tls_bitband_write(HR_GPIOB_DATA_PULLEN, 3, 0);
 			break;
 
 		case WM_IO_PB_19:
+			tls_gpio_cfg(WM_IO_PB_19, WM_GPIO_DIR_OUTPUT, WM_GPIO_ATTR_PULLHIGH);
 			tls_io_cfg_set(WM_IO_PB_19, WM_IO_OPTION2);
-			tls_bitband_write(HR_GPIOB_DATA_PULLEN, 19, 0);
 			break;
 
 		case WM_IO_PB_30:
+			tls_gpio_cfg(WM_IO_PB_30, WM_GPIO_DIR_OUTPUT, WM_GPIO_ATTR_PULLHIGH);
 			tls_io_cfg_set(WM_IO_PB_30, WM_IO_OPTION1);
-			tls_bitband_write(HR_GPIOB_DATA_PULLEN, 30, 0);
 			break;			
 
 		default:
@@ -667,22 +675,27 @@ void wm_i2c_scl_config(enum tls_io_name io_name)
 	switch(io_name)
 	{
 		case WM_IO_PA_06:
+			tls_gpio_cfg(WM_IO_PA_06, WM_GPIO_DIR_OUTPUT, WM_GPIO_ATTR_PULLHIGH);
 			tls_io_cfg_set(WM_IO_PA_06, WM_IO_OPTION1);
 			break;
 
 		case WM_IO_PA_08:
+			tls_gpio_cfg(WM_IO_PA_08, WM_GPIO_DIR_OUTPUT, WM_GPIO_ATTR_PULLHIGH);
 			tls_io_cfg_set(WM_IO_PA_08, WM_IO_OPTION4);
 			break;
 
 		case WM_IO_PB_13:
+			tls_gpio_cfg(WM_IO_PB_13, WM_GPIO_DIR_OUTPUT, WM_GPIO_ATTR_PULLHIGH);
 			tls_io_cfg_set(WM_IO_PB_13, WM_IO_OPTION3);
 			break;
 
 		case WM_IO_PB_11:
+			tls_gpio_cfg(WM_IO_PB_11, WM_GPIO_DIR_OUTPUT, WM_GPIO_ATTR_PULLHIGH);
 			tls_io_cfg_set(WM_IO_PB_11, WM_IO_OPTION4);
 			break;
 
 		case WM_IO_PB_21:
+			tls_gpio_cfg(WM_IO_PB_21, WM_GPIO_DIR_OUTPUT, WM_GPIO_ATTR_PULLHIGH);
 			tls_io_cfg_set(WM_IO_PB_21, WM_IO_OPTION3);
 			break;
 
@@ -697,22 +710,27 @@ void wm_i2c_sda_config(enum tls_io_name io_name)
 	switch(io_name)
 	{
 		case WM_IO_PA_15:
+			tls_gpio_cfg(WM_IO_PA_15, WM_GPIO_DIR_OUTPUT, WM_GPIO_ATTR_PULLHIGH);
 			tls_io_cfg_set(WM_IO_PA_15, WM_IO_OPTION1);
 			break;
 
 		case WM_IO_PA_07:
+			tls_gpio_cfg(WM_IO_PA_07, WM_GPIO_DIR_OUTPUT, WM_GPIO_ATTR_PULLHIGH);
 			tls_io_cfg_set(WM_IO_PA_07, WM_IO_OPTION4);
 			break;
 
 		case WM_IO_PB_14:
+			tls_gpio_cfg(WM_IO_PB_14, WM_GPIO_DIR_OUTPUT, WM_GPIO_ATTR_PULLHIGH);
 			tls_io_cfg_set(WM_IO_PB_14, WM_IO_OPTION3);
 			break;
 
 		case WM_IO_PB_12:
+			tls_gpio_cfg(WM_IO_PB_12, WM_GPIO_DIR_OUTPUT, WM_GPIO_ATTR_PULLHIGH);
 			tls_io_cfg_set(WM_IO_PB_12, WM_IO_OPTION4);
 			break;
 
 		case WM_IO_PB_22:
+			tls_gpio_cfg(WM_IO_PB_22, WM_GPIO_DIR_OUTPUT, WM_GPIO_ATTR_PULLHIGH);
 			tls_io_cfg_set(WM_IO_PB_22, WM_IO_OPTION3);
 			break;
 

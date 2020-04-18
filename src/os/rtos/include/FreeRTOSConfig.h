@@ -72,7 +72,7 @@
 #define configUSE_IDLE_HOOK			1	//使用空闲钩子
 #define configUSE_TICK_HOOK			0	//不使用时间片钩子
 
-#define configCPU_CLOCK_HZ			( ( unsigned long ) 40000000 )	/* =12.0MHz xtal multiplied by 5 using the PLL. *///内部处理器执行频率
+//#define configCPU_CLOCK_HZ			( ( unsigned long ) 80000000 )	//内部处理器执行频率，没有使用
 
 #define configTICK_RATE_HZ			( ( portTickType ) 500u )	//时间片中断的频率
 #define configMAX_PRIORITIES		( ( unsigned portBASE_TYPE ) 63)	//应用程序中可用优先级的数目
@@ -102,6 +102,7 @@ to exclude the API function. */
 #define INCLUDE_vTaskDelayUntil			0
 #define INCLUDE_vTaskDelay				1
 
-
+#define configUSE_MUTEXES                   1 //使用互斥锁
+#define INCLUDE_xTaskGetCurrentTaskHandle   1 //可以获取当前任务
 
 #endif /* FREERTOS_CONFIG_H */

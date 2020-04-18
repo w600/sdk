@@ -2676,6 +2676,36 @@ u32 tls_get_current_task(void)
 {
   return pxCurrentTCB->uxPriority;
 }
+
+void show_taskstack(void)
+{
+	unsigned int *sp = 0;
+	unsigned int stacksize = 0;
+	void *cur, *start = 0;
+	int i = 0;
+	portDISABLE_INTERRUPTS();
+	stacksize = pxCurrentTCB->stacksize/4;
+	start = pxCurrentTCB->pxStack + stacksize;
+	cur = (void *)pxCurrentTCB->pxTopOfStack;
+	printf("Stack Range[%x,%x], used size:%d\n",pxCurrentTCB->pxStack, start, ((unsigned int *)start - (unsigned int *)cur));
+	printf("Priority:%d", configMAX_PRIORITIES - pxCurrentTCB->uxPriority);
+	if (pxCurrentTCB->pcTaskName[0] != '\0')
+	{
+		printf("\nTaskname:%s", pxCurrentTCB->pcTaskName);
+	}
+	for (sp = (unsigned int *) cur; sp <= (unsigned int *)start; sp++)
+	{
+		if (i%4 == 0)
+		{
+			printf("\n%x:", sp);
+		}
+		printf("%08x ", *sp);
+		i++;
+	}	
+	portENABLE_INTERRUPTS();
+}
+
+
 #else
 void *pxCurrentTCB = NULL;
 volatile unsigned portLONG ulCriticalNesting = 9999UL;

@@ -844,7 +844,7 @@ void tls_airkiss_recv(u8 *data, u16 data_len)
 #else
         airkiss_chan_cnt = 3;
 		airkiss_chan_bw40 = hdr->duration_id&0x0001;
-//        tls_oneshot_switch_channel_tim_temp_stop();
+        tls_oneshot_switch_channel_tim_temp_stop();
 #endif
     }
     else if (ret == AIRKISS_STATUS_CHANNEL_LOCKED)

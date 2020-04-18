@@ -176,15 +176,18 @@ void tls_cmd_reset_sys(void)
     int err=0;
 	if(0 == tls_get_fwup_mode())
 	{
-   		err = tls_os_timer_create(&RSTTIMER,
-				            ResetTimerProc,
-				            NULL,
-				            HZ/10,
-				            FALSE,
-				            NULL);
-		if(TLS_OS_SUCCESS == err)
+		if(RSTTIMER == NULL)
 		{
-			tls_os_timer_start(RSTTIMER);
+			err = tls_os_timer_create(&RSTTIMER,
+								ResetTimerProc,
+								NULL,
+								HZ/10,
+								FALSE,
+								NULL);
+			if(TLS_OS_SUCCESS == err)
+			{
+				tls_os_timer_start(RSTTIMER);
+			}
 		}
 	}
 }
@@ -362,45 +365,6 @@ int tls_cmd_create_net( void )
 int tls_cmd_create_ibss_net( void )
 {
 	int ret=CMD_ERR_UNSUPP;
-#if TLS_CONFIG_IBSS
-	struct tls_ibss_info_t* ibssinfo;
-	struct tls_ibssip_info_t* ipinfo;
-	struct tls_cmd_ssid_t ssid;
-	struct tls_cmd_ip_params_t ip_addr;
-	u8 channel_en;
-
-	ibssinfo = tls_mem_alloc(sizeof(struct tls_softap_info_t));
-	if(ibssinfo == NULL)
-		return CMD_ERR_MEM;
-	ipinfo = tls_mem_alloc(sizeof(struct tls_ip_info_t));
-	if(ipinfo == NULL){
-		tls_mem_free(ibssinfo);
-		return CMD_ERR_MEM;
-	}
-
-	tls_cmd_get_ssid(&ssid);
-	MEMCPY(ibssinfo->ssid, ssid.ssid, ssid.ssid_len);
-	ibssinfo->ssid[ssid.ssid_len] = '\0';
-
-	tls_cmd_get_encrypt( &ibssinfo->encrypt);
-
-	tls_cmd_get_channel( &ibssinfo->channel, &channel_en);
-
-	tls_cmd_get_key((struct tls_cmd_key_t *)(&ibssinfo->keyinfo));
-
-	tls_cmd_get_ip_info(&ip_addr);
-
-	/*ip配置信息:ip地址，掩码，dns名称*/
-	MEMCPY(ipinfo->ip, ip_addr.ip_addr, 4);
-	MEMCPY(ipinfo->netmask, ip_addr.netmask, 4);
-	MEMCPY(ipinfo->gateway, ip_addr.gateway, 4);
-	MEMCPY(ipinfo->dns1, ip_addr.dns, 4);
-	MEMCPY(ipinfo->dns2, ip_addr.dns, 4);
-
-	ret = tls_wifi_ibss_create(ibssinfo, ipinfo);
-	tls_mem_free(ibssinfo);
-	tls_mem_free(ipinfo);
-#endif
 	return ret;
 }
 
@@ -460,6 +424,43 @@ int tls_cmd_join( enum tls_cmd_mode mode,
     return ret;
 }
 
+int tls_cmd_apjoin( enum tls_cmd_mode mode,
+        struct tls_cmd_connect_t *conn)
+{
+    int ret = -1;
+    u8 wifi_mode;
+	struct tls_hostif *hif = tls_get_hostif();
+    static u8 last_wifi_mode = 0xFF;
+
+    /* supplicant is connect a network */
+    if (hif->last_join)
+        return CMD_ERR_BUSY;
+
+	hif->last_join_cmd_mode = mode;
+	hif->last_join = 1;
+
+	tls_cmd_get_wireless_mode(&wifi_mode);
+
+    switch (wifi_mode) {
+        case 2://IEEE80211_MODE_INFRA:
+        case 3://IEEE80211_MODE_APSTA:
+            if ((last_wifi_mode != 0xFF)&&(last_wifi_mode != wifi_mode))
+            {
+	           tls_wifi_disconnect();
+	           tls_wifi_softap_destroy();
+            }       
+            ret = tls_cmd_create_net();
+            break;
+        default:
+            return CMD_ERR_BUSY;
+            break;
+    }
+    last_wifi_mode = wifi_mode;
+    if (ret)
+        hif->last_join = 0;
+    return ret;
+}
+
 int tls_cmd_disconnect_network(u8 mode)
 {
 	struct tls_hostif *hif = tls_get_hostif();
@@ -495,19 +496,11 @@ int tls_cmd_get_link_status(
         lks->status = 1;
     else
         lks->status = 0;
-#if TLS_CONFIG_LWIP_VER2_0_3
     MEMCPY(lks->ip, (char *)ip_2_ip4(&ni->ip_addr), 4);
     MEMCPY(lks->netmask, (char *)ip_2_ip4(&ni->netmask), 4);
     MEMCPY(lks->gw, (char *)ip_2_ip4(&ni->gw), 4);
     MEMCPY(lks->dns1, (char *)ip_2_ip4(&ni->dns1), 4);
     MEMCPY(lks->dns2, (char *)ip_2_ip4(&ni->dns2), 4);
-#else
-    MEMCPY(lks->ip, (char *)&ni->ip_addr.addr, 4);
-    MEMCPY(lks->netmask, (char *)&ni->netmask.addr, 4);
-    MEMCPY(lks->gw, (char *)&ni->gw.addr, 4);
-    MEMCPY(lks->dns1, (char *)&ni->dns1.addr, 4);
-    MEMCPY(lks->dns2, (char *)&ni->dns2.addr, 4);
-#endif
     return 0;
 }
 
@@ -596,31 +589,6 @@ int tls_cmd_get_ssid(struct tls_cmd_ssid_t *ssid)
     }else{
 	ssid->ssid_len = params_ssid.ssid_len;
 	MEMCPY(ssid->ssid, params_ssid.ssid, ssid->ssid_len);
-    }
-    return 0;
-}
-
-int tls_cmd_set_tem_offset(struct tls_cmd_tem_t *tem, u8 update_flash)
-{
-    struct tls_param_tem_offset params_tem;
-
-    params_tem.offset_len = tem->offsetLen;
-    params_tem.offset = tem->offset;
-    tls_param_set(TLS_PARAM_ID_TEM_OFFSET, (void *)&params_tem, (bool)update_flash);
-    return 0;
-}
-
-int tls_cmd_get_tem_offset(struct tls_cmd_tem_t *tem)
-{
-    struct tls_param_tem_offset params_tem;
-
-    tls_param_get(TLS_PARAM_ID_TEM_OFFSET, (void *)&params_tem, 0);
-    if (params_tem.offset_len > 4){
-    	tem->offsetLen = 0;
-    }
-    else{
-    	tem->offsetLen = params_tem.offset_len;
-        tem->offset = params_tem.offset;
     }
     return 0;
 }
@@ -1155,19 +1123,12 @@ int tls_cmd_set_ip_info(
 	            tls_dhcp_start();
 	    } else {
 	        tls_dhcp_stop();
-#if TLS_CONFIG_LWIP_VER2_0_3
+
 			MEMCPY((char *)ip_2_ip4(&ethif->ip_addr) , &params->ip_addr, 4);
             MEMCPY((char *)ip_2_ip4(&ethif->dns1), &params->dns, 4);
 	        MEMCPY((char *)ip_2_ip4(&ethif->netmask), &params->netmask, 4);
 	        MEMCPY((char *)ip_2_ip4(&ethif->gw), &params->gateway, 4);
-#else
-	        MEMCPY((char *)&ethif->ip_addr.addr, &params->ip_addr, 4);
-	        MEMCPY((char *)&ethif->dns1.addr, &params->dns, 4);
-	        MEMCPY((char *)&ethif->netmask.addr, &params->netmask, 4);
-	        MEMCPY((char *)&ethif->gw.addr, &params->gateway, 4);
-#endif
-	        tls_netif_set_addr(
-	                &ethif->ip_addr, &ethif->netmask, &ethif->gw);
+	        tls_netif_set_addr(&ethif->ip_addr, &ethif->netmask, &ethif->gw);
 	    }
 	}
 
@@ -1789,7 +1750,11 @@ int tls_cmd_set_softap_hw_mode(
 {
     struct tls_param_bgr bgr;
 
-	if (hw_mode->hw_mode > 1) //wangm:  bg
+#if TLS_CONFIG_SOFTAP_11N
+	if (hw_mode->hw_mode > 2)
+#else
+    if (hw_mode->hw_mode > 1) //wangm:  bg
+#endif
 		return -1;
 
     if ((hw_mode->hw_mode == 1) && (hw_mode->max_rate > 3)) {
@@ -1896,22 +1861,13 @@ int tls_cmd_get_sta_detail(u32 *sta_num, u8 *buf)
                                                MAC2STR(sta->mac_addr));
         }
         else
-        {
-#if TLS_CONFIG_LWIP_VER2_0_3        
+        {     
             len += sprintf((char *)(buf+len), ",%02X-%02X-%02X-%02X-%02X-%02X,%d.%d.%d.%d",
                                                MAC2STR(sta->mac_addr),
                                                ip4_addr1(ip_2_ip4(ip_addr)),
                                                ip4_addr2(ip_2_ip4(ip_addr)),
                                                ip4_addr3(ip_2_ip4(ip_addr)),
                                                ip4_addr4(ip_2_ip4(ip_addr)));
-#else
-	len += sprintf((char *)(buf+len), ",%02X-%02X-%02X-%02X-%02X-%02X,%d.%d.%d.%d",
-									   MAC2STR(sta->mac_addr),
-									   ip4_addr1(&ip_addr->addr),
-									   ip4_addr2(&ip_addr->addr),
-									   ip4_addr3(&ip_addr->addr),
-									   ip4_addr4(&ip_addr->addr));
-#endif
         }
         sta++;
     }

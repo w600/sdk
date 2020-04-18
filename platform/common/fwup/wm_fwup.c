@@ -491,6 +491,7 @@ u32 tls_fwup_enter(enum tls_fwup_image_src image_src)
 		
 	fwup->current_session_id = session_id;
 	fwup->busy = TRUE;
+	tls_os_release_critical(cpu_sr);	
 	oneshotback = tls_wifi_get_oneshot_flag();
 	if (oneshotback == 1){
 		tls_wifi_set_oneshot_flag(0);	// 退出一键配置
@@ -498,7 +499,6 @@ u32 tls_fwup_enter(enum tls_fwup_image_src image_src)
 
 	tls_wifi_set_psflag(FALSE, 0);
 
-	tls_os_release_critical(cpu_sr);
 	return session_id;
 }
 
@@ -538,13 +538,15 @@ int tls_fwup_exit(u32 session_id)
 	fwup->received_number = -1;
 
 	fwup->current_session_id = 0;
-	fwup->busy = FALSE;
+	fwup->busy = FALSE;	
+	tls_os_release_critical(cpu_sr);
+
 	if (oneshotback == 1){
 		tls_wifi_set_oneshot_flag(oneshotback); // 恢复一键配置
 	}
 	tls_param_get(TLS_PARAM_ID_PSM, &enable, TRUE);	
 	tls_wifi_set_psflag(enable, 0);
-	tls_os_release_critical(cpu_sr);
+
 	return TLS_FWUP_STATUS_OK;
 }
 

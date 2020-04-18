@@ -236,7 +236,7 @@ int tls_crypto_rc4_init(psCipherContext_t * ctx, const unsigned char *key, u32 k
  * @retval  		0  		success 
  * @retval  		other   	failed  
  *
- * @note             	None
+ * @note            The address needs to be four-byte aligned, and it needs to operate in words, not in bytes.
  */
 int tls_crypto_rc4(psCipherContext_t * ctx, unsigned char *in, unsigned char *out, u32 len)
 {
@@ -303,7 +303,7 @@ int tls_crypto_aes_init(psCipherContext_t * ctx, const unsigned char *IV, const 
  * @retval		0  		success 
  * @retval		other	failed	
  *
- * @note			None
+ * @note            The address needs to be four-byte aligned, and it needs to operate in words, not in bytes.
  */
 int tls_crypto_aes_encrypt_decrypt(psCipherContext_t * ctx, unsigned char *in, unsigned char *out, u32 len, CRYPTO_WAY dec)
 {
@@ -387,7 +387,7 @@ int tls_crypto_3des_init(psCipherContext_t * ctx, const unsigned char *IV, const
  * @retval		0  		success 
  * @retval		other	failed	
  *
- * @note			None
+ * @note            The address needs to be four-byte aligned, and it needs to operate in words, not in bytes.
  */
 int tls_crypto_3des_encrypt_decrypt(psCipherContext_t * ctx, unsigned char *in, unsigned char *out, u32 len, CRYPTO_WAY dec)
 {
@@ -460,7 +460,7 @@ int tls_crypto_des_init(psCipherContext_t * ctx, const unsigned char *IV, const 
  * @retval		0  		success 
  * @retval		other	failed	
  *
- * @note			None
+ * @note            The address needs to be four-byte aligned, and it needs to operate in words, not in bytes.
  */
 int tls_crypto_des_encrypt_decrypt(psCipherContext_t * ctx, unsigned char *in, unsigned char *out, u32 len, CRYPTO_WAY dec)
 {
@@ -527,7 +527,7 @@ int tls_crypto_crc_init(psCrcContext_t * ctx, u32 key, CRYPTO_CRC_TYPE crc_type,
  * @retval		0		success 
  * @retval		other	failed	
  *
- * @note			None
+ * @note            The address needs to be four-byte aligned.
  */
 int tls_crypto_crc_update(psCrcContext_t * ctx, unsigned char *in, u32 len)
 {

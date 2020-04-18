@@ -85,12 +85,7 @@ void GPIOB_IRQHandler(void)
  * @return         None
  *
  * @note
- * From gpio3 to gpio7,attribute can set to WM_GPIO_ATTR_PULLHIGH,
- * but can not set to WM_GPIO_ATTR_PULLLOW,
- * the default attribute is WM_GPIO_ATTR_PULLHIGH.
- * Other gpio can set to WM_GPIO_ATTR_PULLLOW,but can not set to WM_GPIO_ATTR_PULLHIGH,the deault
- * attribute is WM_GPIO_ATTR_PULLLOW.
- * all gpio can set to WM_GPIO_ATTR_FLOATING
+ * All gpio's attribute can only be set as WM_GPIO_ATTR_FLOATING or WM_GPIO_ATTR_PULLHIGH on W600/W60X.
  */
 void tls_gpio_cfg(enum tls_io_name gpio_pin, enum tls_gpio_dir dir, enum tls_gpio_attr attr)
 {
@@ -99,12 +94,12 @@ void tls_gpio_cfg(enum tls_io_name gpio_pin, enum tls_gpio_dir dir, enum tls_gpi
 
     if (gpio_pin >= WM_IO_PB_00)
     {
-        pin    = gpio_pin - WM_IO_PB_00;
+        pin = gpio_pin - WM_IO_PB_00;
         offset = TLS_IO_AB_OFFSET;
     }
     else
     {
-        pin    = gpio_pin;
+        pin = gpio_pin;
         offset = 0;
     }
 
@@ -112,16 +107,24 @@ void tls_gpio_cfg(enum tls_io_name gpio_pin, enum tls_gpio_dir dir, enum tls_gpi
     tls_io_cfg_set(gpio_pin, WM_IO_OPT5_GPIO);
 
     /* gpio direction */
-    if (WM_GPIO_DIR_OUTPUT == dir)
+    if (WM_GPIO_DIR_OUTPUT == dir) 
+	{
         tls_reg_write32(HR_GPIO_DIR + offset, tls_reg_read32(HR_GPIO_DIR + offset) | BIT(pin));      /* 1 set output */
-    else if (WM_GPIO_DIR_INPUT == dir)
+	}
+    else if (WM_GPIO_DIR_INPUT == dir) 
+	{
         tls_reg_write32(HR_GPIO_DIR + offset, tls_reg_read32(HR_GPIO_DIR + offset) & (~BIT(pin)));   /* 0 set input */
+	}
 
     /* gpio pull attribute */
-    if (WM_GPIO_ATTR_FLOATING == attr)
+    if (WM_GPIO_ATTR_FLOATING == attr) 
+	{
         tls_reg_write32(HR_GPIO_PULL_EN + offset, tls_reg_read32(HR_GPIO_PULL_EN + offset) | BIT(pin));  	   /* 1 disable pull */
-    if ((WM_GPIO_ATTR_PULLHIGH == attr) || (WM_GPIO_ATTR_PULLLOW == attr))
+	}
+    else if (WM_GPIO_ATTR_PULLHIGH == attr) 
+	{
         tls_reg_write32(HR_GPIO_PULL_EN + offset, tls_reg_read32(HR_GPIO_PULL_EN + offset) & (~BIT(pin)));      /* 0 enable pull */
+	}
 }
 
 /**
@@ -129,8 +132,8 @@ void tls_gpio_cfg(enum tls_io_name gpio_pin, enum tls_gpio_dir dir, enum tls_gpi
  *
  * @param[in]      gpio_pin    gpio pin num
  *
- * @retval         0     power level is low
- * @retval         1     power level is high
+ * @retval         0     low level
+ * @retval         1     high level
  *
  * @note           None
  */
@@ -167,8 +170,8 @@ u8 tls_gpio_read(enum tls_io_name gpio_pin)
  *
  * @param[in]      gpio_pin    gpio pin num
  * @param[in]      value       power level
- *                             0: low  power level
- * 					           1: high power level
+ *                             0: low level
+ * 					           1: high level
  *
  * @return         None
  *
@@ -239,37 +242,28 @@ void tls_gpio_irq_enable(enum tls_io_name gpio_pin, enum tls_gpio_irq_trig mode)
         offset = 0;
         vec_no = GPIO_INT;
     }
-
-//	TLS_DBGPRT_INFO("\r\ntls_gpio_int_enable gpio pin =%d,mode==%d\r\n",gpio_pin,mode);
-
 	switch(mode)
 	{
 		case WM_GPIO_IRQ_TRIG_RISING_EDGE:
 			reg = tls_reg_read32(HR_GPIO_IS + offset);
 			reg &= (~(0x1 << pin));
-		//	TLS_DBGPRT_INFO("\r\nrising edge is ret=%x\r\n",reg);
 			tls_reg_write32(HR_GPIO_IS + offset, reg);		/* 0 edge trigger */
 			reg = tls_reg_read32(HR_GPIO_IBE + offset);
 			reg &= (~(0x1 << pin));
-		//	TLS_DBGPRT_INFO("\r\nrising edge ibe ret=%x\r\n",reg);
 			tls_reg_write32(HR_GPIO_IBE + offset, reg);	/* 0 edge trigger */
 			reg = tls_reg_read32(HR_GPIO_IEV + offset);
 			reg |= (0x1 << pin);
-		//	TLS_DBGPRT_INFO("\r\nrising edge iev ret=%x\r\n",reg);
 			tls_reg_write32(HR_GPIO_IEV + offset, reg);	/* 1 rising edge trigger */
 			break;
 		case WM_GPIO_IRQ_TRIG_FALLING_EDGE:
 			reg = tls_reg_read32(HR_GPIO_IS + offset);
 			reg &= (~(0x1 << pin));
-		//	TLS_DBGPRT_INFO("\falling edge is ret=%x\n",reg);
 			tls_reg_write32(HR_GPIO_IS + offset, reg);		/* 0 edge trigger */
 			reg = tls_reg_read32(HR_GPIO_IBE + offset);
 			reg &= (~(0x1 << pin));
-		//	TLS_DBGPRT_INFO("\falling edge ibe ret=%x\n",reg);
 			tls_reg_write32(HR_GPIO_IBE + offset, reg);	/* 0 edge trigger */
 			reg = tls_reg_read32(HR_GPIO_IEV + offset);
 			reg &= (~(0x1 << pin));
-		//	TLS_DBGPRT_INFO("\falling edge iev ret=%x\n",reg);
 			tls_reg_write32(HR_GPIO_IEV + offset, reg);	/* 0 falling edge trigger */
 			break;
 		case WM_GPIO_IRQ_TRIG_DOUBLE_EDGE:
@@ -294,9 +288,7 @@ void tls_gpio_irq_enable(enum tls_io_name gpio_pin, enum tls_gpio_irq_trig mode)
 
 	reg = tls_reg_read32(HR_GPIO_IE + offset);
 	reg |= (0x1 << pin);
-//	TLS_DBGPRT_INFO("\nie ret=%x\n",reg);
 	tls_reg_write32(HR_GPIO_IE + offset, reg);		/* enable interrupt */
-
 	tls_irq_enable(vec_no);
 }
 

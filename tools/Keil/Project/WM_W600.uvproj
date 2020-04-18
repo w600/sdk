@@ -376,7 +376,7 @@
               <MiscControls>--c99 --gnu </MiscControls>
               <Define>WM_W600</Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\..\Include;..\..\..\Src\Network\api;..\..\..\Src\Wlan\Driver;..\..\..\Src\Wlan\Supplicant;..\..\..\Platform\Common\Params;..\..\..\Platform\Common\task;..\..\..\Platform\Common\mem;..\..\..\Platform\Common\fwup;..\..\..\Platform\Common\utils;..\..\..\Platform\Inc;..\..\..\Platform\Sys;..\..\..\Src\App\wm_atcmd;..\..\..\Src\App\demo;..\..\..\Src\App\dhcpserver;..\..\..\Src\App\dnsserver;..\..\..\Src\App\matrixssl;..\..\..\Src\App\matrixssl\crypto;..\..\..\Src\App\libupnp-1.6.19\ixml\inc;..\..\..\Src\App\libupnp-1.6.19\upnp\inc;..\..\..\Src\App\libupnp-1.6.19\ixml\include;..\..\..\Src\App\libupnp-1.6.19\threadutil\include;..\..\..\Src\App\libupnp-1.6.19\upnp\include;..\..\..\Src\App\gmediarender-0.0.6;..\..\..\Src\App\web;..\..\..\Src\App\cloud;..\..\..\Src\App\cJSON;..\..\..\Src\App\ajtcl-15.04.00a\inc;..\..\..\Src\App\ajtcl-15.04.00a\target\winnermicro;..\..\..\Src\App\ajtcl-15.04.00a\external\sha2;..\..\..\Src\App\cJSON;..\..\..\Src\App\cloud\Kii;..\..\..\Src\App\rmms;..\..\..\Demo;..\..\..\Src\App\ntp;..\..\..\Src\OS\OS_ports;..\..\..\Src\App\httpclient;..\..\..\Src\App\oneshotconfig;..\..\..\Lib;..\..\..\Src\App\iperf;..\..\..\Src\OS\uCOS-II;..\..\..\Src\OS\uCOS-II\ports;..\..\..\Src\OS\uCOS-II\source;..\..\..\Src\OS\RTOS\include;..\..\..\Platform\Common\crypto;..\..\..\Include\App;..\..\..\Include\Driver;..\..\..\Include\Net;..\..\..\Include\OS;..\..\..\Include\Platform;..\..\..\Include\WiFi;..\..\..\Src\App\matrixssl\core;..\..\..\Platform\Common\crypto\digest;..\..\..\Platform\Common\crypto\math;..\..\..\Platform\Common\crypto\symmetric;..\..\..\Src\App\mqtt;..\..\..\Src\App\iperf;..\..\..\Src\App\ping;..\..\..\Src\App\polarssl\include;..\..\..\Src\App\mDNS\mDNSPosix;..\..\..\Src\App\mDNS\mDNSCore;..\..\..\Src\Network\lwip2.0.3\include;..\..\..\Src\App\OTA;..\..\..\Src\App\libwebsockets-2.1-stable;..\..\..\Platform\Common\crypto</IncludePath>
+              <IncludePath>..\..\..\Include;..\..\..\Src\Network\api;..\..\..\Src\Wlan\Driver;..\..\..\Src\Wlan\Supplicant;..\..\..\Platform\Common\Params;..\..\..\Platform\Common\task;..\..\..\Platform\Common\mem;..\..\..\Platform\Common\fwup;..\..\..\Platform\Common\utils;..\..\..\Platform\Inc;..\..\..\Platform\Sys;..\..\..\Src\App\wm_atcmd;..\..\..\Src\App\demo;..\..\..\Src\App\dhcpserver;..\..\..\Src\App\dnsserver;..\..\..\Src\App\matrixssl;..\..\..\Src\App\matrixssl\crypto;..\..\..\Src\App\libupnp-1.6.19\ixml\inc;..\..\..\Src\App\libupnp-1.6.19\upnp\inc;..\..\..\Src\App\libupnp-1.6.19\ixml\include;..\..\..\Src\App\libupnp-1.6.19\threadutil\include;..\..\..\Src\App\libupnp-1.6.19\upnp\include;..\..\..\Src\App\gmediarender-0.0.6;..\..\..\Src\App\web;..\..\..\Src\App\cloud;..\..\..\Src\App\cJSON;..\..\..\Src\App\ajtcl-15.04.00a\inc;..\..\..\Src\App\ajtcl-15.04.00a\target\winnermicro;..\..\..\Src\App\ajtcl-15.04.00a\external\sha2;..\..\..\Src\App\cJSON;..\..\..\Src\App\cloud\Kii;..\..\..\Src\App\rmms;..\..\..\Demo;..\..\..\Src\App\ntp;..\..\..\Src\OS\OS_ports;..\..\..\Src\App\httpclient;..\..\..\Src\App\oneshotconfig;..\..\..\Lib;..\..\..\Src\App\iperf;..\..\..\Src\OS\uCOS-II;..\..\..\Src\OS\uCOS-II\ports;..\..\..\Src\OS\uCOS-II\source;..\..\..\Src\OS\RTOS\include;..\..\..\Platform\Common\crypto;..\..\..\Include\App;..\..\..\Include\Driver;..\..\..\Include\Net;..\..\..\Include\OS;..\..\..\Include\Platform;..\..\..\Include\WiFi;..\..\..\Src\App\matrixssl\core;..\..\..\Platform\Common\crypto\digest;..\..\..\Platform\Common\crypto\math;..\..\..\Platform\Common\crypto\symmetric;..\..\..\Src\App\mqtt;..\..\..\Src\App\iperf;..\..\..\Src\App\ping;..\..\..\Src\App\polarssl\include;..\..\..\Src\App\mDNS\mDNSPosix;..\..\..\Src\App\mDNS\mDNSCore;..\..\..\Src\Network\lwip2.0.3\include;..\..\..\Src\App\OTA;..\..\..\Src\App\libwebsockets-2.1-stable;..\..\..\Platform\Common\crypto;..\..\..\Src\Network\api2.0.3</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -441,19 +441,9 @@
               <FilePath>..\..\..\demo\wm_adc_demo.c</FilePath>
             </File>
             <File>
-              <FileName>wm_alljoyn_led_demo.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\demo\wm_alljoyn_led_demo.c</FilePath>
-            </File>
-            <File>
               <FileName>wm_apsta_demo.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\demo\wm_apsta_demo.c</FilePath>
-            </File>
-            <File>
-              <FileName>Wm_cloud_demo.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\demo\Wm_cloud_demo.c</FilePath>
             </File>
             <File>
               <FileName>wm_connect_net_demo.c</FileName>
@@ -469,16 +459,6 @@
               <FileName>wm_crypt_hard_demo.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\demo\wm_crypt_hard_demo.c</FilePath>
-            </File>
-            <File>
-              <FileName>wm_dlna_mediarender_demo.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\demo\wm_dlna_mediarender_demo.c</FilePath>
-            </File>
-            <File>
-              <FileName>wm_dlna_mediarender_demo_vs1053.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\demo\wm_dlna_mediarender_demo_vs1053.c</FilePath>
             </File>
             <File>
               <FileName>wm_flash_demo.c</FileName>
@@ -536,16 +516,6 @@
               <FilePath>..\..\..\demo\wm_pwm_demo.c</FilePath>
             </File>
             <File>
-              <FileName>wm_raw_socket_client_demo.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\demo\wm_raw_socket_client_demo.c</FilePath>
-            </File>
-            <File>
-              <FileName>wm_raw_socket_server_demo.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\demo\wm_raw_socket_server_demo.c</FilePath>
-            </File>
-            <File>
               <FileName>wm_rsa_demo.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\demo\wm_rsa_demo.c</FilePath>
@@ -579,11 +549,6 @@
               <FileName>wm_socket_server_demo.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\demo\wm_socket_server_demo.c</FilePath>
-            </File>
-            <File>
-              <FileName>wm_socket_server_sel_demo.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\demo\wm_socket_server_sel_demo.c</FilePath>
             </File>
             <File>
               <FileName>wm_softap_demo.c</FileName>
@@ -749,11 +714,6 @@
               <FileName>wm_pwm.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\platform\drivers\wm_pwm.c</FilePath>
-            </File>
-            <File>
-              <FileName>wm_reflector.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\platform\drivers\wm_reflector.c</FilePath>
             </File>
             <File>
               <FileName>wm_rtc.c</FileName>

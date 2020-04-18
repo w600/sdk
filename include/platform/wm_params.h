@@ -428,7 +428,7 @@ typedef struct tls_user_param{
  */
 
 /**
- * @brief          This function is used to initialize parameter's manamge module
+ * @brief          This function is used to initialize parameter's manage module
  *
  * @param[in]      None
  *

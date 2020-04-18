@@ -132,7 +132,8 @@ struct tls_inside_fls
  *
  * @param	       None	 
  *
- * @return         None
+ * @return         0 success
+ *				   -1 fail
  *
  * @note           None
  */
@@ -143,7 +144,8 @@ int tls_flash_unlock(void);
  *
  * @param	       None	 
  *
- * @return         None
+ * @return         0 success
+ *				   -1 fail
  *
  * @note           None
  */
@@ -194,6 +196,8 @@ int tls_fls_init(void);
  * @param[in]      len                  Specifies the length of the data to read.
  *
  * @retval         TLS_FLS_STATUS_OK	    if read sucsess
+ * @retval	   	   TLS_FLS_STATUS_EPERM		if flash driver module not beed installed
+ * @retval		   TLS_FLS_STATUS_EINVAL    if arguments invalid
  * @retval         TLS_FLS_STATUS_EIO	    if read fail
  *
  * @note           None

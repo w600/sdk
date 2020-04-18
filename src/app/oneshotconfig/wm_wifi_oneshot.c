@@ -57,6 +57,7 @@ u32 oneshottime = 0;
 volatile u8 guconeshotflag = 0;
 
 volatile u8 gucOneshotPsFlag = 0;
+volatile u8 gucOneshotErr = 0;
 
 
 /*Networking necessary information*/
@@ -75,7 +76,7 @@ static u8 gucCustomData[3][65] ={{'\0'},{'\0'}, {'\0'}};
 static u8 gucConfigMode = 0;
 
 static tls_wifi_oneshot_result_callback gpfResult = NULL;
-
+static 	int gchanLock = 0;
 
 #define ONESHOT_MSG_QUEUE_SIZE 32
 tls_os_queue_t *oneshot_msg_q = NULL;
@@ -88,6 +89,10 @@ extern bool is_airkiss;
 
 u32 oneshotCpuClk = 0;
 
+#if TLS_CONFIG_ONESHOT_DELAY_SPECIAL
+#define ONESHOT_SPECIAL_DELAY_TIME  (20 * HZ)
+static u32 g_oneshot_dur_time = 0;
+#endif
 
 #if TLS_CONFIG_UDP_ONE_SHOT
 #define TLS_ONESHOT_RESTART_TIME  5000*HZ/1000
@@ -1019,10 +1024,12 @@ int tls_wifi_lsd_oneshot_special(u8 *data, u16 data_len)
 	}
 	else if(ret == LSD_ONESHOT_CHAN_TEMP_LOCKED)
 	{	
+		ONESHOT_DBG("LSD_ONESHOT_CHAN_TEMP_LOCKED:%d\r\n", tls_os_get_time());
 		tls_oneshot_switch_channel_tim_temp_stop();
 	}
 	else if(ret == LSD_ONESHOT_CHAN_LOCKED_BW20)
 	{
+		ONESHOT_DBG("LSD_ONESHOT_CHAN_LOCKED_BW20:%d\r\n", tls_os_get_time());
 		tls_oneshot_switch_channel_tim_stop((struct ieee80211_hdr *)data);
 	}
 	else if(ret == LSD_ONESHOT_CHAN_LOCKED_BW40)
@@ -1075,7 +1082,7 @@ int soft_ap_create(void)
 
 	apinfo.encrypt = 0;  /*0:open, 1:wep64, 2:wep128*/
 	apinfo.channel = 5; /*channel random*/
-	/*ip information: ip address?ê?netmask?ê?dns*/
+	/*ip information: ip address netmask dns*/
 	ipinfo.ip_addr[0] = 192;
 	ipinfo.ip_addr[1] = 168;
 	ipinfo.ip_addr[2] = 1;
@@ -1736,8 +1743,9 @@ void tls_oneshot_data_clear(void)
 
 void tls_oneshot_recv_err(void)
 {
-	if (oneshot_msg_q)
+	if (oneshot_msg_q && (0 == gucOneshotErr))
 	{
+        gucOneshotErr = 1;
 		tls_os_queue_send(oneshot_msg_q, (void *)ONESHOT_RECV_ERR, 0);
 	}
 }
@@ -1786,13 +1794,7 @@ void wm_oneshot_send_mac(void)
 	struct tls_socket_desc socket_desc = {SOCKET_CS_MODE_CLIENT};
 	socket_desc.cs_mode = SOCKET_CS_MODE_CLIENT;
 	socket_desc.protocol = SOCKET_PROTO_UDP;
-#if TLS_CONFIG_LWIP_VER2_0_3
 	IP_ADDR4(&socket_desc.ip_addr, 255, 255, 255, 255);
-#else
-	for(idx = 0; idx < 4; idx++){
-		socket_desc.ip_addr[idx] = 255;
-	}
-#endif
 	socket_desc.port = 65534;
 	socket_num = tls_socket_create(&socket_desc);
 	memset(mac_addr,0,sizeof(mac_addr));
@@ -1919,12 +1921,13 @@ void tls_oneshot_special_task_create(void)
 		memset(&OneshotSpecialTaskStk[0], 0, sizeof(OS_STK)*ONESHOT_SPEC_TASK_SIZE);
 		
 		tls_os_sem_create(&oneshot_special_sem, 0);
+        tls_get_mac_addr(&oneshot_local_mac[0]);
 		
 		tls_os_task_create(NULL, NULL,
 				tls_oneshot_special_task_handle,
 						NULL,
-						(void *)&OneshotSpecialTaskStk[0], 		 /* 任务栈的起始地址 */
-						ONESHOT_SPEC_TASK_SIZE * sizeof(u32), /* 任务栈的大小	   */
+						(void *)&OneshotSpecialTaskStk[0],    /* task's stack start address */
+						ONESHOT_SPEC_TASK_SIZE * sizeof(u32), /* task's stack size, unit:byte */
 						TLS_ONESHOT_SPEC_TASK_PRIO,
 						0);
 	}
@@ -1940,10 +1943,7 @@ int tls_oneshot_special_timer_start(u32 timeout)
 	struct tls_timer_cfg timer_cfg;
 
 	tls_oneshot_special_task_create();
-
-	//oneshot_special_flag = 0;
-
-	tls_get_mac_addr(&oneshot_local_mac[0]);
+	ONESHOT_DBG("@@@@@@@@@@@@@@oneshot_timer_start:%d\n", oneshot_timer_id);
 
 	timer_cfg.unit = TLS_TIMER_UNIT_US;
 	timer_cfg.timeout = timeout;
@@ -1976,6 +1976,7 @@ void tls_oneshot_task_handle(void *arg)
 #if TLS_CONFIG_UDP_ONE_SHOT
     static int chanCnt = 0;
 	static int chanRepeat = 0;
+
 #endif
     for(;;)
     {
@@ -1984,6 +1985,7 @@ void tls_oneshot_task_handle(void *arg)
         {
 #if TLS_CONFIG_UDP_ONE_SHOT
             case ONESHOT_SCAN_START:
+			gchanLock = 0;
 			scanChanErr = 0;
 	    	tls_wifi_scan_result_cb_register(tls_oneshot_scan_result_cb);
 	    	if(WM_SUCCESS != tls_wifi_scan())
@@ -1995,8 +1997,12 @@ void tls_oneshot_task_handle(void *arg)
             break;
 			
             case ONESHOT_SCAN_FINISHED:
-
+			gchanLock = 0;
 		    tls_oneshot_scan_result_deal();
+
+#if TLS_CONFIG_ONESHOT_DELAY_SPECIAL
+            g_oneshot_dur_time = tls_os_get_time();
+#endif
 
             chanCnt = 0;
             wifi_change_chanel(airwifichan[chanCnt], airchantype[chanCnt]);
@@ -2021,6 +2027,7 @@ void tls_oneshot_task_handle(void *arg)
             break;
 
             case ONESHOT_SWITCH_CHANNEL:
+			gchanLock = 0;
 #if (TLS_CONFIG_UDP_LSD_SPECIAL || TLS_CONFIG_AIRKISS_MODE_ONESHOT)
 			if(chanRepeat >= 2)
 			{
@@ -2038,24 +2045,34 @@ void tls_oneshot_task_handle(void *arg)
 			if(0 == tls_wifi_get_special_mode())
 			{
 				chanRepeat ++;
+#if TLS_CONFIG_ONESHOT_DELAY_SPECIAL
+            if ((tls_os_get_time() - g_oneshot_dur_time) >= ONESHOT_SPECIAL_DELAY_TIME)
+#endif
 				tls_oneshot_special_timer_start(500);
 				tls_wifi_set_special_mode(1);
 				wifi_change_chanel(airwifichan[chanCnt], 0);
-				ONESHOT_DBG("chan:%d,bandwidth:%d\n", airwifichan[chanCnt], 0);
+				ONESHOT_DBG("@chan:%d,bandwidth:%d,%d\n", airwifichan[chanCnt], 0, tls_os_get_time());
 			}else
 #endif
 			{
 #if (TLS_CONFIG_UDP_LSD_SPECIAL || TLS_CONFIG_AIRKISS_MODE_ONESHOT)
+#if TLS_CONFIG_ONESHOT_DELAY_SPECIAL
+            if ((tls_os_get_time() - g_oneshot_dur_time) >= ONESHOT_SPECIAL_DELAY_TIME)
+#endif
 				tls_oneshot_special_timer_stop();
 				tls_wifi_set_special_mode(0);
 				chanRepeat ++;
 #endif
 				wifi_change_chanel(airwifichan[chanCnt], airchantype[chanCnt]);
-				ONESHOT_DBG("chan:%d,bandwidth:%d\n", airwifichan[chanCnt], airchantype[chanCnt]);
+				ONESHOT_DBG("#chan:%d,bandwidth:%d,%d\n", airwifichan[chanCnt], airchantype[chanCnt], tls_os_get_time());
 			}
 
 #if TLS_CONFIG_AIRKISS_MODE_ONESHOT
-		    tls_oneshot_airkiss_change_channel();
+            tls_oneshot_airkiss_change_channel();
+#endif
+
+#if TLS_CONFIG_UDP_LSD_SPECIAL
+            tls_lsd_init(oneshot_bss);
 #endif
 
 		    if (gWifiSwitchChanTim)
@@ -2067,11 +2084,12 @@ void tls_oneshot_task_handle(void *arg)
 
             case ONESHOT_STOP_TMP_CHAN_SWITCH:
 		    {
+				ONESHOT_DBG("ONESHOT_STOP_TMP_CHAN_SWITCH:%d\r\n", tls_os_get_time());
 				if (gWifiSwitchChanTim)
 				{
 				    tls_os_timer_stop(gWifiSwitchChanTim);
 				}
-				if (gWifiHandShakeTimOut)
+				if (gWifiHandShakeTimOut && (gchanLock == 0))
 				{
 				    tls_os_timer_stop(gWifiHandShakeTimOut);
 				    tls_os_timer_change(gWifiHandShakeTimOut, TLS_ONESHOT_RESTART_TIME);
@@ -2080,7 +2098,7 @@ void tls_oneshot_task_handle(void *arg)
             break;	
 
             case ONESHOT_STOP_CHAN_SWITCH:
-			
+			gchanLock = 1;
 			ONESHOT_DBG("stop channel ch:%d time:%d\n",airwifichan[chanCnt], (tls_os_get_time()-oneshottime)*1000/HZ);
 		    if (gWifiSwitchChanTim)
 		    {
@@ -2102,6 +2120,8 @@ void tls_oneshot_task_handle(void *arg)
             break;
             
             case ONESHOT_HANDSHAKE_TIMEOUT:
+				gchanLock = 0;
+				ONESHOT_DBG("handshake time out:%d\r\n", tls_os_get_time());
                 if (gWifiSwitchChanTim)
                 {
                     tls_os_timer_stop(gWifiSwitchChanTim);
@@ -2110,7 +2130,8 @@ void tls_oneshot_task_handle(void *arg)
            break;
 
            case ONESHOT_RECV_TIMEOUT:
-           ONESHOT_DBG("timeout to oneshot\n");
+		   	gchanLock = 0;
+           ONESHOT_DBG("timeout to oneshot:%d\n", tls_os_get_time());
 #if TLS_CONFIG_AIRKISS_MODE_ONESHOT
            tls_oneshot_airkiss_change_channel();
 #endif
@@ -2120,6 +2141,8 @@ void tls_oneshot_task_handle(void *arg)
            break;
 
 		   case ONESHOT_RECV_ERR:	
+		   	gchanLock = 0;
+		   	ONESHOT_DBG("timeout to recv err:%d\n", tls_os_get_time());
 #if TLS_CONFIG_AIRKISS_MODE_ONESHOT
            tls_oneshot_airkiss_change_channel();
 #endif
@@ -2129,11 +2152,13 @@ void tls_oneshot_task_handle(void *arg)
 		   break;
 #endif            
            case ONESHOT_STOP_DATA_CLEAR:
+		   	gchanLock  = 0;
            ONESHOT_DBG("stop oneshot to connect:%d\n", (tls_os_get_time() - oneshottime)*1000/HZ);
            tls_oneshot_stop_clear_data();
            break;
 		
            case ONESHOT_NET_UP:
+		   	gchanLock = 0;
            printf("oneshot net up, time:%d\n", (tls_os_get_time()-oneshottime)*1000/HZ);
            tls_netif_remove_status_event(wm_oneshot_netif_status_event);
            if (0 == gucConfigMode) 
@@ -2192,7 +2217,7 @@ void tls_oneshot_task_handle(void *arg)
            case AP_WEB_S_MSG_RECEIVE_DATA:        
            if (2 == gucConfigMode)
            {
-               tls_os_time_delay(HZ*5);
+               //tls_os_time_delay(HZ*5);
                httpd_deinit();
             
                ONESHOT_INF("[WEB]SSID:%s\n", gucssidData);
@@ -2249,8 +2274,8 @@ void tls_oneshot_task_create(void)
 		tls_os_task_create(NULL, NULL,
 				tls_oneshot_task_handle,
 						NULL,
-						(void *)&OneshotTaskStk[0], 		 /* 任务栈的起始地址 */
-						ONESHOT_TASK_SIZE * sizeof(u32), /* 任务栈的大小	   */
+						(void *)&OneshotTaskStk[0],      /* task's stack start address */
+						ONESHOT_TASK_SIZE * sizeof(u32), /* task's stack size, unit:byte */
 						TLS_ONESHOT_TASK_PRIO,
 						0);
 	}
@@ -2330,6 +2355,7 @@ void tls_wifi_set_oneshot_flag(u8 flag)
 		}
 
 		guconeshotflag = flag;
+        gucOneshotErr = 0;
 		tls_wifi_disconnect();
 		tls_wifi_softap_destroy();
 		

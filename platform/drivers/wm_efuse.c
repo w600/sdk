@@ -342,8 +342,8 @@ int tls_set_mac_addr(u8 *mac)
 *
 * Arguments  : 	*txlo
 *
-* Returns    : 	TLS_EFUSE_STATUS_OK			get success
-* 			TLS_EFUSE_STATUS_EIO		get failed
+* Returns    : 	0		get success
+* 				-1		get failed
 **********************************************************************************************************/
 int tls_get_tx_lo(u8 *txlo)
 {
@@ -355,8 +355,8 @@ int tls_get_tx_lo(u8 *txlo)
 *
 * Arguments  : 	txlo
 *
-* Returns    : 	TLS_EFUSE_STATUS_OK			set success
-* 			TLS_EFUSE_STATUS_EIO		set failed
+* Returns    : 	0		set success
+* 				-1		set failed
 **********************************************************************************************************/
 int tls_set_tx_lo(u8 *txlo)
 {
@@ -368,8 +368,8 @@ int tls_set_tx_lo(u8 *txlo)
 *
 * Arguments  : 	txGain
 *
-* Returns    : 	TLS_EFUSE_STATUS_OK			set success
-* 			TLS_EFUSE_STATUS_EIO		set failed
+* Returns    : 	0		set success
+* 				-1		set failed
 **********************************************************************************************************/
 int tls_get_tx_iq_gain(u8 *txGain)
 {
@@ -381,8 +381,8 @@ int tls_get_tx_iq_gain(u8 *txGain)
 *
 * Arguments  : 	txGain
 *
-* Returns    : 	TLS_EFUSE_STATUS_OK			set success
-* 			TLS_EFUSE_STATUS_EIO		set failed
+* Returns    : 	0		set success
+* 				-1		set failed
 **********************************************************************************************************/
 int tls_set_tx_iq_gain(u8 *txGain)
 {
@@ -394,8 +394,8 @@ int tls_set_tx_iq_gain(u8 *txGain)
 *
 * Arguments  : 	rxGain
 *
-* Returns    : 	TLS_EFUSE_STATUS_OK			set success
-* 			TLS_EFUSE_STATUS_EIO		set failed
+* Returns    : 	0		set success
+* 				-1		set failed
 **********************************************************************************************************/
 int tls_get_rx_iq_gain(u8 *rxGain)
 {
@@ -407,8 +407,8 @@ int tls_get_rx_iq_gain(u8 *rxGain)
 *
 * Arguments  : 	rxGain
 *
-* Returns    : 	TLS_EFUSE_STATUS_OK			set success
-* 			TLS_EFUSE_STATUS_EIO		set failed
+* Returns    : 	0		set success
+* 				-1		set failed
 **********************************************************************************************************/
 int tls_set_rx_iq_gain(u8 *rxGain)
 {
@@ -420,8 +420,8 @@ int tls_set_rx_iq_gain(u8 *rxGain)
 *
 * Arguments  : 	txPhase
 *
-* Returns    : 	TLS_EFUSE_STATUS_OK			set success
-* 			TLS_EFUSE_STATUS_EIO		set failed
+* Returns    : 	0		set success
+* 				-1		set failed
 **********************************************************************************************************/
 int tls_get_tx_iq_phase(u8 *txPhase)
 {
@@ -433,8 +433,8 @@ int tls_get_tx_iq_phase(u8 *txPhase)
 *
 * Arguments  : 	txPhase
 *
-* Returns    : 	TLS_EFUSE_STATUS_OK			set success
-* 			TLS_EFUSE_STATUS_EIO		set failed
+* Returns    : 	0		set success
+* 				-1		set failed
 **********************************************************************************************************/
 int tls_set_tx_iq_phase(u8 *txPhase)
 {
@@ -446,8 +446,8 @@ int tls_set_tx_iq_phase(u8 *txPhase)
 *
 * Arguments  : 	rxPhase
 *
-* Returns    : 	TLS_EFUSE_STATUS_OK			set success
-* 			TLS_EFUSE_STATUS_EIO		set failed
+* Returns    : 	0		set success
+* 				-1		set failed
 **********************************************************************************************************/
 int tls_get_rx_iq_phase(u8 *rxPhase)
 {
@@ -459,8 +459,8 @@ int tls_get_rx_iq_phase(u8 *rxPhase)
 *
 * Arguments  : 	rxPhase
 *
-* Returns    : 	TLS_EFUSE_STATUS_OK			set success
-* 			TLS_EFUSE_STATUS_EIO		set failed
+* Returns    : 	0		set success
+* 				-1		set failed
 **********************************************************************************************************/
 int tls_set_rx_iq_phase(u8 *rxPhase)
 {
@@ -501,15 +501,12 @@ int tls_rf_vcg_ctrl_op(u8 *vcg, u8 flag)
 *
 * Arguments  : 	txgain		tx gain
 *
-* Returns    : 	TLS_EFUSE_STATUS_OK			get success
-* 			TLS_EFUSE_STATUS_EIO		get failed
+* Returns    : 	0		get success
+* 				-1		get failed
 **********************************************************************************************************/
 int tls_get_tx_gain(u8 *txgain)
 {
-
-	tls_ft_param_get(CMD_TX_GAIN, txgain, TX_GAIN_LEN);
-		
-	return TLS_EFUSE_STATUS_OK;	
+	return tls_ft_param_get(CMD_TX_GAIN, txgain, TX_GAIN_LEN);
 }
 
 /**********************************************************************************************************
@@ -517,15 +514,12 @@ int tls_get_tx_gain(u8 *txgain)
 *
 * Arguments  : 	txgain		tx gain
 *
-* Returns    : 	TLS_EFUSE_STATUS_OK			set success
-* 			TLS_EFUSE_STATUS_EIO		set failed
+* Returns    : 	0			set success
+* 				-1			set failed
 **********************************************************************************************************/
 int tls_set_tx_gain(u8 *txgain)
 {
-
-	tls_ft_param_set(CMD_TX_GAIN, txgain, TX_GAIN_LEN);
-	
-	return TLS_EFUSE_STATUS_OK;	
+	return tls_ft_param_set(CMD_TX_GAIN, txgain, TX_GAIN_LEN);	
 }
 
 #define FF_n16	0xff, 0xff, 0xff, 0xff, \

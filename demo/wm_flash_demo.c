@@ -13,7 +13,7 @@
 #include "wm_internal_flash.h"
 #include "wm_demo.h"
 
-#if DEMO_FLASH 
+#if DEMO_FLASH
 
 #define TEST_FLASH_BUF_SIZE    4000
 
@@ -23,7 +23,7 @@ int flash_demo(void)
     u8 *read_buf = NULL;
     u16 i;
 
-	tls_fls_init();									//初始化
+    tls_fls_init();									//initialize flash driver
 
     write_buf = tls_mem_alloc(TEST_FLASH_BUF_SIZE);
     if (NULL == write_buf)
@@ -32,12 +32,12 @@ int flash_demo(void)
         return WM_FAILED;
     }
 
-    for (i = 0;i < TEST_FLASH_BUF_SIZE;i ++)
+    for (i = 0; i < TEST_FLASH_BUF_SIZE; i ++)
     {
         write_buf[i] = i + 1;
     }
 
-    tls_fls_write(0xF0303, write_buf, 1247);			/**为了测试跨sector写flash的正确性*/
+    tls_fls_write(0xF0303, write_buf, 1247);			/**verifying cross sector writing*/
     tls_fls_write(0xF0303 + 1247, write_buf + 1247, 2571);
     tls_fls_write(0xF0303 + 1247 + 2571, write_buf + 1247 + 2571, 182);
 

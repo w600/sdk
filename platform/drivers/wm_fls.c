@@ -46,12 +46,15 @@ int tls_spifls_read_id(u32 * id)
 /**
  * @brief          This function is used to read data from the flash.
  *
- * @param[in]      addr                 is byte offset addr for read from the flash.
+ * @param[in]      addr                  is byte offset addr for read from the flash.
  * @param[in]      buf                   is user for data buffer of flash read
  * @param[in]      len                   is byte length for read.
  *
  * @retval         TLS_FLS_STATUS_OK	    if read sucsess
  * @retval         TLS_FLS_STATUS_EIO	    if read fail
+ * @retval		   TLS_FLS_STATUS_EPERM     if flash driver module not beed installed
+ * @retval         TLS_FLS_STATUS_ENODRV    if the current spi flash driver not installed
+ * @retval         TLS_FLS_STATUS_EINVAL    if parameter error
  *
  * @note           None
  */
@@ -181,11 +184,12 @@ int tls_spifls_page_write(u32 page, u8 * buf, u32 page_cnt)
  * @param[in]      buf       is the data buffer want to write to flash
  * @param[in]      len       is the byte length want to write
  *
- * @retval         TLS_FLS_STATUS_OK	           if write flash success
- * @retval         TLS_FLS_STATUS_EPERM	    if flash struct point is null
+ * @retval         TLS_FLS_STATUS_OK	        if write flash success
+ * @retval         TLS_FLS_STATUS_EPERM	    	if flash struct point is null
  * @retval         TLS_FLS_STATUS_ENODRV	    if flash driver is not installed
  * @retval         TLS_FLS_STATUS_EINVAL	    if argument is invalid
  * @retval         TLS_FLS_STATUS_EIO           if io error
+ * @retval         TLS_FLS_STATUS_ENOMEM        if memory allocation fail
  *
  * @note           None
  */
@@ -194,8 +198,11 @@ int tls_spifls_write(u32 addr, u8 * buf, u32 len)
     u8 *cache;
     int err;
     u32 sector_addr;
-    u32 sector_num;
+    u32 sector_off;
+    u32 sector_remain;
+    u32 cntforFF;
     u32 write_bytes;
+    u32 write_page = 0;
     u32 i;
     struct tls_fls_drv *drv;
 
@@ -218,14 +225,6 @@ int tls_spifls_write(u32 addr, u8 * buf, u32 len)
     }
     tls_os_sem_acquire(spi_fls->fls_lock, 0);
     drv = spi_fls->current_drv;
-    write_bytes =
-        ((addr + len) > drv->total_size) ? (drv->total_size - addr) : len;
-    sector_addr = addr / drv->sector_size;
-    sector_num = (addr + write_bytes - 1) / drv->sector_size - sector_addr + 1;
-
-    TLS_DBGPRT_FLASH_INFO
-        ("write to flash: sector address - %d, sectors - %d.\n", sector_addr,
-         sector_num);
 
     err = TLS_FLS_STATUS_OK;
 
@@ -238,58 +237,94 @@ int tls_spifls_write(u32 addr, u8 * buf, u32 len)
         return TLS_FLS_STATUS_ENOMEM;
     }
 
-    for (i = 0; i < sector_num; i++)
+    sector_addr = addr / drv->sector_size;				//Section addr
+    sector_off = (addr % drv->sector_size);			//Offset in section
+    sector_remain = drv->sector_size - sector_off;
+    write_bytes = len;
+    TLS_DBGPRT_FLASH_INFO("write to flash: sector address - %d, sector off - %x.\n", sector_addr,
+                          sector_off);
+
+    if(write_bytes <= sector_remain)
     {
-        TLS_DBGPRT_FLASH_INFO("firstly, read the sector - %d to cache.\n",
-                              sector_addr + i);
-        err = drv->read((sector_addr + i) * drv->sector_size, cache, drv->sector_size);
+        sector_remain = write_bytes;								//Not bigger with remain size in section
+    }
+    while (1)
+    {
+        TLS_DBGPRT_FLASH_INFO("firstly, read the sector - %d to cache.\n", sector_addr);
+        err = drv->read(sector_addr * drv->sector_size, cache, drv->sector_size);
         if (err != TLS_FLS_STATUS_OK)
         {
-            tls_os_sem_release(spi_fls->fls_lock);
-            TLS_DBGPRT_ERR("flash read fail(sector %d)!\n", (sector_addr + i));
+            TLS_DBGPRT_ERR("flash read fail(sector %d)!\n", sector_addr);
             break;
         }
 
-		if (1 == sector_num){/*flash write only in one sector*/
-			MEMCPY(cache + (addr%drv->sector_size), buf, write_bytes);	
-			buf += write_bytes;
-			write_bytes = 0;			
-		}else{/*flash write through some sectors*/
-			if (0 == i) {
-				MEMCPY(cache+(addr%drv->sector_size), buf, drv->sector_size - (addr%drv->sector_size));
-				buf += drv->sector_size - (addr%drv->sector_size);
-				write_bytes -= drv->sector_size - (addr%drv->sector_size);
-			} else if (i == (sector_num - 1)) {
-				MEMCPY(cache, buf, write_bytes);
-				buf += write_bytes;
-				write_bytes = 0;
-			} else {
-				MEMCPY(cache, buf, drv->sector_size);
-				buf += drv->sector_size;
-				write_bytes -= drv->sector_size;
-			}
-		}
-
-        TLS_DBGPRT_FLASH_INFO("second, erase the sector - %d.\n",
-                              sector_addr + i);
-        err = drv->erase(sector_addr + i);
-        if (err != TLS_FLS_STATUS_OK)
+        cntforFF = 0;
+        for(i = 0; i < sector_remain; i++)
         {
-            tls_os_sem_release(spi_fls->fls_lock);
-            TLS_DBGPRT_ERR("flash erase fail(sector %d)!\n", (sector_addr + i));
-            break;
+            if(cache[i + sector_off] == 0xFF)
+            {
+                cntforFF++;
+            }
+            cache[i + sector_off] = buf[i];
         }
 
-        TLS_DBGPRT_FLASH_INFO
-            ("finnaly, write the data in cache to the sector - %d.\n",
-             sector_addr + i);
-        err = tls_spifls_page_write((sector_addr +i) * (drv->sector_size / drv->page_size),
-                            cache, drv->sector_size / drv->page_size);
-        if (err != TLS_FLS_STATUS_OK)
+        //If the flash address to be written is all 0xFF, then erase sector is not necessary;
+        if( cntforFF != sector_remain)
         {
-            tls_os_sem_release(spi_fls->fls_lock);
-            TLS_DBGPRT_ERR("flash write fail(sector %d)!\n", (sector_addr + i));
+            TLS_DBGPRT_FLASH_INFO("second, erase the sector - %d.\n", sector_addr);
+            err = drv->erase(sector_addr);
+            if (err != TLS_FLS_STATUS_OK)
+            {
+                TLS_DBGPRT_ERR("flash erase fail(sector %d)!\n", sector_addr);
+                break;
+            }
+        }
+
+        if( (cntforFF != sector_remain ) || ((sector_off == 0) && (sector_remain == drv->sector_size)))
+        {
+            for(i = 0; i < (drv->sector_size / drv->page_size); i++)
+            {
+                err = drv->page_write(sector_addr * drv->sector_size / drv->page_size + i, &cache[i * drv->page_size]);
+                if (err != TLS_FLS_STATUS_OK)
+                {
+                    TLS_DBGPRT_ERR("flash page write fail(page %d)!\n", i);
+                    tls_mem_free(cache);
+                    tls_os_sem_release(spi_fls->fls_lock);
+                    return err;
+                }
+            }
+        }
+        else
+        {
+            write_page = (sector_off / drv->page_size) == 15 ? 16 : (sector_off + sector_remain) / drv->page_size + 1;
+            //As long as this sector is not erased in this round, we only program the changed pages instead of all of them.
+            for(i = (sector_off / drv->page_size); i < write_page; i++)
+            {
+                err = drv->page_write(sector_addr * drv->sector_size / drv->page_size + i, &cache[i * drv->page_size]);
+                if (err != TLS_FLS_STATUS_OK)
+                {
+                    TLS_DBGPRT_ERR("flash page write fail(page %d)!\n", i);
+                    tls_mem_free(cache);
+                    tls_os_sem_release(spi_fls->fls_lock);
+                    return err;
+                }
+            }
+        }
+
+        if(write_bytes == sector_remain)
+        {
             break;
+        }
+        else
+        {
+            sector_addr++;
+            sector_off = 0;
+            buf += sector_remain;
+            write_bytes -= sector_remain;
+            if(write_bytes > (drv->sector_size))
+                sector_remain = drv->sector_size;
+            else
+                sector_remain = write_bytes;					//Next section will finish
         }
     }
 

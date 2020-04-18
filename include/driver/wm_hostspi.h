@@ -182,7 +182,7 @@ struct tls_spi_port
  * @param[in]      None
  *
  * @retval         TLS_SPI_STATUS_OK			if initialize success
- * @retval         TLS_SPI_STATUS_EBUSY		if SPI is already initialized
+ * @retval         TLS_SPI_STATUS_EBUSY			if SPI is already initialized
  * @retval         TLS_SPI_STATUS_ENOMEM		if malloc SPI memory fail
  *
  * @note           None
@@ -214,7 +214,7 @@ int tls_spi_setup(u8 mode, u8 cs_active, u32 fclk);
  *
  * @retval         TLS_SPI_STATUS_OK			if write success.
  * @retval         TLS_SPI_STATUS_EINVAL		if argument is invalid.
- * @retval         TLS_SPI_STATUS_ENOMEM			if there is no enough memory.
+ * @retval         TLS_SPI_STATUS_ENOMEM		if there is no enough memory.
  * @retval         TLS_SPI_STATUS_ESHUTDOWN		if SPI driver does not installed.
  *
  * @note           None
@@ -256,10 +256,10 @@ int tls_spi_read_with_cmd(const u8 * txbuf, u32 n_tx, u8 * rxbuf, u32 n_rx);
 /**
  * @brief          This function is used to synchronous write 32bit command then write data from SPI.
  *
- * @param[in]      cmd                    is the command data.
+ * @param[in]      cmd                   is the command data.
  * @param[in]      n_cmd                 is the command len,can not bigger than four
- * @param[in]      txbuf                   is the write data buffer.
- * @param[in]      n_tx                    is the write data length.
+ * @param[in]      txbuf                 is the write data buffer.
+ * @param[in]      n_tx                  is the write data length.
  *
  * @retval         TLS_SPI_STATUS_OK			if write success.
  * @retval         TLS_SPI_STATUS_EINVAL		if argument is invalid.

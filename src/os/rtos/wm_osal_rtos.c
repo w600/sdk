@@ -1068,12 +1068,17 @@ u32 os_cnter = 0;
 *
 ************************************************************************************************************************
 */
- int tls_os_timer_delete(tls_os_timer_t *timer)
+ tls_os_status_t tls_os_timer_delete(tls_os_timer_t *timer)
 {
 	int ret = 0;
+	tls_os_status_t os_status;
 	/* xTimer is already active - delete it. */
 	ret = xTimerDelete((xTIMER *)timer, 10);
-	return ret;
+	if (pdPASS == ret)
+        os_status = TLS_OS_SUCCESS;
+    else
+        os_status = TLS_OS_ERROR;
+	return os_status;
 }
 
 

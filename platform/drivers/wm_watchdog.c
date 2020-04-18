@@ -13,14 +13,18 @@
 #include "wm_cpu.h"
 #include "wm_watchdog.h"
 
-
+static u32 wdg_jumpclear_flag = 0; /*0:donot jump clear, 1: jump clear, 2:close wdg*/
 void WDG_IRQHandler(void)
 {
-	printf("WDG IRQ\n");
+    show_taskstack();
+    printf("heap:%d\r\n", xPortGetFreeHeapSize());
+    extern void tls_os_disp_task_stat_info(void);
+    tls_os_disp_task_stat_info();
+    while(1);
 }
 
 /**
- * @brief          This function is used to clear watchdog
+ * @brief          This function is used to clear watchdog irq in case watchdog reset
  *
  * @param          None
  *
@@ -30,7 +34,10 @@ void WDG_IRQHandler(void)
  */
 void tls_watchdog_clr(void)
 {
-	tls_reg_write32(HR_WDG_INT_CLR, 0x01);
+	if (0 == wdg_jumpclear_flag)
+	{
+	    tls_reg_write32(HR_WDG_INT_CLR, 0x01);
+	}
 }
 
 /**
@@ -52,6 +59,85 @@ void tls_watchdog_init(u32 usec)
 	
 	tls_reg_write32(HR_WDG_LOAD_VALUE, sysclk.apbclk * usec); 		/* 40M dominant frequency: 40 * 10^6 * (usec / 10^6) */
 	tls_reg_write32(HR_WDG_CTRL, 0x3);             /* enable irq & reset */
+}
+
+
+/**
+ * @brief          This function is used to deinit watchdog
+ *
+ * @param[in]     None
+ *
+ * @return         None
+ *
+ * @note           None
+ */
+void tls_watchdog_deinit(void)
+{
+	tls_irq_disable(WATCHDOG_INT);
+	tls_reg_write32(HR_WDG_CTRL, 0);	
+	tls_reg_write32(HR_WDG_INT_CLR, 0x01);
+}
+
+/**
+ * @brief          This function is used to start calculating elapsed time. 
+ *
+ * @param[in]      None
+ *
+ * @return         elapsed time, unit:millisecond
+ *
+ * @note           None
+ */
+void tls_watchdog_start_cal_elapsed_time(void)
+{
+	if (tls_reg_read32(HR_WDG_CTRL)&0x3)
+	{
+		wdg_jumpclear_flag = 1;
+		tls_reg_write32(HR_WDG_INT_CLR, 0x01);
+	}
+	else
+	{
+		wdg_jumpclear_flag = 2;
+		tls_watchdog_init(5*1000*1000);
+	}
+}
+
+/**
+ * @brief          This function is used to stop calculating & return elapsed time. 
+ *
+ * @param[in]     none
+ *
+ * @return         elapsed time, unit:millisecond
+ *
+ * @note           None
+ */
+u32 tls_watchdog_stop_cal_elapsed_time(void)
+{
+#define RT_TIME_BASE (40)
+	u32 val = 0;
+
+	switch (wdg_jumpclear_flag)
+	{
+		case 1:
+		{
+			val = (tls_reg_read32(HR_WDG_LOAD_VALUE) - tls_reg_read32(HR_WDG_CUR_VALUE))/RT_TIME_BASE;
+			wdg_jumpclear_flag = 0;
+		}
+		break;
+		
+		case 2:
+		{
+			val = (tls_reg_read32(HR_WDG_LOAD_VALUE) - tls_reg_read32(HR_WDG_CUR_VALUE))/RT_TIME_BASE;
+			wdg_jumpclear_flag = 0;
+			tls_watchdog_deinit();
+		}
+		break;
+
+		default:
+			wdg_jumpclear_flag = 0;
+			break;
+	}
+
+	return val;	
 }
 
 /**

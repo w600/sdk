@@ -17,7 +17,7 @@ sinclude $(TOP_DIR)/tools/tool_chain.def
 
 TARGET = w600
 
-USE_LIB=1
+USE_LIB=0
 
 #EXTRA_CCFLAGS += -u
 ifndef PDIR # {

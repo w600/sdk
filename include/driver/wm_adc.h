@@ -94,11 +94,11 @@ typedef struct adc_st{
  * @brief		This function is used to init ADC
  *
  * @param[in]	ifusedma		if use dma
- * @param[in]	dmachannel	dma channel
+ * @param[in]	dmachannel		dma channel
  *
  * @return		None
  *
- * @note			If the requested dma channel is already used by other task, system will auto use other dma channel.	
+ * @note		If the requested dma channel is already used by other task, system will auto use other dma channel.	
  */
 void tls_adc_init(u8 ifusedma,u8 dmachannel);
 
@@ -113,7 +113,7 @@ void tls_adc_init(u8 ifusedma,u8 dmachannel);
  *
  * @return		None
  *
- * @note			None
+ * @note		None
  */
 void tls_adc_irq_register(int inttype, void (*callback)(u16 *buf, u16 len));
 
@@ -127,7 +127,7 @@ void tls_adc_irq_register(int inttype, void (*callback)(u16 *buf, u16 len));
  *
  * @return		None
  *
- * @note			None
+ * @note		None
  */
 void tls_adc_clear_irq(int inttype);
 
@@ -140,7 +140,7 @@ void tls_adc_clear_irq(int inttype);
  *
  * @return	     None
  *
- * @note		     None
+ * @note		 None
  */
 void tls_adc_start_with_dma(int Channel, int Length);
 
@@ -151,7 +151,7 @@ void tls_adc_start_with_dma(int Channel, int Length);
  *
  * @return		 None
  *
- * @note			 None
+ * @note		 None
  */
 void tls_adc_start_with_cpu(int Channel);
 
@@ -162,7 +162,7 @@ void tls_adc_start_with_cpu(int Channel);
  *
  * @return		 None
  *
- * @note			 None
+ * @note		 None
  */
 void tls_adc_enable_calibration_buffer_offset(void);
 
@@ -173,7 +173,7 @@ void tls_adc_enable_calibration_buffer_offset(void);
  *
  * @return		 None
  *
- * @note			 None
+ * @note		 None
  */
 void tls_adc_voltage_start_with_cpu(void);
 
@@ -184,7 +184,7 @@ void tls_adc_voltage_start_with_cpu(void);
  *
  * @return		 None
  *
- * @note			 None
+ * @note		 None
  */
 void tls_adc_temp_offset_with_cpu(u8 calenflag);
 
@@ -193,9 +193,9 @@ void tls_adc_temp_offset_with_cpu(u8 calenflag);
  *
  * @param[in]	 None
  *
- * @return		 None
+ * @return		 The value of adc result
  *
- * @note			 None
+ * @note		 The 14th bit of the return value is the symbol bit
  */
 u16 tls_read_adc_result(void);
 
@@ -206,7 +206,7 @@ u16 tls_read_adc_result(void);
  *
  * @return		 None
  *
- * @note			 None
+ * @note		 None
  */
 void tls_adc_stop(int ifusedma);
 
@@ -219,7 +219,7 @@ void tls_adc_stop(int ifusedma);
  *
  * @return		 None
  *
- * @note			 None
+ * @note		 None
  */
 void tls_adc_config_cmp_reg(int cmp_data, int cmp_pol);
 
@@ -227,12 +227,12 @@ void tls_adc_config_cmp_reg(int cmp_data, int cmp_pol);
  * @brief		 This function is used to set adc reference source
  *
  * @param[in]	 ref
- *                       ADC_REFERENCE_EXTERNAL
- *				ADC_REFERENCE_INTERNAL 
+ *               ADC_REFERENCE_EXTERNAL
+ *				 ADC_REFERENCE_INTERNAL 
  *
  * @return		 None
  *
- * @note			 None
+ * @note		 None
  */
 void tls_adc_reference_sel(int ref);
 
@@ -243,7 +243,7 @@ void tls_adc_reference_sel(int ref);
  *
  * @return		 None
  *
- * @note			 None
+ * @note		 None
  */
 void tls_adc_set_clk(int div);
 
@@ -256,7 +256,7 @@ void signedToUnsignedData(u16 *adcValue, u16 *offset);
  *
  * @return		 None
  *
- * @note			 None
+ * @note		 None
  */
 void tls_adc_buffer_bypass_set(u8 isset);
 
@@ -271,7 +271,7 @@ void tls_adc_buffer_bypass_set(u8 isset);
  *
  * @return		 None
  *
- * @note			 None
+ * @note		 None
  */
  void tls_adc_cmp_start(int Channel, int cmp_data, int cmp_pol);
 

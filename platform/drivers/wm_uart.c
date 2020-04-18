@@ -44,7 +44,7 @@ const u32 baud_rates[] = {
 static void tls_uart_tx_enable(struct tls_uart_port *port);
 static void tls_uart_tx_chars(struct tls_uart_port *port);
 
-void Uart0Init(void)
+void Debug_UartInit(void)
 {
     u32 bd;
 
@@ -58,22 +58,30 @@ void Uart0Init(void)
 /* 如果APB时钟是40MHz， */
 /* 波特率寄存器的值设置为 115200 : 21 */
 /* 9600bps : 260 */
+	bd = (apbclk / (16 * 115200) -
+		  1) | (((apbclk % (115200 * 16)) * 16 / (115200 * 16)) << 16);
+	#if WM_CONFIG_DEBUG_UART1
+		{
+			tls_reg_write32(HR_UART1_BAUD_RATE_CTRL, bd);
+		/* Line control register : Normal,No parity,1 stop,8 bits, only use tx */
+			tls_reg_write32(HR_UART1_LINE_CTRL, ULCON_WL8 | ULCON_TX_EN);
+		}
+
+	#elif WM_CONFIG_DEBUG_UART2
+	{
+        tls_reg_write32(HR_UART2_BAUD_RATE_CTRL, bd);
+    /* Line control register : Normal,No parity,1 stop,8 bits, only use tx */
+        tls_reg_write32(HR_UART2_LINE_CTRL, ULCON_WL8 | ULCON_TX_EN);
+	}
+	#else
     {
-        bd = (apbclk / (16 * 115200) -
-              1) | (((apbclk % (115200 * 16)) * 16 / (115200 * 16)) << 16);
         tls_reg_write32(HR_UART0_BAUD_RATE_CTRL, bd);
     /* Line control register : Normal,No parity,1 stop,8 bits, only use tx */
         tls_reg_write32(HR_UART0_LINE_CTRL, ULCON_WL8 | ULCON_TX_EN);
 
-    /* disable auto flow control */
-        tls_reg_write32(HR_UART0_FLOW_CTRL, 0);
-    /* disable dma */
-        tls_reg_write32(HR_UART0_DMA_CTRL, 0);
-    /* one byte tx */
-        tls_reg_write32(HR_UART0_FIFO_CTRL, 0);
-    /* disable interrupt */
-        tls_reg_write32(HR_UART0_INT_MASK, 0xFF);
     }
+	
+	#endif
 }
 
 void UartRegInit(int uart_no)
@@ -967,30 +975,33 @@ int tls_uart_port_init(u16 uart_no, tls_uart_options_t * opts, u8 modeChoose)
 
 
     UartRegInit(uart_no);
+	if (uart_no > TLS_UART_2)
+	{
+		return WM_FAILED;
+	}
+
+	if (uart_port[uart_no].recv.buf)
+	{
+		tls_mem_free(uart_port[uart_no].recv.buf);
+		uart_port[uart_no].recv.buf = NULL;
+	}
+	
+	memset(&uart_port[uart_no], 0, sizeof(struct tls_uart_port));
+	port = &uart_port[uart_no];
 
     if (TLS_UART_0 == uart_no)
     {
-        memset(&uart_port[0], 0, sizeof(struct tls_uart_port));
-        port = &uart_port[0];
         port->regs = (TLS_UART_REGS_T *) HR_UART0_BASE_ADDR;
     }
     else if (TLS_UART_1 == uart_no)
     {
-        memset(&uart_port[1], 0, sizeof(struct tls_uart_port));
-        port = &uart_port[1];
         port->regs = (TLS_UART_REGS_T *) HR_UART1_BASE_ADDR;
     }
 	else if (TLS_UART_2 == uart_no)
 	{
-		memset(&uart_port[2], 0, sizeof(struct tls_uart_port));
-        port = &uart_port[2];
         port->regs = (TLS_UART_REGS_T *) HR_UART2_BASE_ADDR;
 		(modeChoose == 1)?(port->regs->UR_LC |= (1 << 24)):(port->regs->UR_LC &= ~(0x1000000));
 	}
-    else
-    {
-        return WM_FAILED;
-    }
 
     port->uart_no = uart_no;
 
@@ -1083,7 +1094,8 @@ void tls_uart_tx_callback_register(u16 uart_no,
  * @param[in] uart_no: is the uart numer.
  * @param[in] buf: is the user buffer.
  * @param[in] readsize: is the user read size.
- * @retval
+ * @retval -1:failed
+ *         other:real length to written in buf
  */
 int tls_uart_read(u16 uart_no, u8 * buf, u16 readsize)
 {
@@ -1107,9 +1119,9 @@ int tls_uart_read(u16 uart_no, u8 * buf, u16 readsize)
     {
         buflen = readsize;
     }
-    else                        // 如果数据不够，直接返回0
+    else                        // 如果数据不够，返回实际读取到的长度
     {
-        return 0;
+        buflen = data_cnt;
     }
     if ((recv->tail + buflen) > TLS_UART_RX_BUF_SIZE)
     {
@@ -1286,9 +1298,10 @@ static s16 tls_uart_tx_cb(struct tls_uart_port *port)
 /**
  * @brief          This function is used to transfer data throuth DMA.
  *
- * @param[in]      buf                is a buf for saving user data
+ * @param[in]      buf              is a buf for saving user data
  * @param[in]      writesize        is the user data length
- * @param[in]      cmpl_callback  function point,when the transfer is completed, the function will be called.
+ * @param[in]      cmpl_callback  	function point,when the transfer is completed, the function will be called.
+ * @param[in]      uart_no      	is the uart number
  *
  * @retval         WM_SUCCESS    success
  * @retval         WM_FAILED       failed
@@ -1537,6 +1550,44 @@ int tls_uart_dma_off(u16 uart_no)
 {
 	uart_port[uart_no].tx_dma_on = FALSE;
 	return WM_SUCCESS;
+}
+
+int tls_uart_output_char(int ch)
+{
+#if WM_CONFIG_DEBUG_UART1
+	tls_reg_write32(HR_UART1_INT_MASK, 0x3);
+	if(ch == '\n')	
+	{
+		while (tls_reg_read32(HR_UART1_FIFO_STATUS)&0x3F);
+		tls_reg_write32(HR_UART1_TX_WIN, '\r');
+	}
+	while(tls_reg_read32(HR_UART1_FIFO_STATUS)&0x3F);
+	tls_reg_write32(HR_UART1_TX_WIN, (char)ch);
+	tls_reg_write32(HR_UART1_INT_MASK, 0x0);
+
+#elif  WM_CONFIG_DEBUG_UART2
+	tls_reg_write32(HR_UART2_INT_MASK, 0x3);
+	if(ch == '\n')	
+	{
+		while (tls_reg_read32(HR_UART2_FIFO_STATUS)&0x3F);
+		tls_reg_write32(HR_UART2_TX_WIN, '\r');
+	}
+	while(tls_reg_read32(HR_UART2_FIFO_STATUS)&0x3F);
+	tls_reg_write32(HR_UART2_TX_WIN, (char)ch);
+	tls_reg_write32(HR_UART2_INT_MASK, 0x0);
+	
+#else
+	tls_reg_write32(HR_UART0_INT_MASK, 0x3);
+    if(ch == '\n')  
+	{
+		while (tls_reg_read32(HR_UART0_FIFO_STATUS)&0x3F);
+		tls_reg_write32(HR_UART0_TX_WIN, '\r');
+    }
+    while(tls_reg_read32(HR_UART0_FIFO_STATUS)&0x3F);
+    tls_reg_write32(HR_UART0_TX_WIN, (char)ch);
+    tls_reg_write32(HR_UART0_INT_MASK, 0x0);
+#endif		
+    return ch;
 }
 #endif
 //TLS_CONFIG_UART

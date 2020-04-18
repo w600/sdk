@@ -3,32 +3,32 @@
 #include "wm_type_def.h"
 typedef struct _ltpt_rx_info
 {
-	int cnt_total;
-	int cnt_good;
-	int cnt_bad;
-	unsigned char valid;
-	unsigned char snr;
-	unsigned char rcpi;
-	unsigned char rate;
-	unsigned char channel;
-	unsigned char bandwidth;
-	unsigned char bprocess;
+	volatile int cnt_total;
+	volatile int cnt_good;
+	volatile int cnt_bad;
+	volatile unsigned char valid;
+	volatile unsigned char snr;
+	volatile unsigned char rcpi;
+	volatile unsigned char rate;
+	volatile unsigned char channel;
+	volatile unsigned char bandwidth;
+	volatile unsigned char bprocess;
 }ltpt_rx_info;
 
 typedef struct _ltpt_tx_info
 {
-	int cnt_total;
-	int packetcount;	
-	int psdulen;    	
+	volatile int cnt_total;
+	volatile int packetcount;	
+	volatile int psdulen;    	
 	/* input parameters */
-	unsigned char txgain;      
-	unsigned char datarate;
-	unsigned char gimode;
-	unsigned char greenfield;
-	unsigned char rifs;
-	unsigned char bprocess;	
-	unsigned char channel;
-	unsigned char longpreamble;
+	volatile unsigned char txgain;      
+	volatile unsigned char datarate;
+	volatile unsigned char gimode;
+	volatile unsigned char greenfield;
+	volatile unsigned char rifs;
+	volatile unsigned char bprocess;	
+	volatile unsigned char channel;
+	volatile unsigned char longpreamble;
 }ltpt_tx_info;
 
 
@@ -68,7 +68,7 @@ enum Rate
 	MCS32 = 0x0232,
 };
 
-extern int g_ltpt_testmode;
+extern volatile int g_ltpt_testmode;
 extern ltpt_rx_info *g_ltpt_rxinfo;
 extern ltpt_tx_info *g_ltpt_txinfo;
 extern unsigned char hed_rf_txgainmap[];
@@ -86,4 +86,5 @@ void tls_rx_litepoint_test_result(u32 *total, u32 *goodcnt, u32 *badcnt);
 void tls_tx_litepoint_param_update(u8 Gain, u8 TxRate);
 void tls_rx_litepoint_test_rate(u8 rate);
 void tls_rx_litepoint_pwr_result(u32 *valid, u32 *snr, u32 *rcpi);
+void tls_tx_litepoint_period(u32 period);
 #endif

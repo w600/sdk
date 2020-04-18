@@ -31,10 +31,10 @@ UNAME_S:=$(shell uname -s)
 # default use 1m flash
 
 ifeq ($(FLASH_SIZE), 2M)
-	IMG_TYPE:=3
+	IMG_TYPE:=2M
 	IMG_START:=100000
 else
-	IMG_TYPE:=0
+	IMG_TYPE:=1M
 	IMG_START:=90000
 endif
 
@@ -49,7 +49,7 @@ $$(LIBODIR)/$(1)$(LIB_EXT):  $$(BOOT_OBJS) $$(OBJS) $$(DEP_OBJS_$(1)) $$(DEP_LIB
 	@mkdir -p $$(LIBODIR)
 	$$(if $$(filter %$(LIB_EXT),$$?),mkdir -p $$(EXTRACT_DIR)_$(1))
 	$$(if $$(filter %$(LIB_EXT),$$?),cd $$(EXTRACT_DIR)_$(1); $$(foreach lib,$$(filter %$(LIB_EXT),$$?),$$(AR) $(ARFLAGS_2) $$(UP_EXTRACT_DIR)/$$(lib);))
-	$$(AR) $(ARFLAGS) $$@ $$(filter %.o,$$?) $$(if $$(filter %$(LIB_EXT),$$?),$$(EXTRACT_DIR)_$(1)/*.o)
+	@$$(AR) $(ARFLAGS) $$@ $$(filter %.o,$$?) $$(if $$(filter %$(LIB_EXT),$$?),$$(EXTRACT_DIR)_$(1)/*.o)
 	$$(if $$(filter %$(LIB_EXT),$$?),$$(RM) -r $$(EXTRACT_DIR)_$(1))
 endef
 
@@ -63,16 +63,15 @@ ifeq ($(COMPILE), gcc)
 else
 	$(LINK) $(LINKFLAGS)  $$(OBJS) $$(DEP_OBJS_$(1)) $$(DEP_LIBS_$(1)) $$(if $$(LINKFLAGS_$(1)),$$(LINKFLAGS_$(1)),$$(LINKFLAGS_DEFAULT)) $(MAP) $(INFO) $(LIST) -o $$@
 endif
-#	$$(CC) $$(LDFLAGS) $$(if $$(LINKFLAGS_$(1)),$$(LINKFLAGS_$(1)),$$(LINKFLAGS_DEFAULT) $$(OBJS) $$(DEP_OBJS_$(1)) $$(DEP_LIBS_$(1))) -o $$@
 endef
 
 $(BINODIR)/%.bin: $(IMAGEODIR)/%.out
 	@mkdir -p $(FIRMWAREDIR)
 	@mkdir -p $(FIRMWAREDIR)/$(TARGET)
 ifeq ($(COMPILE), gcc)
-	$(OBJCOPY) --output-target=binary -S -g -x -X -R .sbss -R .bss -R .reginfo -R .stack $(IMAGEODIR)/$(TARGET).out $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin	
+	@$(OBJCOPY) --output-target=binary -S -g -x -X -R .sbss -R .bss -R .reginfo -R .stack $(IMAGEODIR)/$(TARGET).out $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin	
 else
-	$(FROMELF) --bin -o  $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin $(IMAGEODIR)/$(TARGET).out  
+	@$(FROMELF) --bin -o  $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin $(IMAGEODIR)/$(TARGET).out  
 endif
 	@echo "Generate  $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin successully"
 
@@ -90,23 +89,18 @@ ifeq ($(UNAME_O),Darwin)
 	@echo "don't support mac"
 else
 	@echo "windows platform"
-	@$(SDK_TOOLS)/wm_gzip.exe  $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin
-	@$(SDK_TOOLS)/makeimg.exe  $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin "$(FIRMWAREDIR)/$(TARGET)/$(TARGET).img" $(IMG_TYPE) 0 "$(FIRMWAREDIR)/version.txt" $(IMG_START) 10100
-	@$(SDK_TOOLS)/makeimg.exe  $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin.gz "$(FIRMWAREDIR)/$(TARGET)/$(TARGET)_gz.img" $(IMG_TYPE) 1 "$(FIRMWAREDIR)/version.txt" $(IMG_START) 10100 $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin
-	@$(SDK_TOOLS)/makeimg_all.exe "$(FIRMWAREDIR)/secboot.img" "$(FIRMWAREDIR)/$(TARGET)/$(TARGET).img" "$(FIRMWAREDIR)/$(TARGET)/$(TARGET).fls"
-	@$(SDK_TOOLS)/makeimg_dbg.exe "$(FIRMWAREDIR)/$(TARGET)/$(TARGET).img" "$(IMAGEODIR)/$(TARGET).dbg"
+	@$(SDK_TOOLS)/wm_tool.exe -b $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin -sb $(FIRMWAREDIR)/secboot.img -fc compress -it $(IMG_TYPE) -ua $(IMG_START) -ra 10100 -df -o $(FIRMWAREDIR)/$(TARGET)/$(TARGET)
 endif
 endif
 	@cp $(IMAGEODIR)/$(TARGET).map $(FIRMWAREDIR)/$(TARGET)/$(TARGET).map
-#	@rm ./test.bin
-	@rm $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin.gz
-	@rm $(FIRMWAREDIR)/$(TARGET)/$(TARGET).img
+	@rm -f $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin
+	@rm -f $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin.gz
+	@rm -f $(FIRMWAREDIR)/$(TARGET)/$(TARGET).img
+	@rm -f $(FIRMWAREDIR)/$(TARGET)/$(TARGET)_dbg.img
 	@echo "use" $(FLASH_SIZE) "flash"
 	@echo "Build finish !!!"
 
-
 all: .subdirs $(BOOT_OBJS) $(OBJS) $(OLIBS) $(OIMAGES) $(OBINS) $(SPECIAL_MKTARGETS)
-
 
 clean:
 	$(foreach d, $(SUBDIRS), $(MAKE) -C $(d) clean;)
@@ -231,6 +225,7 @@ INCLUDES += -I $(TOP_DIR)/src/app/mdns/mdnscore
 INCLUDES += -I $(TOP_DIR)/src/network/lwip2.0.3/include
 INCLUDES += -I $(TOP_DIR)/src/app/ota
 INCLUDES += -I $(TOP_DIR)/src/app/libwebsockets-2.1-stable
+INCLUDES += -I $(TOP_DIR)/src/app/easylogger/inc
 
 INCLUDES += -I $(TOP_DIR)/demo
 INCLUDES += -I $(TOP_DIR)/lib

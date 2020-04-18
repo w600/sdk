@@ -21,7 +21,8 @@
 #include "iperf_queue.h"
 #include "wm_sockets.h"
 
-typedef u64 iperf_size_t;
+//typedef u64 iperf_size_t;
+typedef s64 iperf_size_t;
 //typedef int iperf_size_t;
 
 struct tht_param_1{

@@ -160,11 +160,7 @@ static int hspi_socket_recv(struct tls_hspi *hspi,
     {
         extaddr = (struct tls_hostif_extaddr *) (tx_desc->buf_addr[0] +
                                                  sizeof(struct tls_hostif_hdr));
-#if TLS_CONFIG_LWIP_VER2_0_3
 		extaddr->ip_addr = ip_addr_get_ip4_u32(&tx_msg->u.msg_udp.ip_addr);
-#else
-        extaddr->ip_addr = tx_msg->u.msg_udp.ip_addr.addr;
-#endif
         extaddr->remote_port = host_to_be16(tx_msg->u.msg_udp.port);
         extaddr->local_port = host_to_be16(tx_msg->u.msg_udp.localport);
     }
@@ -204,16 +200,11 @@ static int hspi_tx(struct hspi_tx_data *tx_data)
 #endif
     tx_desc = hspi->tls_slave_hspi->curr_tx_desc;
 
-    u32 wait_state = 0;
-
     while (tx_desc->valid_ctrl & BIT(31))
     {
-        if(wait_state ++ > 10000)
-        {
-            printf("tx time out !\r\n");
-            break;
-        }
+        ;
     }
+
     switch (tx_msg->type)
     {
         case HOSTIF_TX_MSG_TYPE_EVENT:
@@ -719,7 +710,6 @@ int tls_hspi_init(void)
 
     tls_param_get(TLS_PARAM_ID_USRINTF, &mode, TRUE);
 
-    wm_hspi_gpio_config(0);
     tls_slave_spi_init();
     tls_set_high_speed_interface_type(mode);
     hspi->tls_slave_hspi = &g_slave_hspi;

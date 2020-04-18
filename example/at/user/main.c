@@ -13,6 +13,10 @@
 *****************************************************************************/ 
 #include "wm_include.h"
 
+void pre_gpio_config()
+{
+	
+}
 
 void UserMain(void)
 {

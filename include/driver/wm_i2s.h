@@ -89,7 +89,7 @@ extern "C" {
 #define I2S_INT_MASK_RXDONE	        ((uint16_t)0x008)                   /*!< Receive Done Interrupt Mask */
 #define I2S_INT_MASK_RXTH		    ((uint16_t)0x004)                   /*!< Receive FIFO Threshold level Interrupt MASK */
 #define I2S_INT_MASK_RXOV		    ((uint16_t)0x002)                   /*!< Receive FIFO Overflow Interrupt MASK */
-#define I2S_INT_MASK_RXUD		    ((uint16_t)0x002)                   /*!< Receive FIFO Underflow Interrupt MASK */
+#define I2S_INT_MASK_RXUD		    ((uint16_t)0x001)                   /*!< Receive FIFO Underflow Interrupt MASK */
 
 #define I2S_FLAG_TX_Pos			    (12)                                /*!< INT_SRC: TX interrupt flag Position */
 #define I2S_FLAG_RX_Pos			    (11)                                /*!< INT_SRC: RX interrupt flag Position */
@@ -237,8 +237,8 @@ typedef struct _tls_i2s_port
  */
 
 /**
- * @brief 	This function is used to initial i2s port.
- * @param[in] opts	the i2s setting options,if this param is NULL,this function will use the default options.
+ * @brief 		This function is used to initial i2s port.
+ * @param[in] 	opts	the i2s setting options,if this param is NULL,this function will use the default options.
  * @retval
  *	- \ref WM_SUCCESS
  *	- \ref WM_FAILED
@@ -247,14 +247,14 @@ typedef struct _tls_i2s_port
 int tls_i2s_port_init(tls_i2s_options_t *opts);
 
 /**
- * @brief 	This function is used to config i2s port.
+ * @brief 			This function is used to config i2s port.
  * @param[in] opts	is the i2s setting options
  *
  */
 void tls_i2s_config(tls_i2s_options_t *opts);
 
 /**
- * @brief 	Set the frequency of the i2s port.
+ * @brief 			Set the frequency of the i2s port.
  * @param[in] freq	the required frequency of the i2s module
  * @retval
  *
@@ -262,13 +262,10 @@ void tls_i2s_config(tls_i2s_options_t *opts);
 void tls_i2s_set_freq(uint32_t freq);
 
 /**
- * @brief
- * 	set the frequency of the i2s port.
+ * @brief	set the frequency of the i2s port.
  *
- * @param[in] freq
- *	the required frequency of the i2s module
- * @param[in] exclk
- *	the frequency of the external clock
+ * @param[in] freq		the required frequency of the i2s module
+ * @param[in] exclk		the frequency of the external clock
  *
  * @retval
  *
@@ -290,7 +287,7 @@ int tls_i2s_tx_block(uint32_t *buf, uint16_t len);
  * @param[in] buf	pointer to data buffer
  * @param[in] len	bytes of data to be sent.
  * @param[in] tx_callback   function pointer to a callback,when the data have been sent this specified function will be called
- *  @retval
+ * @retval
  *     - \ref WM_SUCCESS
  *     - \ref WM_FAILED
  *  @note
@@ -314,7 +311,7 @@ int tls_i2s_tx_nonblock(uint32_t *buf, uint16_t len, void (*tx_callback)(u16 len
 int tls_i2s_rx_nonblock(uint32_t *buf, uint16_t len, void (*rx_callback)(u16 len));
 
 /**
- * @brief	This function is used to receive data in DMA mode.
+ * @brief	This function is used to transmit data in DMA mode.
  * @param[in] buf	pointer to data buffer
  * @param[in] len	bytes of data to be sent.
  * @param[in] callback     function pointer to a callback,when the data have been sent this specified function will be called
@@ -331,10 +328,10 @@ int tls_i2s_tx_dma(uint32_t * addr, uint16_t len, tls_i2s_callback callback);
  * @param[in] addr	pointer to data buffer
  * @param[in] len	bytes of data to be sent.
  * @param[in] callback   function pointer to a callback,when the data have been received this specified function will be called
- *  @retval
+ * @retval
  *     - \ref WM_SUCCESS
  *     - \ref WM_FAILED
- *  @note
+ * @note
  *      this function only submit the data
  *      when the data transfer finished the callback function will be called
  */
@@ -359,7 +356,7 @@ int tls_i2s_rx_dma(uint32_t * addr, uint16_t len, tls_i2s_callback callback);
  */
 #define TLS_I2S_CLK_ENABLE()   \
 	do { \
-		tls_bitband_write(HR_CLK_I2S_CTL, HR_CLK_I2S_GATE_Pos , 1); \
+		tls_bitband_write(HR_CLK_BASE_ADDR, HR_CLK_I2S_GATE_Pos , 1); \
 	} while(0)
 
 /**
@@ -368,7 +365,7 @@ int tls_i2s_rx_dma(uint32_t * addr, uint16_t len, tls_i2s_callback callback);
  */
 #define TLS_I2S_CLK_DISABLE()   \
 	do { \
-		tls_bitband_write(HR_CLK_I2S_CTL, HR_CLK_I2S_GATE_Pos , 0); \
+		tls_bitband_write(HR_CLK_BASE_ADDR, HR_CLK_I2S_GATE_Pos , 0); \
 	} while(0)
 
 /**
@@ -535,7 +532,7 @@ static __inline__ void tls_i2s_channel_sel(I2S_CHANNEL_SEL channel_sel)
  *     - \ref I2S_INT_MASK_RXTH
  *     - \ref I2S_INT_MASK_RXOV
  *     - \ref I2S_INT_MASK_RXUD
- * @param[in] enable 	when set ,enable interrupt, zero disabled
+ * @param[in] enable 	when set 1 disable interrupt, 0 enable
  * @retval None
  */
 static __inline__ void tls_i2s_int_config(uint32_t  i2s_int_mask, uint8_t enable)

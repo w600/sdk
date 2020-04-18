@@ -17,9 +17,11 @@
   			Below Switch Only for Reference!!!
 ********************************************************/
 #define  TLS_CONFIG_AP        				CFG_WIFI_ON
-#define  TLS_CONFIG_IBSS		 			CFG_WIFI_OFF
 #define  TLS_CONFIG_11N                     CFG_WIFI_ON
 
+#define  TLS_CONFIG_SOFTAP_11N              CFG_WIFI_ON
+
+#define  TLS_CONFIG_AP_BEACON_SOFT         (CFG_ON && TLS_CONFIG_AP)
 #define  TLS_CONFIG_AP_OPT_PS              (CFG_ON && TLS_CONFIG_AP)/* SOFTAP POWER SAVE */
 #define  TLS_CONFIG_AP_OPT_FWD             (CFG_ON && TLS_CONFIG_AP)/* IP PACKET FORWARD */
 
@@ -28,7 +30,7 @@
 
 #define  TLS_CONFIG_1SSID_MULTI_PWD          CFG_WIFI_ON
 
+#define TLS_CONFIG_FAST_JOIN_NET			CFG_WIFI_ON
 
-#define USE_OLD_RF_PARAM	CFG_WIFI_ON
 #endif /*__WM_WIFI_CONFIG_H__*/
 

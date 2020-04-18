@@ -844,7 +844,7 @@ int tls_spi_setup(u8 mode, u8 cs_active, u32 fclk)
  *
  * @retval         TLS_SPI_STATUS_OK			if write success.
  * @retval         TLS_SPI_STATUS_EINVAL		if argument is invalid.
- * @retval         TLS_SPI_STATUS_ENOMEM			if there is no enough memory.
+ * @retval         TLS_SPI_STATUS_ENOMEM		if there is no enough memory.
  * @retval         TLS_SPI_STATUS_ESHUTDOWN		if SPI driver does not installed.
  *
  * @note           None

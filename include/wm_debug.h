@@ -39,19 +39,19 @@
 #define __TLS_DBGPRT_INFO(fmt, ...)				     \
 do {									                     \
        u32 time = tls_os_get_time();	                 \
-       printf("[WM_I] <%d.%02d> %s : "fmt, (time/100), (time%100), __func__ , ##__VA_ARGS__); \
+       wm_printf("[WM_I] <%d.%02d> %s : "fmt, (time/100), (time%100), __func__ , ##__VA_ARGS__); \
 } while (0)
 
 #define __TLS_DBGPRT_WARNING(fmt, ...)				     \
 do {									                     \
        u32 time = tls_os_get_time();	                 \
-       printf("[WM_W] <%d.%02d> %s : "fmt, (time/100), (time%100), __func__ , ##__VA_ARGS__); \
+       wm_printf("[WM_W] <%d.%02d> %s : "fmt, (time/100), (time%100), __func__ , ##__VA_ARGS__); \
 } while (0)
 
 #define __TLS_DBGPRT_ERR(fmt, ...)				     \
 do {									                     \
        u32 time = tls_os_get_time();	                 \
-       printf("[WM_E] <%d.%02d> %s : "fmt, (time/100), (time%100), __func__ , ##__VA_ARGS__); \
+       wm_printf("[WM_E] <%d.%02d> %s : "fmt, (time/100), (time%100), __func__ , ##__VA_ARGS__); \
 } while (0)
 
 

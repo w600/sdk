@@ -112,13 +112,14 @@ void tls_dma_irq_register(unsigned char ch, void (*callback)(void *p), void *arg
 
 
 /**
- * @brief          This function is used to register dma interrupt
+ * @brief          This function is used to Wait until DMA operation completes
  *
- * @param[in]     	ch		DMA channel no.[0~7]
+ * @param[in]      ch    DMA channel no.[0~7]
  *
- * @return         None
+ * @return         0     completed
+ * @return        -1     failed
  *
- * @note           	None
+ * @note           None
  */
 int tls_dma_wait_complt(unsigned char ch);
 
@@ -152,13 +153,14 @@ unsigned char tls_dma_start_by_wrap(unsigned char ch, struct tls_dma_descriptor 
 
 
 /**
- * @brief          This function is used to Wait until DMA operation completes
+ * @brief            This function is used for Starting the DMA controller
  *
- * @param[in]     	 autoReload 	Does restart when current transfer complete?	
  * @param[in]     	 ch            	Channel no.[0~7]
  * @param[in]     	 pDmaDesc    	Pointer to DMA channel descriptor structure.
- *
- * @retval         	 Always STATUS_SUCCESS.
+ * @param[in]     	 autoReload 	Does restart when current transfer complete?	
+ * 
+ * @retval           0     success
+ * @retval         	 1     failed
  *
  * @note
  *                  DMA Descriptor:
@@ -182,16 +184,17 @@ unsigned char tls_dma_start(unsigned char ch, struct tls_dma_descriptor *dma_des
  *
  * @param[in]      ch    channel no. to be stopped
  *
- * @retval         	Always STATUS_SUCCESS
+ * @retval         0     success
+ * @retval         1     failed
  *
- * @note           	If channel stop, DMA_CHNL_CTRL_CHNL_ON bit in DMA_CHNLCTRL_REG is cleared.
+ * @note           If channel stop, DMA_CHNL_CTRL_CHNL_ON bit in DMA_CHNLCTRL_REG is cleared.
  */
 unsigned char tls_dma_stop(unsigned char ch);
 
 
 /**
  * @brief          	This function is used to Request a free dma channel.
- *				If ch is 0, the function will select a random free channel,
+ *					If ch is 0, the function will select a random free channel,
  *		         	else return the selected channel no. if free.
  *
  * @param[in]      ch       channel no.
@@ -199,7 +202,7 @@ unsigned char tls_dma_stop(unsigned char ch);
  *
  * @return         Channel no. that is free now
  *
- * @note           	 Channel no. that is free now
+ * @note           Channel no. that is free now
  */
 unsigned char tls_dma_request(unsigned char ch, unsigned char flags);
 

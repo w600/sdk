@@ -34,6 +34,8 @@
 
 #include "dns_server.h"
 
+#include "wm_wifi_oneshot.h"
+
 #if TLS_CONFIG_AP
 static DNS_SERVER DnsServer;
 
@@ -265,7 +267,9 @@ void DNSS_RecvCb(void *Arg, struct udp_pcb *Pcb, struct pbuf *P, ip_addr_t *Addr
 			break;
 		}
 
-		if(_DnsCompareName(DnsServer.DnsName, pDnsName) != 0)
+		if ((_DnsCompareName(DnsServer.DnsName, pDnsName) != 0) &&
+		    !((1 == tls_wifi_get_oneshot_flag()) &&
+		     (2 == tls_wifi_get_oneshot_config_mode())))
 		{
 			/* Not my dns name, so notify the client name error. */
 #if TLS_CONFIG_AP

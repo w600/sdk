@@ -54,25 +54,25 @@ void TLS_DBGPRT_DUMP(char *p, u32 len)
     int i;
     if (TLS_DBG_LEVEL_DUMP)
     {
-        printf("dump length : %d\n", len);
+        wm_printf("dump length : %d\n", len);
         for (i = 0; i < len; i++)
         {
-            printf("%02X ", p[i]);
+            wm_printf("%02X ", p[i]);
             if ((i + 1) % 16 == 0 && (i + 1) % 32 != 0)
             {
-                printf("- ");
+                wm_printf("- ");
             }
             if ((i + 1) % 32 == 0)
             {
-                printf("\n");
+                wm_printf("\n");
             }
             if (i == 2000)
             {
-                printf("\n");
+                wm_printf("\n");
                 break;
             }
         }
-        printf("\n");
+        wm_printf("\n");
     }
 }
 
@@ -80,11 +80,11 @@ void TLS_DBGPRT_DUMP(char *p, u32 len)
 
 #endif
 
-#if TLS_CONFIG_LWIP_VER2_0_3
 static void sys_net_up()
 {
     ip_addr_t ip_addr, net_mask, gateway, dns1, dns2;
     struct tls_param_ip ip_param;
+    bool enable = FALSE;	
 
     tls_param_get(TLS_PARAM_ID_IP, &ip_param, FALSE);
     if (ip_param.dhcp_enable)
@@ -109,6 +109,11 @@ static void sys_net_up()
         MEMCPY((char*)ip_2_ip4(&dns2), &ip_param.dns2, 4);
         tls_netif_dns_setserver(0, &dns1);
         tls_netif_dns_setserver(1, &dns2);
+		
+		/*when DHCP is disabled, Use static IP without IP_NET_UP Reporting, 
+		  set wifi powersaving flag according to TLS_PARAM_ID_PSM here.*/
+		tls_param_get(TLS_PARAM_ID_PSM, &enable, TRUE); 	
+		tls_wifi_set_psflag(enable, FALSE);
     }
 
     return ;
@@ -116,44 +121,7 @@ static void sys_net_up()
 
 //-------------------------------------------------------------------------
 
-#else
-#define ip_addr_set_zero(ipaddr)      ((ipaddr)->addr = 0)
-static void sys_net_up()
-{
-    struct ip_addr ip_addr, net_mask, gateway, dns1, dns2;
-    struct tls_param_ip ip_param;
-
-    tls_param_get(TLS_PARAM_ID_IP, &ip_param, FALSE);
-    if (ip_param.dhcp_enable)
-    {
-        ip_addr_set_zero(&ip_addr);
-        ip_addr_set_zero(&net_mask);
-        ip_addr_set_zero(&gateway);
-        tls_netif_set_addr( &ip_addr, &net_mask, &gateway);
-        tls_dhcp_start();
-    }
-    else
-    {
-        tls_dhcp_stop();
-        MEMCPY((char*) &ip_addr.addr, &ip_param.ip, 4);
-        MEMCPY((char*) &net_mask.addr, &ip_param.netmask, 4);
-        MEMCPY((char*) &gateway.addr, &ip_param.gateway, 4);
-        tls_netif_set_addr( &ip_addr, &net_mask, &gateway);
-        MEMCPY((char*) &dns1.addr, &ip_param.dns1, 4);
-        MEMCPY((char*) &dns2.addr, &ip_param.dns2, 4);
-        tls_netif_dns_setserver(0, &dns1);
-        tls_netif_dns_setserver(1, &dns2);
-        tls_netif_set_up();
-    }
-
-    return ;
-}
-
-//-------------------------------------------------------------------------
-
-#endif
 #if TLS_CONFIG_AP
-#if TLS_CONFIG_LWIP_VER2_0_3
 static void sys_net2_up()
 {
     ip_addr_t ip_addr, net_mask, gateway;
@@ -186,41 +154,6 @@ static void sys_net2_up()
 
 //-------------------------------------------------------------------------
 
-#else
-static void sys_net2_up()
-{
-    struct ip_addr ip_addr, net_mask, gateway;
-    struct tls_param_ip ip_param;
-    u8 dnsname[32];
-
-    dnsname[0] = '\0';
-    tls_param_get(TLS_PARAM_ID_DNSNAME, dnsname, 0);
-    tls_param_get(TLS_PARAM_ID_SOFTAP_IP, &ip_param, FALSE);
-
-    MEMCPY((char*) &ip_addr.addr, &ip_param.ip, 4);
-    MEMCPY((char*) &net_mask.addr, &ip_param.netmask, 4);
-    MEMCPY((char*) &gateway.addr, &ip_param.gateway, 4);
-
-    tls_netif2_set_addr(&ip_addr, &net_mask, &gateway);
-    tls_netif2_set_up();
-
-    //tls_dhcps_stop();
-    if (ip_param.dhcp_enable)
-    {
-        tls_dhcps_start();
-    }
-
-    if ('\0' != dnsname[0])
-    {
-        tls_dnss_start(dnsname);
-    }
-
-    return ;
-}
-
-//-------------------------------------------------------------------------
-
-#endif
 static void sys_net2_down()
 {
     tls_dnss_stop();
@@ -370,53 +303,6 @@ void tls_auto_reconnect(void)
         case TLS_PARAM_IEEE80211_SOFTAP:
             {
                 tls_auto_reconnect_softap();
-            }
-            break;
-#endif
-#if TLS_CONFIG_IBSS
-        case TLS_PARAM_IEEE80211_ADHOC:
-            {
-                struct tls_ibss_info_t *ibssinfo;
-                struct tls_ibssip_info_t *ipinfo;
-                struct tls_param_ip ip_param;
-                struct tls_param_key key;
-                ibssinfo = tls_mem_alloc(sizeof(struct tls_softap_info_t));
-                if (ibssinfo == NULL)
-                {
-                    return ;
-                }
-                ipinfo = tls_mem_alloc(sizeof(struct tls_ip_info_t));
-                if (ipinfo == NULL)
-                {
-                    tls_mem_free(ibssinfo);
-                    return ;
-                }
-
-                tls_param_get(TLS_PARAM_ID_SSID, (void*) &ssid, true);
-                memcpy(ibssinfo->ssid, ssid.ssid, ssid.ssid_len);
-                ibssinfo->ssid[ssid.ssid_len] = '\0';
-
-                tls_param_get(TLS_PARAM_ID_ENCRY, (void*) &ibssinfo->encrypt,
-                    true);
-                tls_param_get(TLS_PARAM_ID_CHANNEL, (void*) &ibssinfo->channel,
-                    true);
-
-                tls_param_get(TLS_PARAM_ID_KEY, (void*) &key, 1);
-                ibssinfo->keyinfo.key_len = key.key_length;
-                ibssinfo->keyinfo.format = key.key_format;
-                ibssinfo->keyinfo.index = key.key_index;
-                memcpy(ibssinfo->keyinfo.key, key.psk, key.key_length);
-
-                tls_param_get(TLS_PARAM_ID_IP, &ip_param, true);
-                /*ip配置信息:ip地址，掩码，dns名称*/
-                memcpy(ipinfo->ip, ip_param.ip, 4);
-                memcpy(ipinfo->netmask, ip_param.netmask, 4);
-                memcpy(ipinfo->gateway, ip_param.gateway, 4);
-                memcpy(ipinfo->dns1, ip_param.dns1, 4);
-                memcpy(ipinfo->dns2, ip_param.dns2, 4);
-                tls_wifi_ibss_create(ibssinfo, ipinfo);
-                tls_mem_free(ibssinfo);
-                tls_mem_free(ipinfo);
             }
             break;
 #endif
@@ -621,22 +507,13 @@ static void sys_net_status_changed(u8 status)
             break;
         case NETIF_IP_NET_UP:
             tls_netif_set_status(1);
-            /*对于STA，拿到IP之后再依据节能标志设置节能模式，联网拿IP过程中不节能*/
+			/*when DHCP enable, IP_NET_UP Report, set wifi powersaving flag according to  TLS_PARAM_ID_PSM*/
             tls_param_get(TLS_PARAM_ID_PSM, &enable, TRUE);		
             tls_wifi_set_psflag(enable, FALSE);
 
 #if TLS_CONFIG_TLS_DEBUG
             ethif = tls_netif_get_ethif();
-#if TLS_CONFIG_LWIP_VER2_0_3
-            printf("net up ==> ip = %d.%d.%d.%d\n", ip4_addr1(ip_2_ip4
-                (&ethif->ip_addr)), ip4_addr2(ip_2_ip4(&ethif->ip_addr)),
-                ip4_addr3(ip_2_ip4(&ethif->ip_addr)), ip4_addr4(ip_2_ip4(&ethif
-                ->ip_addr)));
-#else
-            TLS_DBGPRT_INFO("net up ==> ip = %d.%d.%d.%d\n", ip4_addr1(&ethif
-                ->ip_addr.addr), ip4_addr2(&ethif->ip_addr.addr), ip4_addr3
-                (&ethif->ip_addr.addr), ip4_addr4(&ethif->ip_addr.addr));
-#endif
+            TLS_DBGPRT_INFO("net up ==> ip = %v\n", ethif->ip_addr.addr);
 #endif
 #if TLS_CONFIG_AP
             tls_param_get(TLS_PARAM_ID_WPROTOCOL, (void*) &wireless_protocol,
@@ -667,10 +544,7 @@ static void sys_net_status_changed(u8 status)
         case NETIF_IP_NET2_UP:
 #if TLS_CONFIG_TLS_DEBUG
             ethif = tls_netif_get_ethif2();
-            TLS_DBGPRT_INFO("net up ==> ip = %d.%d.%d.%d\n" ip4_addr1(ip_2_ip4
-                (&ethif->ip_addr)), ip4_addr2(ip_2_ip4(&ethif->ip_addr)),
-                ip4_addr3(ip_2_ip4(&ethif->ip_addr)), ip4_addr4(ip_2_ip4(&ethif
-                ->ip_addr)));
+            TLS_DBGPRT_INFO("net up ==> ip = %v\n", ethif->ip_addr.addr);
 #endif
             break;
 #endif
@@ -696,8 +570,8 @@ int tls_sys_init()
 
     /* create task */
     tls_os_task_create(NULL, "Sys Task", tls_sys_task, (void*)0, (void*)
-        &sys_task_stk,  /* 任务栈的起始地址 */
-    SYS_TASK_STK_SIZE *sizeof(u32),  /* 任务栈的大小     */
+        &sys_task_stk,               /* task's stack start address */
+    SYS_TASK_STK_SIZE *sizeof(u32),  /* task's stack size, unit:byte */
     TLS_SYS_TASK_PRIO, 0);
 
     tls_netif_add_status_event(sys_net_status_changed);

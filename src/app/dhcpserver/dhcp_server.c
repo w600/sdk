@@ -28,11 +28,7 @@
 #include "lwip/api.h"
 #include "lwip/tcpip.h"
 #include "lwip/dhcp.h"
-#if TLS_CONFIG_LWIP_VER2_0_3
 #include "lwip/prot/dhcp.h"
-#else
-
-#endif
 #include "netif/ethernetif.h"
 #include "dhcp_server.h"
 
@@ -438,11 +434,7 @@ static PDHCP_CLIENT _ClientTableLookup(INT8U * MacAddr, INT8U MsgType, INT32U Re
 						}
 
 						pMyClient->State = DHCP_CLIENT_STATE_IDLE;
-#if TLS_CONFIG_LWIP_VER2_0_3
-						if((ServerId == 0) || (ip_addr_get_ip4_u32(&DhcpServer.ServerIpAddr) == ServerId))
-#else
-						if((ServerId == 0) || (DhcpServer.ServerIpAddr.addr == ServerId))
-#endif						
+						if((ServerId == 0) || (ip_addr_get_ip4_u32(&DhcpServer.ServerIpAddr) == ServerId))						
 						{
 							/* The client request the new address and that is free, allocate it. */
 							pReturnClient = pReqClient;
@@ -452,12 +444,8 @@ static PDHCP_CLIENT _ClientTableLookup(INT8U * MacAddr, INT8U MsgType, INT32U Re
 							/* The client refuses my offer and request another ip address. */
 							pReturnClient = NULL;
 						}
-					}
-#if TLS_CONFIG_LWIP_VER2_0_3					
-					else if((ServerId == 0) || (ip_addr_get_ip4_u32(&DhcpServer.ServerIpAddr) == ServerId))
-#else
-					else if((ServerId == 0) || (DhcpServer.ServerIpAddr.addr == ServerId))
-#endif					
+					}				
+					else if((ServerId == 0) || (ip_addr_get_ip4_u32(&DhcpServer.ServerIpAddr) == ServerId))				
 					{
 						/* The client request this address that has been allocated to it(a little abnorm) or the client renew the lease time. */
 						pReturnClient = pMyClient;
@@ -475,12 +463,8 @@ static PDHCP_CLIENT _ClientTableLookup(INT8U * MacAddr, INT8U MsgType, INT32U Re
 				{
 					/* The requested ip address was allocated, so return null. */
 					pReturnClient = NULL;
-				}
-#if TLS_CONFIG_LWIP_VER2_0_3				
-				else if((ServerId == 0) || (ip_addr_get_ip4_u32(&DhcpServer.ServerIpAddr) == ServerId))
-#else
-				else if((ServerId == 0) || (DhcpServer.ServerIpAddr.addr == ServerId))
-#endif				
+				}				
+				else if((ServerId == 0) || (ip_addr_get_ip4_u32(&DhcpServer.ServerIpAddr) == ServerId))				
 				{
 					/* The client request my free address, so allocate it. */
 					pReturnClient = pReqClient;
@@ -562,12 +546,8 @@ static void _DHCPNakGenAndSend(INT8U * pClientMacAddr, INT32U Xid)
 	pDhcpMsg->Op = DHCP_OP_REPLY;
 	pDhcpMsg->HType = DHCP_HWTYPE_ETHERNET;
 	pDhcpMsg->HLen = 6;
-	pDhcpMsg->Xid = htonl(Xid);
-#if TLS_CONFIG_LWIP_VER2_0_3	
-	pDhcpMsg->Siaddr = ip_addr_get_ip4_u32(&DhcpServer.ServerIpAddr);
-#else
-    pDhcpMsg->Siaddr = DhcpServer.ServerIpAddr.addr;
-#endif	
+	pDhcpMsg->Xid = htonl(Xid);	
+	pDhcpMsg->Siaddr = ip_addr_get_ip4_u32(&DhcpServer.ServerIpAddr);	
 	MEMCPY(pDhcpMsg->Chaddr, pClientMacAddr, 6);
 	pDhcpMsg->Magic = htonl(DHCP_MAGIC);
 
@@ -585,18 +565,10 @@ static void _DHCPNakGenAndSend(INT8U * pClientMacAddr, INT32U Xid)
 	/* Send broadcast to the DHCP client. */
 	udp_sendto(DhcpServer.Socket, pDhcpBuf, IP_ADDR_BROADCAST, DHCP_CLIENT_PORT);
 
-#if TLS_CONFIG_LWIP_VER2_0_3
 	TLS_DBGPRT_INFO("sent dhcp nak, ClientMacAddr="MACSTR", ServerIp=%d.%d.%d.%d\n",
 	                MAC2STR(pClientMacAddr),
 	                ip4_addr1(&DhcpServer.ServerIpAddr), ip4_addr2(&DhcpServer.ServerIpAddr),
 	                ip4_addr3(&DhcpServer.ServerIpAddr), ip4_addr4(&DhcpServer.ServerIpAddr));
-#else
-	TLS_DBGPRT_INFO("sent dhcp nak, ClientMacAddr="MACSTR", ServerIp=%d.%d.%d.%d\n",
-	                MAC2STR(pClientMacAddr),
-	                ip4_addr1(&DhcpServer.ServerIpAddr.addr), ip4_addr2(&DhcpServer.ServerIpAddr.addr),
-	                ip4_addr3(&DhcpServer.ServerIpAddr.addr), ip4_addr4(&DhcpServer.ServerIpAddr.addr));
-
-#endif
 	pbuf_free(pDhcpBuf);
 }
 
@@ -621,11 +593,7 @@ static void _DHCPAckGenAndSend(PDHCP_CLIENT pClient, INT8U * pClientMacAddr, INT
 	pDhcpMsg->HType = DHCP_HWTYPE_ETHERNET;
 	pDhcpMsg->HLen = 6;
 	pDhcpMsg->Xid = htonl(Xid);
-#if TLS_CONFIG_LWIP_VER2_0_3
 	pDhcpMsg->Yiaddr = ip_addr_get_ip4_u32(&pClient->IpAddr);
-#else
-	pDhcpMsg->Yiaddr = pClient->IpAddr.addr;
-#endif	
 	pDhcpMsg->Siaddr = 0;
 	MEMCPY(pDhcpMsg->Chaddr, pClientMacAddr, 6);
 	pDhcpMsg->Magic = htonl(DHCP_MAGIC);
@@ -638,7 +606,6 @@ static void _DHCPAckGenAndSend(PDHCP_CLIENT pClient, INT8U * pClientMacAddr, INT
 
 	/* Set the lease time. */
 	DHCP_SET_OPTION_LEASE_TIME(Body, DHCP_DEFAULT_LEASE_TIME, Len);
-#if TLS_CONFIG_LWIP_VER2_0_3
 	/* Set the server's ip address */
 	DHCP_SET_OPTION_SERVER_ID(Body, ip_addr_get_ip4_u32(&DhcpServer.ServerIpAddr), Len);
 
@@ -650,22 +617,6 @@ static void _DHCPAckGenAndSend(PDHCP_CLIENT pClient, INT8U * pClientMacAddr, INT
 
 	/* Set the dns server's ip address. */
 	DHCP_SET_OPTION_DNS(Body, ip_addr_get_ip4_u32(&DhcpServer.Dns1), ip_addr_get_ip4_u32(&DhcpServer.Dns2), Len);
-#else
-	/* Set the lease time. */
-	DHCP_SET_OPTION_LEASE_TIME(Body, DHCP_DEFAULT_LEASE_TIME, Len);
-
-	/* Set the server's ip address */
-	DHCP_SET_OPTION_SERVER_ID(Body, DhcpServer.ServerIpAddr.addr, Len);
-
-	/* Set the subnet mask. */
-	DHCP_SET_OPTION_SUBNET_MASK(Body, DhcpServer.SubnetMask.addr, Len);
-
-	/* Set the default gatway's ip address. */
-	DHCP_SET_OPTION_GW(Body, DhcpServer.GateWay.addr, Len);
-
-	/* Set the dns server's ip address. */
-	DHCP_SET_OPTION_DNS(Body, DhcpServer.Dns1.addr, DhcpServer.Dns2.addr, Len);
-#endif
 	DHCP_SET_OPTION_END(Body, Len);
 
 	pbuf_take(pDhcpBuf, (const void *)pDhcpMsg, Len);
@@ -686,21 +637,13 @@ static void _DHCPAckGenAndSend(PDHCP_CLIENT pClient, INT8U * pClientMacAddr, INT
 	    udp_sendto(DhcpServer.Socket, pDhcpBuf, (ip_addr_t *)(&pClient->IpAddr), DHCP_CLIENT_UDP_PORT);
     }
 #endif
-#if TLS_CONFIG_LWIP_VER2_0_3
+
     TLS_DBGPRT_INFO("sent dhcp ack, ClientMacAddr="MACSTR", GivenIpAddr=%d.%d.%d.%d, ServerIp=%d.%d.%d.%d\n",
 	                MAC2STR(pClientMacAddr),
 	                ip4_addr1(&pClient->IpAddr), ip4_addr2( &pClient->IpAddr),
 	                ip4_addr3(&pClient->IpAddr), ip4_addr4( &pClient->IpAddr),
 	                ip4_addr1(&DhcpServer.ServerIpAddr), ip4_addr2(&DhcpServer.ServerIpAddr),
 	                ip4_addr3(&DhcpServer.ServerIpAddr), ip4_addr4(&DhcpServer.ServerIpAddr) );
-#else
-    TLS_DBGPRT_INFO("sent dhcp ack, ClientMacAddr="MACSTR", GivenIpAddr=%d.%d.%d.%d, ServerIp=%d.%d.%d.%d\n",
-	                MAC2STR(pClientMacAddr),
-	                ip4_addr1(&pClient->IpAddr.addr), ip4_addr2(&pClient->IpAddr.addr),
-	                ip4_addr3(&pClient->IpAddr.addr), ip4_addr4(&pClient->IpAddr.addr),
-	                ip4_addr1(&DhcpServer.ServerIpAddr.addr), ip4_addr2(&DhcpServer.ServerIpAddr.addr),
-	                ip4_addr3(&DhcpServer.ServerIpAddr.addr), ip4_addr4(&DhcpServer.ServerIpAddr.addr));
-#endif
 
 	pbuf_free(pDhcpBuf);
 }
@@ -725,12 +668,8 @@ static void _DHCPOfferGenAndSend(PDHCP_CLIENT pClient, INT8U * pClientMacAddr, I
 	pDhcpMsg->Op = DHCP_OP_REPLY;
 	pDhcpMsg->HType = DHCP_HWTYPE_ETHERNET;
 	pDhcpMsg->HLen = 6;
-	pDhcpMsg->Xid = htonl(Xid);
-#if TLS_CONFIG_LWIP_VER2_0_3	
+	pDhcpMsg->Xid = htonl(Xid);	
 	pDhcpMsg->Yiaddr = ip_addr_get_ip4_u32(&pClient->IpAddr);
-#else
-	pDhcpMsg->Yiaddr = pClient->IpAddr.addr;
-#endif	
 	pDhcpMsg->Siaddr = 0;
 	MEMCPY(pDhcpMsg->Chaddr, pClientMacAddr, 6);
 	pDhcpMsg->Magic = htonl(DHCP_MAGIC);
@@ -743,7 +682,6 @@ static void _DHCPOfferGenAndSend(PDHCP_CLIENT pClient, INT8U * pClientMacAddr, I
 
 	/* Set the lease time. */
 	DHCP_SET_OPTION_LEASE_TIME(Body, DHCP_DEFAULT_LEASE_TIME, Len);
-#if TLS_CONFIG_LWIP_VER2_0_3
 	/* Set the server's ip address */
 	DHCP_SET_OPTION_SERVER_ID(Body, ip_addr_get_ip4_u32(&DhcpServer.ServerIpAddr), Len);
 
@@ -755,22 +693,6 @@ static void _DHCPOfferGenAndSend(PDHCP_CLIENT pClient, INT8U * pClientMacAddr, I
 
 	/* Set the dns server's ip address. */
 	DHCP_SET_OPTION_DNS(Body, ip_addr_get_ip4_u32(&DhcpServer.Dns1), ip_addr_get_ip4_u32(&DhcpServer.Dns2), Len);
-#else
-	/* Set the lease time. */
-	DHCP_SET_OPTION_LEASE_TIME(Body, DHCP_DEFAULT_LEASE_TIME, Len);
-
-	/* Set the server's ip address */
-	DHCP_SET_OPTION_SERVER_ID(Body, DhcpServer.ServerIpAddr.addr, Len);
-
-	/* Set the subnet mask. */
-	DHCP_SET_OPTION_SUBNET_MASK(Body, DhcpServer.SubnetMask.addr, Len);
-
-	/* Set the default gatway's ip address. */
-	DHCP_SET_OPTION_GW(Body, DhcpServer.GateWay.addr, Len);
-
-	/* Set the dns server's ip address. */
-	DHCP_SET_OPTION_DNS(Body, DhcpServer.Dns1.addr, DhcpServer.Dns2.addr, Len);
-#endif
 	DHCP_SET_OPTION_END(Body, Len);
 
 	pbuf_take(pDhcpBuf, (const void *)pDhcpMsg, Len);
@@ -791,22 +713,14 @@ static void _DHCPOfferGenAndSend(PDHCP_CLIENT pClient, INT8U * pClientMacAddr, I
 	    udp_sendto(DhcpServer.Socket, pDhcpBuf, (ip_addr_t *)(&pClient->IpAddr), DHCP_CLIENT_UDP_PORT); 
     }
 #endif
-#if TLS_CONFIG_LWIP_VER2_0_3
+
     TLS_DBGPRT_INFO("sent dhcp offer, ClientMacAddr="MACSTR", GivenIpAddr=%d.%d.%d.%d, ServerIp=%d.%d.%d.%d\n",
 	                MAC2STR(pClientMacAddr),
 	                ip4_addr1(&pClient->IpAddr), ip4_addr2(&pClient->IpAddr),
 	                ip4_addr3(&pClient->IpAddr), ip4_addr4(&pClient->IpAddr),
 	                ip4_addr1( &DhcpServer.ServerIpAddr), ip4_addr2( &DhcpServer.ServerIpAddr),
 	                ip4_addr3( &DhcpServer.ServerIpAddr), ip4_addr4( &DhcpServer.ServerIpAddr)
-		   );
-#else
-    TLS_DBGPRT_INFO("sent dhcp offer, ClientMacAddr="MACSTR", GivenIpAddr=%d.%d.%d.%d, ServerIp=%d.%d.%d.%d\n",
-	                MAC2STR(pClientMacAddr),
-	                ip4_addr1(&pClient->IpAddr.addr), ip4_addr2(&pClient->IpAddr.addr),
-	                ip4_addr3(&pClient->IpAddr.addr), ip4_addr4(&pClient->IpAddr.addr),
-	                ip4_addr1(&DhcpServer.ServerIpAddr.addr), ip4_addr2(&DhcpServer.ServerIpAddr.addr),
-	                ip4_addr3(&DhcpServer.ServerIpAddr.addr), ip4_addr4(&DhcpServer.ServerIpAddr.addr));
-#endif				   
+		   );				   
 	
 	pbuf_free(pDhcpBuf);
 }
@@ -911,17 +825,10 @@ INT8U *DHCPS_GetMacByIp(const ip_addr_t *ipaddr)
 /* numdns 0/1  --> dns 1/2 */
 void DHCPS_SetDns(INT8U numdns, INT32U dns)
 {
-#if TLS_CONFIG_LWIP_VER2_0_3
     if (0 == numdns)
         ip_addr_set_ip4_u32(&DhcpServer.Dns1, dns);
     if (1 == numdns)
         ip_addr_set_ip4_u32(&DhcpServer.Dns2, dns);
-#else
-    if (0 == numdns)
-        DhcpServer.Dns1.addr = dns;
-    if (1 == numdns)
-        DhcpServer.Dns2.addr = dns;	
-#endif
     return;
 }
 
@@ -946,13 +853,10 @@ void DHCPS_RecvCb(void *Arg, struct udp_pcb *Pcb, struct pbuf *P, ip_addr_t *Add
 	INT8U MsgType;
 	PDHCP_MSG pDhcpMsg;
 	INT32U MsgLen;
-#if TLS_CONFIG_LWIP_VER2_0_3	
+
 	ip_addr_t ReqIpAddr;
 	ip_addr_t ServerId;
-#else
-	INT32U ReqIpAddr;
-	INT32U ServerId;
-#endif	
+	
 	INT8U ClientMacAddr[6];
 	PDHCP_CLIENT pClient;
     INT8U* MacAddr;
@@ -989,16 +893,10 @@ void DHCPS_RecvCb(void *Arg, struct udp_pcb *Pcb, struct pbuf *P, ip_addr_t *Add
         }
 
 		/* Parse the packet to get message type, ip address requested by client and server ID. */
-		MsgType = 0xff;
-#if TLS_CONFIG_LWIP_VER2_0_3				
+		MsgType = 0xff;			
 		memset(&ReqIpAddr, 0, sizeof(ip_addr_t));
 		memset(&ServerId, 0, sizeof(ip_addr_t));		
-		if((_ParseDhcpOptions(pDhcpMsg, &MsgType, &ip4_addr_get_u32(&ReqIpAddr), &ip4_addr_get_u32(&ServerId)) & 0x01) == 0)
-#else
-		ReqIpAddr = 0;
-		ServerId = 0;
-		if((_ParseDhcpOptions(pDhcpMsg, &MsgType, &ReqIpAddr, &ServerId) & 0x01) == 0)
-#endif		
+		if((_ParseDhcpOptions(pDhcpMsg, &MsgType, &ip4_addr_get_u32(&ReqIpAddr), &ip4_addr_get_u32(&ServerId)) & 0x01) == 0)		
 		{
 			break;
 		}
@@ -1020,12 +918,8 @@ void DHCPS_RecvCb(void *Arg, struct udp_pcb *Pcb, struct pbuf *P, ip_addr_t *Add
 		                ip4_addr1(&ReqIpAddr), ip4_addr2(&ReqIpAddr), ip4_addr3(&ReqIpAddr), ip4_addr4(&ReqIpAddr), 
 		                ip4_addr1(&ServerId), ip4_addr2(&ServerId), ip4_addr3(&ServerId), ip4_addr4(&ServerId));
 
-		/* Get the client entry that is free or negotiating. */
-#if TLS_CONFIG_LWIP_VER2_0_3		
-		pClient = _ClientTableLookup(ClientMacAddr, MsgType, ip4_addr_get_u32(&ReqIpAddr), ip4_addr_get_u32(&ServerId));
-#else
-		pClient = _ClientTableLookup(ClientMacAddr, MsgType, ReqIpAddr, ServerId);
-#endif		
+		/* Get the client entry that is free or negotiating. */		
+		pClient = _ClientTableLookup(ClientMacAddr, MsgType, ip4_addr_get_u32(&ReqIpAddr), ip4_addr_get_u32(&ServerId));	
 		if(pClient == NULL)
 		{
 			if((MsgType != DHCP_MSG_RELEASE) && (MsgType != DHCP_MSG_DECLINE))
@@ -1120,14 +1014,9 @@ INT8S DHCPS_Start(struct netif *Netif)
 	}
 	memset(&DhcpServer, 0, sizeof(DhcpServer));
 	
-	/* Calculate the start ip address of the server's ip pool. */
-#if TLS_CONFIG_LWIP_VER2_0_3	
+	/* Calculate the start ip address of the server's ip pool. */	
 	Val = ntohl(ip_addr_get_ip4_u32(&Netif->ip_addr));
-	Mask = ntohl(ip_addr_get_ip4_u32(&Netif->netmask));
-#else
-	Val = ntohl(Netif->ip_addr.addr);
-	Mask = ntohl(Netif->netmask.addr);
-#endif	
+	Mask = ntohl(ip_addr_get_ip4_u32(&Netif->netmask));	
 	tmp = (Val & (~Mask));
 	tmp = ((tmp + 1) % (~Mask)) ? ((tmp + 1) % (~Mask)) : 1;
 	Val = htonl((Val & Mask) | tmp);
@@ -1149,12 +1038,8 @@ INT8S DHCPS_Start(struct netif *Netif)
 		/* Set the initial client state is "IDLE". */
 		pClient->State = DHCP_CLIENT_STATE_IDLE;
 		
-		/* Set the ip address to the client. */
-#if TLS_CONFIG_LWIP_VER2_0_3		
-		Val = ntohl(ip_addr_get_ip4_u32(&DhcpServer.StartIpAddr));
-#else
-		Val = ntohl(DhcpServer.StartIpAddr.addr);
-#endif		
+		/* Set the ip address to the client. */	
+		Val = ntohl(ip_addr_get_ip4_u32(&DhcpServer.StartIpAddr));		
 		tmp = (Val & (~Mask));
 		tmp = ((tmp + i) % (~Mask)) ? ((tmp + i) % (~Mask)) : 1;
 		Val = htonl((Val & Mask) | tmp);

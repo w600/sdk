@@ -195,8 +195,6 @@ int tls_cmd_set_wireless_mode(u8 mode, u8 update_flash);
 int tls_cmd_get_wireless_mode(u8 *mode);
 int tls_cmd_set_ssid(struct tls_cmd_ssid_t *ssid, u8 update_flash);
 int tls_cmd_get_ssid(struct tls_cmd_ssid_t *ssid);
-int tls_cmd_set_tem_offset(struct tls_cmd_tem_t *tem, u8 update_flash);
-int tls_cmd_get_tem_offset(struct tls_cmd_tem_t *tem);
 int tls_cmd_set_key(struct tls_cmd_key_t *key, u8 update_flash);
 int tls_cmd_get_key(struct tls_cmd_key_t *key);
 int tls_cmd_set_encrypt(u8 encrypt, u8 update_flash);

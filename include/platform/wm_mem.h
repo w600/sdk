@@ -178,11 +178,11 @@ void *mem_calloc_debug(u32 length, u32 size);
 /**
  * @brief          This function is used to get available memory
  *
- * @param[in]    None  
+ * @param[in]      None  
  *
  * @return         None
  *
- * @note          This api just can get coarse memory that is remained
+ * @note           This api just can get coarse memory that is remained
  */
 unsigned int tls_mem_get_avail_heapsize(void);
 

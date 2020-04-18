@@ -20,6 +20,11 @@
 
 static u32 user_task_stk[USER_TASK_STK_SIZE];
 
+void pre_gpio_config()
+{
+	
+}
+
 void pwm_task(void *data)
 {
     u8 pwm_value = 0;

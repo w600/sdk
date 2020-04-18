@@ -26,7 +26,7 @@
 #define HSPI_RX_CMD_MSG     1
 #define HSPI_RX_DATA_MSG    2
 
-/**spi/sdio buffer, Wraper controller can only access the address after the 0x60000*/
+/**spi/sdio buffer??Wraper controller can only access the address after the 0x60000*/
 #define HSPI_TXBUF_NUM              2
 #define HSPI_TX_DESC_NUM            HSPI_TXBUF_NUM
 #define HSPI_RXBUF_NUM              3//10
@@ -187,8 +187,8 @@ int tls_slave_spi_init(void);
  * @return         None
  *
  * @note           If the user enables the user mode, RICM instruction in the system will not be used by SPI.
- *		        If the user wants to use the SPI interface as other use, need to enable the user mode.
- *		        This function must be called before the register function.
+ *		           If the user wants to use the SPI interface as other use, need to enable the user mode.
+ *		           This function must be called before the register function.
  */
 void tls_set_hspi_user_mode(u8 ifenable);
 
@@ -244,10 +244,10 @@ void tls_hspi_tx_data_callback_register(s16 (*tx_data_callback)(char *buf));
  * @brief          This function is used to transfer data.
  *
  * @param[in]      txbuf			is a buf for saving user data.
- * @param[in]      len                 is the data length.
+ * @param[in]      len              is the data length.
  *
  * @retval         transfer data len     success
- * @retval         0                          failed
+ * @retval         0                     failed
  *
  * @note           None
  */

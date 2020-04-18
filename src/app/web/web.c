@@ -816,7 +816,8 @@ u16  Web_parse_line(char * id_char,u16 * after_id_len,char * idvalue,u16 * Value
 	            strcat(idvalue, str);
 	            for(u8 i=0; i<scan_res->count && i<40; i++)
 	            {
-	                if( bss_info->ssid != NULL && bss_info->ssid_len != 0 ){
+	                if( bss_info->ssid != NULL && bss_info->ssid_len != 0 )
+					{
 	                    *(bss_info->ssid + bss_info->ssid_len) = '\0';
 	                    sprintf(str, "<option value=\"%s\">%s</option>\n", bss_info->ssid,  bss_info->ssid);
 	        			strcat(idvalue, str);
@@ -825,7 +826,7 @@ u16  Web_parse_line(char * id_char,u16 * after_id_len,char * idvalue,u16 * Value
 	                }
 	                else
 	                {
-		           bss_info->ssid[bss_info->ssid_len] = '\0';
+		           		bss_info->ssid[bss_info->ssid_len] = '\0';
 	                    DEBUG_PRINT("illegal: %d, %s\r\n", bss_info->ssid_len, bss_info->ssid);
 	                }
 	                bss_info ++;				
@@ -2113,15 +2114,15 @@ u16  Web_parse_line(char * id_char,u16 * after_id_len,char * idvalue,u16 * Value
 
 
 
-char *Res[] = {"/hedbasic.html",  
-			"/hedadvance.html",	
-			"/hedfirmware.html",	
-			"/hedindex.html",	
+char *Res[] = {"/basic.html",  
+			"/advance.html",	
+			"/firmware.html",	
+			"/index.html",	
 #if WEB_SERVER_RUSSIAN		
-			"/hed_basic_en.html",	
-			"/hed_basic_ru.html",	
-			"/hed_firmware_en.html",
-			"/hed_firmware_ru.html",
+			"/basic_en.html",	
+			"/basic_ru.html",	
+			"/firmware_en.html",
+			"/firmware_ru.html",
 #endif
 };
 static int HtmlConvertURLStr(char *drc, char *src, int len)
@@ -2163,7 +2164,7 @@ static int HtmlConvertURLStr(char *drc, char *src, int len)
 }
 
 #define CGI_CONFIG MK_CGI_ENTRY( \
-	"/hedbasic.html", \
+	"/basic.html", \
 	do_cgi_config \
 	)
 
@@ -2546,7 +2547,7 @@ char * do_cgi_config(int iIndex, int iNumParams, char *pcParam[], char *pcValue[
 }
 
 #define CGI_ADVANCE MK_CGI_ENTRY( \
-	"/hedadvance.html", \
+	"/advance.html", \
 	do_cgi_advance \
 	)
 	
@@ -2886,19 +2887,19 @@ char * do_cgi_webindex(int iIndex, int iNumParams, char *pcParam[], char *pcValu
 	)
 #if WEB_SERVER_RUSSIAN
 #define CGI_CONFIG_EN MK_CGI_ENTRY( \
-	"/hed_basic_en.html", \
+	"/basic_en.html", \
 	do_cgi_config \
 	)
 #define CGI_CONFIG_RU MK_CGI_ENTRY( \
-	"/hed_basic_ru.html", \
+	"/basic_ru.html", \
 	do_cgi_config \
 	)
 #define CGI_FIRMWARE_EN MK_CGI_ENTRY( \
-	"/hed_firmware_en.html", \
+	"/firmware_en.html", \
 	do_cgi_firmware \
 	)
 #define CGI_FIRMWARE_RU MK_CGI_ENTRY( \
-	"/hed_firmware_ru.html", \
+	"/firmware_ru.html", \
 	do_cgi_firmware \
 	)	
 #endif		

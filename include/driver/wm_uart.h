@@ -360,7 +360,7 @@ void tls_uart_rx_callback_register(u16 uart_no, s16(*rx_callback) (u16 len));
  * @brief          This function is used to copy circular buffer data to user buffer.
  *
  * @param[in]      uart_no    is the uart numer
- * @param[in]      buf          is the user buffer
+ * @param[in]      buf        is the user buffer
  * @param[in]      readsize   is the user read size
  *
  * @retval         copy data size
@@ -374,11 +374,11 @@ int tls_uart_read(u16 uart_no, u8 * buf, u16 readsize);
  * @brief          This function is used to transfer data synchronously.
  *
  * @param[in]      uart_no      is the uart number
- * @param[in]      buf            is a buf for saving user data
+ * @param[in]      buf          is a buf for saving user data
  * @param[in]      writesize    is the user data length
  *
  * @retval         WM_SUCCESS    tx success
- * @retval         WM_FAILED       tx failed
+ * @retval         WM_FAILED     tx failed
  *
  * @note           None
  */
@@ -388,12 +388,13 @@ int tls_uart_write(u16 uart_no, char *buf, u16 writesize);
 /**
  * @brief          This function is used to transfer data with DMA.
  *
- * @param[in]      buf                is a buf for saving user data
+ * @param[in]      buf              is a buf for saving user data
  * @param[in]      writesize        is the user data length
- * @param[in]      cmpl_callback  function point,when the transfer is completed, the function will be called.
+ * @param[in]      cmpl_callback    function point,when the transfer is completed, the function will be called.
+ * @param[in]      uart_no      	is the uart number
  *
  * @retval         WM_SUCCESS    success
- * @retval         WM_FAILED       failed
+ * @retval         WM_FAILED     failed
  *
  * @note           Only uart1 support DMA transfer.
  */
@@ -407,7 +408,7 @@ int tls_uart_dma_write(char *buf, u16 writesize, void (*cmpl_callback) (void *p)
  * @param[in]      paritytype   is a parity type defined in TLS_UART_PMODE_T
  *
  * @retval         WM_SUCCESS	if setting success
- * @retval         WM_FAILED	 	if setting fail
+ * @retval         WM_FAILED	if setting fail
  *
  * @note           None
  */
@@ -439,6 +440,17 @@ int tls_uart_set_baud_rate(u16 uart_no, u32 baudrate);
  * @note           None
  */
 int tls_uart_set_stop_bits(u16 uart_no, TLS_UART_STOPBITS_T stopbits);
+
+/**
+ * @brief          This function is used to output a character to the serial port.
+ *
+ * @param[in]      ch      character to be output
+ *
+ * @retval         ch
+ *
+ * @note           None
+ */
+int tls_uart_output_char(int ch);
 
 /**
  * @}

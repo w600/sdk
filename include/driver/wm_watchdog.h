@@ -31,7 +31,7 @@
  */
 
 /**
- * @brief          This function is used to feed the dog.
+ * @brief          This function is used to clear watchdog irq in case watchdog reset.
  *
  * @param          None
  *
@@ -51,6 +51,30 @@ void tls_watchdog_clr(void);
  * @note           None
  */
 void tls_watchdog_init(u32 usec);
+
+/**
+ * @brief          This function is used to start calculating elapsed time. 
+ *
+ * @param[in]      None
+ *
+ * @return         elapsed time, unit:millisecond
+ *
+ * @note           None
+ */
+void tls_watchdog_start_cal_elapsed_time(void);
+
+
+/**
+ * @brief          This function is used to stop calculating & return elapsed time. 
+ *
+ * @param[in]     none
+ *
+ * @return         elapsed time, unit:millisecond
+ *
+ * @note           None
+ */
+u32 tls_watchdog_stop_cal_elapsed_time(void);
+
 
 /**
  * @brief          This function is used to reset the system.

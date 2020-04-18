@@ -12,63 +12,65 @@
 
 #define __MPU_PRESENT 						1
 
-#define __CM3_REV                 0x0201  /*!< Core Revision r2p1                           */
-#define __NVIC_PRIO_BITS          4       /*!< W600 uses 4 Bits for the Priority Levels    */
-#define __Vendor_SysTickConfig    0       /*!< Set to 1 if different SysTick Config is used */
+#define __CM3_REV                 0x0201  /*!< Core Revision r2p1                           	  */
+#define __NVIC_PRIO_BITS          4       /*!< W600 uses 4 Bits for the Priority Levels    	      */
+#define __Vendor_SysTickConfig    0       /*!< Set to 1 if different SysTick Config is used 	  */
 
 typedef enum IRQn
 {
 /******  Cortex-M3 Processor Exceptions Numbers ***************************************************/
-  NonMaskableInt_IRQn         = -14,    /*!< 2 Non Maskable Interrupt                             */
-  MemoryManagement_IRQn       = -12,    /*!< 4 Cortex-M3 Memory Management Interrupt              */
-  BusFault_IRQn               = -11,    /*!< 5 Cortex-M3 Bus Fault Interrupt                      */
-  UsageFault_IRQn             = -10,    /*!< 6 Cortex-M3 Usage Fault Interrupt                    */
-  SVCall_IRQn                 = -5,     /*!< 11 Cortex-M3 SV Call Interrupt                       */
-  DebugMonitor_IRQn           = -4,     /*!< 12 Cortex-M3 Debug Monitor Interrupt                 */
-  PendSV_IRQn                 = -2,     /*!< 14 Cortex-M3 Pend SV Interrupt                       */
-  SysTick_IRQn                = -1,     /*!< 15 Cortex-M3 System Tick Interrupt                   */
+  NonMaskableInt_IRQn         = -14,    /*!< 2 Non Maskable Interrupt                               */
+  MemoryManagement_IRQn       = -12,    /*!< 4 Cortex-M3 Memory Management Interrupt     			*/
+  BusFault_IRQn               = -11,    /*!< 5 Cortex-M3 Bus Fault Interrupt                        */
+  UsageFault_IRQn             = -10,    /*!< 6 Cortex-M3 Usage Fault Interrupt                   	*/
+  SVCall_IRQn                 = -5,     /*!< 11 Cortex-M3 SV Call Interrupt                         */
+  DebugMonitor_IRQn           = -4,     /*!< 12 Cortex-M3 Debug Monitor Interrupt             		*/
+  PendSV_IRQn                 = -2,     /*!< 14 Cortex-M3 Pend SV Interrupt                      	*/
+  SysTick_IRQn                = -1,     /*!< 15 Cortex-M3 System Tick Interrupt                 	*/
 
-/******  Venus specific Interrupt Numbers *********************************************************/
-  SDIO_RX_IRQn                = 0,      /*!< SDIO Receiver Interrupt                              */
-  SDIO_TX_IRQn                = 1,      /*!< SDIO Transmit Interrupt                              */
-  SDIO_RX_CMD_IRQn            = 2,      /*!< SDIO Command Receiver Interrupt                      */
-  SDIO_TX_CMD_IRQn            = 3,      /*!< SDIO Command Transmit Interrupt                      */
-  MAC_IRQn                 	  = 4,      /*!< MAC Interrupt                                        */
-
-  SEC_RX_IRQn                 = 6,      /*!< EXTI Line0 Interrupt                                 */
-  SEC_TX_MNGT_IRQn            = 7,      /*!< EXTI Line1 Interrupt                                 */
-  SEC_TX_DAT_IRQn             = 8,      /*!< EXTI Line2 Interrupt                                 */
-  PMU_RTC_IRQn                = 9,      /*!< PMU RTC Interrupt                                    */
-  PMU_SLP_INTVL_IRQn          = 10,     /*!< PMU Sleep Interval Interrupt                         */
-  PMU_GPIO_WAKE_IRQn          = 11,     /*!< PMU GPIO Wake Interrupt                              */
-  PMU_SDIO_WAKE_IRQn          = 12,     /*!< PMU SDIO Wake Interrupt                              */
-  DMA_Channel0_IRQn           = 13,     /*!< DMA  Channel 0 global Interrupt                      */
-  DMA_Channel1_IRQn           = 14,     /*!< DMA  Channel 1 global Interrupt                      */
-  DMA_Channel2_IRQn           = 15,     /*!< DMA  Channel 2 global Interrupt                      */
-  DMA_Channel3_IRQn           = 16,     /*!< DMA  Channel 3 global Interrupt                      */
-  DMA_Channel4_7_IRQn         = 17,     /*!< DMA  Channel 4~7 global Interrupt                    */
-  DMA_BRUST_IRQn              = 18,     /*!< DMA Burst global Interrupt                           */
-  I2C_IRQn         			  		= 19,     /*!< I2C Interrupts                                       */
-  ADC_IRQn        			  		= 20,     /*!< ADC Convert Interrupts                               */
-  SPI_LS_IRQn                 = 21,     /*!< Low Speed SPI Interrupt                              */
-  SPI_HS_IRQn                 = 22,     /*!< High Speed SPI Interrupt                             */
-  UART0_IRQn                  = 23,     /*!< UART0 Interrupts                                     */
-  UART1_IRQn               	  = 24,     /*!< UART1 Interrupt                                      */
-  GPIO_IRQn                	  = 25,     /*!< GPIO Interrupt                                       */
-  TIM1_IRQn           		  	= 26,     /*!< TIM1 Trigger and Commutation Interrupt               */
-  TIM2_IRQn                	  = 27,     /*!< TIM1 Capture Compare Interrupt                       */
-  TIM3_IRQn                   = 28,     /*!< TIM2 global Interrupt                                */
-  TIM4_IRQn                   = 29,     /*!< TIM3 global Interrupt                                */
-  TIM5_IRQn                	  = 31,     /*!< I2C1 Event Interrupt                                 */
-  WDG_IRQn                	  = 32,     /*!< Watch Dog Interrupt                                  */
-  PMU_IRQn                    = 33,     /*!< PMU Interrupt                                        */
-  FLASH_IRQn                  = 34,     /*!< Flash Interrupt                                      */
-  PWM_IRQn                 	  = 35,     /*!< PWM Interrupt                                        */
-  I2S_IRQn              	  	= 36,     /*!< I2S  Interrupts                                      */
-  RSA_IRQn            		  	=	38,   	
-  CRYPTION_IRQn       		  	=	39, 
-  GPIOB_IRQn									= 40,  
-  UART2_IRQn				  				= 41,	
+/******  Venus specific Interrupt Numbers *******************************************************/
+  SDIO_RX_IRQn                = 0,      /*!< SDIO Receiver Interrupt                            */
+  SDIO_TX_IRQn                = 1,      /*!< SDIO Transmit Interrupt                            */
+  SDIO_RX_CMD_IRQn            = 2,      /*!< SDIO Command Receiver Interrupt,  Not Used         */
+  SDIO_TX_CMD_IRQn            = 3,      /*!< SDIO Command Transmit Interrupt                    */
+  MAC_IRQn                 	  = 4,      /*!< MAC  Interrupt                                     */
+  Resverd_IRQn                = 5,      /*!< Not Used  									        */
+  SEC_RX_IRQn                 = 6,      /*!< Wi-Fi Rx Interrupt                                 */
+  SEC_TX_MNGT_IRQn            = 7,      /*!< Wi-Fi Managment Tx Interrupt                       */
+  SEC_TX_DAT_IRQn             = 8,      /*!< Wi-Fi Data Tx  Interrupt                           */
+  PMU_TIMER1_IRQn             = 9,      /*!< PMU Timer1 Interrupt                               */
+  PMU_TIMER0_IRQn             = 10,     /*!< PMU Timer0 Interrupt                         		*/
+  PMU_GPIO_WAKE_IRQn          = 11,     /*!< PMU GPIO Wake Interrupt                            */
+  PMU_SDIO_WAKE_IRQn          = 12,     /*!< PMU SDIO Wake Interrupt                            */
+  DMA_Channel0_IRQn           = 13,     /*!< DMA  Channel 0 global Interrupt                    */
+  DMA_Channel1_IRQn           = 14,     /*!< DMA  Channel 1 global Interrupt                    */
+  DMA_Channel2_IRQn           = 15,     /*!< DMA  Channel 2 global Interrupt                    */
+  DMA_Channel3_IRQn           = 16,     /*!< DMA  Channel 3 global Interrupt                    */
+  DMA_Channel4_7_IRQn         = 17,     /*!< DMA  Channel 4~7 global Interrupt                 	*/
+  DMA_BURST_IRQn              = 18,     /*!< DMA Burst global Interrupt                         */
+  I2C_IRQn					  = 19,     /*!< I2C Interrupts                                     */
+  ADC_IRQn        			  = 20,     /*!< ADC Convert Interrupts                             */
+  SPI_LS_IRQn                 = 21,     /*!< Low Speed SPI Interrupt                            */
+  SPI_HS_IRQn                 = 22,     /*!< High Speed SPI Interrupt                           */
+  UART0_IRQn                  = 23,     /*!< UART0 Interrupts                                   */
+  UART1_IRQn               	  = 24,     /*!< UART1 Interrupt                                    */
+  GPIOA_IRQn                  = 25,     /*!< GPIOA Interrupt                                    */
+  TIM0_IRQn					  = 26,     /*!< Timer0 Trigger Interrupt					        */
+  TIM1_IRQn           		  = 27,     /*!< Timer1 Trigger Interrupt               		    */
+  TIM2_IRQn                	  = 28,     /*!< Timer2 Trigger Interrupt                       	*/
+  TIM3_IRQn                   = 29,     /*!< Timer3 Trigger Interrupt                           */
+  TIM4_IRQn                   = 30,     /*!< Timer4 Trigger Interrupt                           */
+  TIM5_IRQn                	  = 31,     /*!< Timer5 Trigger Interrupt                           */
+  WDG_IRQn                	  = 32,     /*!< WatchDog Interrupt                                 */
+  PMU_IRQn                    = 33,     /*!< Not Used              						        */
+  FLASH_IRQn                  = 34,     /*!< Not Used              						        */
+  PWM_IRQn                    = 35,     /*!< PWM Interrupt       						        */
+  I2S_IRQn                    = 36,     /*!< I2S Interrupt      						        */
+  PMU_RTC_IRQn				  = 37,     /*!< PMU RTC Interrupt 						            */
+  RSA_IRQn                    =	38,   	/*!< RSA Interrupt 							            */
+  CRYPTION_IRQn               =	39,     /*!< Cryption Interrupt 					            */
+  GPIOB_IRQn				  = 40,     /*!< GPIOB Interrupt 						            */
+  UART2_IRQn				  = 41,	    /*!< UART2&7816 Interrupt 					            */
 
 } IRQn_Type;
 
@@ -333,9 +335,6 @@ typedef volatile unsigned int TLS_REG;    /* Hardware register definition */
 #define HR_SD_ADC_BASE_ADDR         (HR_APB_BASE_ADDR + 0x200)
 #define HR_SD_ADC_RESULT_REG     	((HR_SD_ADC_BASE_ADDR+0x000))
 #define HR_SD_ADC_CONFIG_REG     	((HR_SD_ADC_BASE_ADDR+0x004))
-#define HR_SD_ADC_CTRL_REG	       ((HR_SD_ADC_BASE_ADDR+0x008))
-#define HR_SD_ADC_INT_MASK_REG	((HR_SD_ADC_BASE_ADDR+0x00C))
-#define HR_SD_ADC_INT_SOURCE_REG	((HR_SD_ADC_BASE_ADDR+0x010))
 
 
 /***************************************************************
@@ -755,7 +754,7 @@ typedef volatile unsigned int TLS_REG;    /* Hardware register definition */
 /***********************************************************//**
  * I2S寄存器定义
  ***************************************************************/
-#define HR_CLK_I2S_GATE_Pos					(10)
+#define HR_CLK_I2S_GATE_Pos					(11)
 
 
 #define HR_I2S_REG_BASE					 (HR_APB_BASE_ADDR+0x1A00)

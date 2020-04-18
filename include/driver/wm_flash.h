@@ -107,14 +107,25 @@ struct tls_fls
  *
  * @param[in]      None
  *
- * @retval         TLS_FLS_STATUS_OK	                if init sucsess
- * @retval         TLS_FLS_STATUS_EBUSY            already inited
- * @retval         TLS_FLS_STATUS_ENOMEM         memory error
+ * @retval         TLS_FLS_STATUS_OK	         if  init sucsess
+ * @retval         TLS_FLS_STATUS_EBUSY          if  already inited
+ * @retval         TLS_FLS_STATUS_ENOMEM         if  memory allocation failed
  *
  * @note           None
  */
 int tls_spifls_init(void);
 
+/**
+ * @brief          This function is used to read the id of the flash.
+ *
+ * @param[in]      id                       Buffer to hold the id that been read.
+ *
+ * @retval         TLS_FLS_STATUS_OK	    if read sucsess
+ * @retval         TLS_FLS_STATUS_EIO	    if read fail
+ *
+ * @note           None
+ */
+int tls_spifls_read_id(u32 * id);
 
 /**
  * @brief          This function is used to read data from the flash.
@@ -123,8 +134,11 @@ int tls_spifls_init(void);
  * @param[in]      buf                   Pointer to a byte array that is to be written.
  * @param[in]      len                   length to read.
  *
- * @retval         TLS_FLS_STATUS_OK	    if read sucsess
+ * @retval         TLS_FLS_STATUS_OK	    if read success
  * @retval         TLS_FLS_STATUS_EIO	    if read fail
+ * @retval		   TLS_FLS_STATUS_EPERM     if flash driver module not beed installed
+ * @retval         TLS_FLS_STATUS_ENODRV    if the current spi flash driver not installed
+ * @retval         TLS_FLS_STATUS_EINVAL    if arguments is invalid
  *
  * @note           None
  */
@@ -138,15 +152,45 @@ int tls_spifls_read(u32 addr, u8 * buf, u32 len);
  * @param[in]      buf       Pointer to a byte array that holds the data to be written.
  * @param[in]      len       length to write.
  *
- * @retval         TLS_FLS_STATUS_OK	           if write flash success
+ * @retval         TLS_FLS_STATUS_OK	    if write flash success
  * @retval         TLS_FLS_STATUS_EPERM	    if flash struct point is null
- * @retval         TLS_FLS_STATUS_ENODRV	    if flash driver is not installed
- * @retval         TLS_FLS_STATUS_EINVAL	    if argument is invalid
- * @retval         TLS_FLS_STATUS_EIO           if io error
+ * @retval         TLS_FLS_STATUS_ENODRV	if flash driver is not installed
+ * @retval         TLS_FLS_STATUS_EINVAL	if argument is invalid
+ * @retval         TLS_FLS_STATUS_EIO       if io error
+ * @retval         TLS_FLS_STATUS_ENOMEM    if memory allocation fail
  *
  * @note           None
  */
 int tls_spifls_write(u32 addr, u8 * buf, u32 len);
+
+/**
+ * @brief          This function is used to erase one sector of the flash.
+ *
+ * @param[in]      sector      Specifies the sector number to be erased..
+ *
+ * @retval         TLS_FLS_STATUS_OK	    if write flash success
+ * @retval         TLS_FLS_STATUS_EPERM	    if flash struct point is null
+ * @retval         TLS_FLS_STATUS_ENODRV	if flash driver is not installed
+ * @retval         TLS_FLS_STATUS_EINVAL	if argument is invalid
+ * @retval         TLS_FLS_STATUS_EIO       if io error
+ *
+ * @note           None
+ */
+int tls_spifls_erase(u32 sector);
+
+/**
+ * @brief          This function is used to erase the flash.
+ *
+ * @param[in]      None
+ *
+ * @retval         TLS_FLS_STATUS_OK	    if init sucsess
+ * @retval         TLS_FLS_STATUS_EBUSY     already inited
+ * @retval         TLS_FLS_STATUS_ENOMEM    memory error
+ * @retval         TLS_FLS_STATUS_ENODRV	if flash driver is not installed
+ *
+ * @note           None
+ */
+int tls_spifls_chip_erase(void);
 
 /**
  * @}

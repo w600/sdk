@@ -46,11 +46,11 @@
  *
  * @param[in]      None
  *
- * @retval         TLS_FLS_STATUS_OK	         if write flash success
- * @retval         TLS_FLS_STATUS_EPERM     if flash struct point is null
+ * @retval         TLS_FLS_STATUS_OK	      if write flash success
+ * @retval         TLS_FLS_STATUS_EPERM       if flash struct point is null
  * @retval         TLS_FLS_STATUS_ENODRV	  if flash driver is not installed
  * @retval         TLS_FLS_STATUS_EINVAL	  if argument is invalid
- * @retval         TLS_FLS_STATUS_EIO	         if io error
+ * @retval         TLS_FLS_STATUS_EIO	      if io error
  * @retval         TLS_FLS_STATUS_EEXIST	  if driver is already existed
  *
  * @note           None

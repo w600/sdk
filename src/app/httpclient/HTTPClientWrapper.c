@@ -183,16 +183,7 @@ int HTTPWrapperShutDown (int s,int how)
 
 int HTTPWrapperGetSocketError (int s)
 {
-#if TLS_CONFIG_LWIP_VER2_0_3
 	return errno;
-#else
-	struct lwip_sock * sock;
-	sock = get_socket(s);
-	if(sock == NULL)
-		return SOCKET_ERROR;
-	TLS_DBGPRT_INFO("sock->err=%d\n", sock->err);
-	return sock->err;
-#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

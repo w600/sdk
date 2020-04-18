@@ -1,5 +1,5 @@
 /******************************************************************************
-* Copyright ?2004 Altera Corporation, San Jose, California, USA.             *
+* Copyright ? 2004 Altera Corporation, San Jose, California, USA.             *
 * All rights reserved. All use of this software and documentation is          *
 * subject to the License Agreement located at the end of this file below.     *
 *******************************************************************************

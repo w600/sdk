@@ -1,6 +1,5 @@
 #!/bin/sh
-
-./makefs fs fsdata_lwip.c
-./makefs fs_basic fsdata_lwip_basic.c
-./makefs fs_ru fsdata_lwip_russian.c
-./makefs fs_ruigong fsdata_lwip_ruigong.c
+#basic web data
+./makefs fs fsdata_html.h
+#web cfg data when TLS_CONFIG_AP_MODE_ONESHOT is ON
+./makefs fs_ap_config fsdata_ap_config_html.h

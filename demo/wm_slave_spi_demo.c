@@ -35,7 +35,7 @@ static u8 GetCrc(u8 *buf, u16 len)
 
     if(buf != NULL && len > 0)
     {
-        for(i=0; i<len; i++)
+        for(i = 0; i < len; i++)
             crc += buf[i];
     }
 
@@ -46,9 +46,9 @@ static s16 HspiRxDataCb(char *buf)
 {
     int i = 0, err_num = 0;
 
-    for(i=0; i<HSPI_BUF_SIZE; i++)
+    for(i = 0; i < HSPI_BUF_SIZE; i++)
     {
-        if(buf[i] != ((i + 1)%255))
+        if(buf[i] != ((i + 1) % 255))
             err_num++;
     }
 
@@ -60,7 +60,7 @@ static s16 HspiRxDataCb(char *buf)
     else
     {
         count++;
-        if(count%100 == 0)
+        if(count % 100 == 0)
             USER_PRINT("RX ok %d\n", count);
     }
 
@@ -73,13 +73,13 @@ static s16 HspiRxCmdCb(char *buf)
     u16 len = 0;
     u8 *tx_buf = NULL;
     int i = 0;
-printf("%s\n", __func__);
+    printf("%s\n", __func__);
     if(buf[0] != 0x5A)
         return;
-    
+
     len = buf[1] << 8 | buf[2];
     USER_PRINT("rx[%d] :", len);
-    for(i=0; i<len; i++)
+    for(i = 0; i < len; i++)
         USER_PRINT("%02x ", buf[i]);
     USER_PRINT("\n");
 
@@ -91,9 +91,9 @@ printf("%s\n", __func__);
         tx_buf = tls_mem_alloc(HSPI_BUF_SIZE);
         if(tx_buf == NULL)
             return;
-        for(i=0; i<HSPI_BUF_SIZE; i++)
-            tx_buf[i] = (i + 1)%255;
-        
+        for(i = 0; i < HSPI_BUF_SIZE; i++)
+            tx_buf[i] = (i + 1) % 255;
+
         tls_hspi_tx_data(tx_buf, HSPI_BUF_SIZE);
         tls_mem_free(tx_buf);
     }
@@ -101,16 +101,13 @@ printf("%s\n", __func__);
 
 static void HspiInit(int type)
 {
-    int ret=0;
-    
-    wm_hspi_gpio_config(0);
+    int ret = 0;
 
     tls_slave_spi_init();
     tls_set_high_speed_interface_type(type);
     tls_set_hspi_user_mode(1);
     tls_hspi_rx_data_callback_register(HspiRxDataCb);
     tls_hspi_rx_cmd_callback_register(HspiRxCmdCb);
-
 }
 
 int slave_spi_demo(int type)
@@ -118,10 +115,13 @@ int slave_spi_demo(int type)
     if(type == 0)
     {
         type = HSPI_INTERFACE_SPI;
+        wm_hspi_gpio_config(0);
     }
     else
     {
         type = HSPI_INTERFACE_SDIO;
+        wm_sdio_config(0);
+        wm_sdio_cmd_config(WM_IO_PB_13);
     }
     printf("\r\ntype:%d\r\n", type);
 

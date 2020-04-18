@@ -1153,7 +1153,7 @@ iperf_exchange_results(struct iperf_test *test)
         SLIST_FOREACH(sp, &test->streams, streams) {
             bytes_transferred = (test->reverse ? sp->result->bytes_received : sp->result->bytes_sent);
             //snprintf(buf, 128, "%d:%llu,%lf,%d,%d\n", sp->id, bytes_transferred,sp->jitter,sp->cnt_error, sp->packet_count);
-            snprintf(buf, 128, "%d:%d,%f,%d,%d\n", sp->id, bytes_transferred,sp->jitter,sp->cnt_error, sp->packet_count);
+            snprintf(buf, 128, "%d:%lld,%f,%d,%d\n", sp->id, bytes_transferred,sp->jitter,sp->cnt_error, sp->packet_count);
             size += strlen(buf);
             if ((results = tls_mem_realloc(results, size+1)) == NULL) {
                 i_errno = IEPACKAGERESULTS;
@@ -1239,7 +1239,7 @@ iperf_exchange_results(struct iperf_test *test)
         SLIST_FOREACH(sp, &test->streams, streams) {
             bytes_transferred = (test->reverse ? sp->result->bytes_sent : sp->result->bytes_received);
             //snprintf(buf, 128, "%d:%llu,%lf,%d,%d\n", sp->id, bytes_transferred, sp->jitter,sp->cnt_error, sp->packet_count);
-            snprintf(buf, 128, "%d:%d,%f,%d,%d\n", sp->id, bytes_transferred, sp->jitter,sp->cnt_error, sp->packet_count);
+            snprintf(buf, 128, "%d:%lld,%f,%d,%d\n", sp->id, bytes_transferred, sp->jitter,sp->cnt_error, sp->packet_count);
             size += strlen(buf);
             if ((results = tls_mem_realloc(results, size+1)) == NULL) {
                 i_errno = IEPACKAGERESULTS;
@@ -1296,9 +1296,9 @@ parse_results(struct iperf_test *test, char *results)
     }
 	IPF_DBG("strp=%s\n", strp);
 
-    for (strp; *strp; strp = strchr(strp, '\n')+1) {
+    for (/* strp */; *strp; strp = strchr(strp, '\n')+1) {
        // sscanf(strp, "%d:%llu,%lf,%d,%d\n", &sid, &bytes_transferred, &jitter, &cerror, &pcount);
-		 sscanf(strp, "%d:%llu,%f,%d,%d\n", &sid, &bytes_transferred, &jitter, &cerror, &pcount);
+		 sscanf(strp, "%d:%lld,%f,%d,%d\n", &sid, &bytes_transferred, &jitter, &cerror, &pcount);
 		
 		IPF_DBG("sid = %d, bytes_transferred=%d, jitter=%f, cerror=%d, pcount=%d\n ",sid,bytes_transferred,
 			jitter, cerror, pcount);

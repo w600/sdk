@@ -87,48 +87,48 @@ __isr_vector:
 	.long	OS_CPU_SysTickHandler /* SysTick Handler */
 
 	/* External interrupts */
-	.long   SDIO_RX_IRQHandler            /* Window Watchdog */
-    .long   SDIO_TX_IRQHandler             /* PVD through EXTI Line detect */
-    .long   SDIO_RX_CMD_IRQHandler          /* Tamper */
-    .long   SDIO_TX_CMD_IRQHandler             /* RTC */
-    .long   tls_wl_mac_isr           /* Flash */
-    .long   Default_Handler             /* RCC */
-    .long   tls_wl_rx_isr           /* EXTI Line 0 */
-    .long   tls_wl_mgmt_tx_isr           /* EXTI Line 1 */
-    .long   tls_wl_data_tx_isr           /* EXTI Line 2 */
-    .long   PMU_TIMER1_IRQHandler           /* EXTI Line 3 */
-    .long   PMU_TIMER0_IRQHandler           /* EXTI Line 4 */
-    .long   PMU_GPIO_WAKE_IRQHandler   /* DMA1 Channel 1 */
-    .long   PMU_SDIO_WAKE_IRQHandler   /* DMA1 Channel 2 */
-    .long   DMA_Channel0_IRQHandler   /* DMA1 Channel 3 */
-    .long   DMA_Channel1_IRQHandler   /* DMA1 Channel 4 */
-    .long   DMA_Channel2_IRQHandler   /* DMA1 Channel 5 */
-    .long   DMA_Channel3_IRQHandler   /* DMA1 Channel 6 */
-    .long   DMA_Channel4_7_IRQHandler   /* DMA1 Channel 7 */
-    .long   DMA_BRUST_IRQHandler          /* ADC1 & ADC2 */
-    .long   I2C_IRQHandler  /* USB High Priority or CAN1 TX */
-    .long   ADC_IRQHandler /* USB Low  Priority or CAN1 RX0 */
-    .long   SPI_LS_IRQHandler        /* CAN1 RX1 */
-    .long   SPI_HS_IRQHandler        /* CAN1 SCE */
-    .long   UART0_IRQHandler         /* EXTI Line 9..5 */
-    .long   UART1_IRQHandler        /* TIM1 Break */
-    .long   GPIOA_IRQHandler         /* TIM1 Update */
-    .long   TIM0_IRQHandler    /* TIM1 Trigger and Commutation */
-    .long   TIM1_IRQHandler         /* TIM1 Capture Compare */
-    .long   TIM2_IRQHandler            /* TIM2 */
-    .long   TIM3_IRQHandler            /* TIM3 */
-    .long   TIM4_IRQHandler            /* TIM4 */
-    .long   TIM5_IRQHandler         /* I2C1 Event */
-    .long   WDG_IRQHandler         /* I2C1 Error */
-    .long   PMU_IRQHandler         /* I2C2 Event */
-    .long   FLASH_IRQHandler         /* I2C2 Error */
-    .long   PWM_IRQHandler            /* SPI1 */
-    .long   I2S_IRQHandler            /* SPI2 */
-    .long   PMU_RTC_IRQHandler          /* USART1 */
-    .long   RSA_IRQHandler          /* USART2 */
-    .long   CRYPTION_IRQHandler          /* USART3 */
-    .long   GPIOB_IRQHandler       /* EXTI Line 15..10 */
-    .long   UART2_IRQHandler        /* RTC Alarm through EXTI Line */	
+	.long   SDIO_RX_IRQHandler       	/*HSPI&SDIO SLAVE Trasmit*/
+    .long   SDIO_TX_IRQHandler       	/*HSPI & SDIO SLAVE Receive Data*/
+    .long   0						 	/*Not Used*/	
+    .long   SDIO_TX_CMD_IRQHandler	 	/*HSPI & SDIO SLAVE Receive Command*/
+    .long   tls_wl_mac_isr			 	/*MAC isr*/
+    .long   0						 	/*Not Used*/       
+    .long   tls_wl_rx_isr				/*Wi-Fi Rx isr*/         
+    .long   tls_wl_mgmt_tx_isr  		/*Wi-Fi Managment tx isr*/  
+    .long   tls_wl_data_tx_isr    		/*Wi-Fi Data Tx isr*/
+    .long   PMU_TIMER1_IRQHandler 		/*PMU  Timer1*/
+    .long   PMU_TIMER0_IRQHandler 		/*PMU  Timer0*/
+    .long   PMU_GPIO_WAKE_IRQHandler 	/*PMU  Wakeup pin isr*/
+    .long   PMU_SDIO_WAKE_IRQHandler 	/*SDIO Wakeup isr*/
+    .long   DMA_Channel0_IRQHandler  	/*DMA Channel 0*/
+    .long   DMA_Channel1_IRQHandler  	/*DMA Channel 1*/
+    .long   DMA_Channel2_IRQHandler  	/*DMA Channel 2*/
+    .long   DMA_Channel3_IRQHandler  	/*DMA Channel 3*/
+    .long   DMA_Channel4_7_IRQHandler	/*DMA Channel 4-7*/
+    .long   DMA_BURST_IRQHandler		/*DMA Burst isr*/     
+    .long   I2C_IRQHandler 				/*I2C isr*/
+    .long   ADC_IRQHandler 				/*ADC isr*/
+    .long   SPI_LS_IRQHandler 			/*Master SPI isr*/
+    .long   SPI_HS_IRQHandler 			/*HSPI isr, not used*/
+    .long   UART0_IRQHandler  			/*UART0 isr*/
+    .long   UART1_IRQHandler  			/*UART1 isr*/
+    .long   GPIOA_IRQHandler  			/*GPIOA isr*/
+    .long   TIM0_IRQHandler				/*TIM0 isr*/   
+    .long   TIM1_IRQHandler 			/*TIM1 isr*/  
+    .long   TIM2_IRQHandler				/*TIM2 isr*/   
+    .long   TIM3_IRQHandler 			/*TIM3 isr*/  
+    .long   TIM4_IRQHandler  			/*TIM4 isr*/ 
+    .long   TIM5_IRQHandler   			/*TIM5 isr*/
+    .long   WDG_IRQHandler 				/*Watchdog isr*/   
+    .long   0    						/*Not Used*/
+    .long   0  							/*Not Used*/
+    .long   PWM_IRQHandler				/*PWM isr*/
+    .long   I2S_IRQHandler				/*I2S isr*/
+    .long   PMU_RTC_IRQHandler			/*PMU RTC isr*/
+    .long   RSA_IRQHandler    			/*RSA isr*/
+    .long   CRYPTION_IRQHandler			/*CRYPTION isr*/
+    .long   GPIOB_IRQHandler			/*GPIOB isr*/   
+    .long   UART2_IRQHandler			/*UART2&7816 isr*/   
 
 	.size	__isr_vector, . - __isr_vector
 
@@ -177,11 +177,11 @@ Reset_Handler:
 	itt	lt
 	strlt	r0, [r1], #4
 	blt	.L_loop3
-
+/*
 #ifndef __NO_SYSTEM_INIT
 	 bl	SystemInit 
 #endif
-
+*/
 	bl	main
 
 	.pool
@@ -213,46 +213,43 @@ Default_Handler:
 	def_irq_handler	PendSV_Handler
 	def_irq_handler	OS_CPU_SysTickHandler
 	
-	def_irq_handler SDIO_RX_IRQHandler            /* Window Watchdog */
-    def_irq_handler SDIO_TX_IRQHandler             /* PVD through EXTI Line detect */
-    def_irq_handler SDIO_RX_CMD_IRQHandler          /* Tamper */
-    def_irq_handler SDIO_TX_CMD_IRQHandler             /* RTC */
-    def_irq_handler tls_wl_mac_isr           /* Flash */
-    def_irq_handler tls_wl_rx_isr           /* EXTI Line 0 */
-    def_irq_handler tls_wl_mgmt_tx_isr           /* EXTI Line 1 */
-    def_irq_handler tls_wl_data_tx_isr           /* EXTI Line 2 */
-    /*def_irq_handler PMU_TIMER1_IRQHandler*/          /* EXTI Line 3 */
-    /*def_irq_handler PMU_TIMER0_IRQHandler*/          /* EXTI Line 4 */
-    /*def_irq_handler PMU_GPIO_WAKE_IRQHandler*/   /* DMA1 Channel 1 */
-    def_irq_handler PMU_SDIO_WAKE_IRQHandler   /* DMA1 Channel 2 */
-    def_irq_handler DMA_Channel0_IRQHandler   /* DMA1 Channel 3 */
-    def_irq_handler DMA_Channel1_IRQHandler   /* DMA1 Channel 4 */
-    def_irq_handler DMA_Channel2_IRQHandler   /* DMA1 Channel 5 */
-    def_irq_handler DMA_Channel3_IRQHandler   /* DMA1 Channel 6 */
-    def_irq_handler DMA_Channel4_7_IRQHandler   /* DMA1 Channel 7 */
-    def_irq_handler DMA_BRUST_IRQHandler          /* ADC1 & ADC2 */
-    /*def_irq_handler I2C_IRQHandler*/  /* USB High Priority or CAN1 TX */
-    def_irq_handler ADC_IRQHandler /* USB Low  Priority or CAN1 RX0 */
-    def_irq_handler SPI_LS_IRQHandler        /* CAN1 RX1 */
-    def_irq_handler SPI_HS_IRQHandler        /* CAN1 SCE */
-    def_irq_handler UART0_IRQHandler         /* EXTI Line 9..5 */
-    def_irq_handler UART1_IRQHandler        /* TIM1 Break */
-    def_irq_handler GPIOA_IRQHandler         /* TIM1 Update */
-    def_irq_handler TIM0_IRQHandler    /* TIM1 Trigger and Commutation */
-    def_irq_handler TIM1_IRQHandler         /* TIM1 Capture Compare */
-    def_irq_handler TIM2_IRQHandler            /* TIM2 */
-    def_irq_handler TIM3_IRQHandler            /* TIM3 */
-    def_irq_handler TIM4_IRQHandler            /* TIM4 */
-    def_irq_handler TIM5_IRQHandler         /* I2C1 Event */
-    def_irq_handler WDG_IRQHandler         /* I2C1 Error */
-    def_irq_handler PMU_IRQHandler         /* I2C2 Event */
-    def_irq_handler FLASH_IRQHandler         /* I2C2 Error */
-    /*def_irq_handler PWM_IRQHandler*/            /* SPI1 */
-    /*def_irq_handler I2S_IRQHandler*/            /* SPI2 */
-    /*def_irq_handler PMU_RTC_IRQHandler*/          /* USART1 */
-    def_irq_handler RSA_IRQHandler          /* USART2 */
-    def_irq_handler CRYPTION_IRQHandler          /* USART3 */
-    def_irq_handler GPIOB_IRQHandler       /* EXTI Line 15..10 */
-    def_irq_handler UART2_IRQHandler        /* RTC Alarm through EXTI Line */
+	def_irq_handler SDIO_RX_IRQHandler
+    def_irq_handler SDIO_TX_IRQHandler
+    def_irq_handler SDIO_TX_CMD_IRQHandler
+    def_irq_handler tls_wl_mac_isr
+    def_irq_handler tls_wl_rx_isr
+    def_irq_handler tls_wl_mgmt_tx_isr
+    def_irq_handler tls_wl_data_tx_isr
+    /*def_irq_handler PMU_TIMER1_IRQHandler*/
+    /*def_irq_handler PMU_TIMER0_IRQHandler*/
+    /*def_irq_handler PMU_GPIO_WAKE_IRQHandler*/
+    def_irq_handler PMU_SDIO_WAKE_IRQHandler
+    def_irq_handler DMA_Channel0_IRQHandler
+    def_irq_handler DMA_Channel1_IRQHandler
+    def_irq_handler DMA_Channel2_IRQHandler
+    def_irq_handler DMA_Channel3_IRQHandler
+    def_irq_handler DMA_Channel4_7_IRQHandler
+    def_irq_handler DMA_BURST_IRQHandler
+    /*def_irq_handler I2C_IRQHandler*/  
+    def_irq_handler ADC_IRQHandler
+    def_irq_handler SPI_LS_IRQHandler
+    def_irq_handler SPI_HS_IRQHandler
+    def_irq_handler UART0_IRQHandler 
+    def_irq_handler UART1_IRQHandler 
+    def_irq_handler GPIOA_IRQHandler 
+    def_irq_handler TIM0_IRQHandler  
+    def_irq_handler TIM1_IRQHandler  
+    def_irq_handler TIM2_IRQHandler  
+    def_irq_handler TIM3_IRQHandler  
+    def_irq_handler TIM4_IRQHandler  
+    def_irq_handler TIM5_IRQHandler  
+    def_irq_handler WDG_IRQHandler   
+    /*def_irq_handler PWM_IRQHandler*/ 
+    /*def_irq_handler I2S_IRQHandler*/  
+    /*def_irq_handler PMU_RTC_IRQHandler*/
+    def_irq_handler RSA_IRQHandler        
+    def_irq_handler CRYPTION_IRQHandler   
+    def_irq_handler GPIOB_IRQHandler      
+    def_irq_handler UART2_IRQHandler      
 
 	.end

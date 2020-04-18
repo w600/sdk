@@ -18,6 +18,11 @@
 
 static u32 user_task_stk[USER_TASK_STK_SIZE];
 
+void pre_gpio_config()
+{
+	
+}
+
 void blink_task(void *data)
 {
 

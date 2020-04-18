@@ -41,9 +41,9 @@ void CreateThroughputTask(void)
     int err;
 	if(!testing){
 		memset(&gThtSys, 0 ,sizeof(struct tht_param));
-		//tht_q = OSQCreate(&tht_queue, THT_QUEUE_SIZE);
+
        err =  tls_os_queue_create(&tht_q, THT_QUEUE_SIZE);
-        //OSTaskCreate(tht_task, (void *)&gThtSys, (void *)&ThtTaskStk[512 - 1], THT_TASK_PRIO);
+
         tls_os_task_create(NULL, NULL,
                        tht_task,
                        (void *)&gThtSys,

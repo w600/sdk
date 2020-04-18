@@ -79,7 +79,9 @@ iperf_run(struct iperf_test * test)
                 }
                 iperf_reset_test(test);
             }
+#if TLS_IPERF_AUTO_TEST
             break;
+#endif 
         case 'c':
             if (iperf_run_client(test) < 0) {
                 iperf_error("error");

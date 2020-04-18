@@ -670,7 +670,7 @@ tls_os_status_t tls_os_queue_flush(tls_os_queue_t *queue);
  *
  * @note           None
  */
-int tls_os_timer_delete(tls_os_timer_t *timer);
+tls_os_status_t tls_os_timer_delete(tls_os_timer_t *timer);
 
 /**
  * @brief          This function is called to delay execution of the currently

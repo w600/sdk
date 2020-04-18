@@ -407,7 +407,7 @@ alloc_socket(struct netconn *newconn, int accepted)
   for (i = 0; i < NUM_SOCKETS; ++i) {
     /* Protect socket array */
     SYS_ARCH_PROTECT(lev);
-    if (!sockets[i].conn && (sockets[i].select_waiting == 0)) {
+    if (!sockets[i].conn /*&& (sockets[i].select_waiting == 0)*/) {
       sockets[i].conn       = newconn;
       /* The socket is not yet known to anyone, so no need to protect
          after having marked it as used. */

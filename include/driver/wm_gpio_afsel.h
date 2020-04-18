@@ -101,7 +101,7 @@ void wm_spi_di_config(enum tls_io_name io_name);
  * @param  io_name: config spi do pins name
  *			WM_IO_PB_18
  *			WM_IO_PB_02
- *			WM_IO_PB_04
+ *			WM_IO_PA_04
  *			WM_IO_PA_09
  *			WM_IO_PA_10
  *				
@@ -262,7 +262,8 @@ void wm_uart2_rts_scclk_config(enum tls_io_name io_name);
  *			WM_IO_PA_03	 
  *			WM_IO_PB_28
  *			WM_IO_PB_00
- *				
+ *			WM_IO_PB_22
+ *
  * @return None
  */
 void wm_uart2_cts_config(enum tls_io_name io_name);
@@ -397,10 +398,10 @@ void wm_i2c_sda_config(enum tls_io_name io_name);
 void wm_pwm1_config(enum tls_io_name io_name);
 
 /**
- * @brief  config the pins used for pwm1
- * @param  io_name: config pwm1 pins name
+ * @brief  config the pins used for pwm2
+ * @param  io_name: config pwm2 pins name
  *			WM_IO_PA_01
- *			WM_IO_PB_11
+ *			WM_IO_PB_17
  *			WM_IO_PB_04
  *			WM_IO_PA_07
  *			WM_IO_PB_13
@@ -431,7 +432,8 @@ void wm_pwm3_config(enum tls_io_name io_name);
  *			WM_IO_PB_02
  *			WM_IO_PA_09
  *			WM_IO_PB_22
- *				
+ *			WM_IO_PB_06
+ *
  * @return None
  */
 void wm_pwm4_config(enum tls_io_name io_name);
@@ -444,7 +446,8 @@ void wm_pwm4_config(enum tls_io_name io_name);
  *			WM_IO_PB_01
  *			WM_IO_PA_10
  *			WM_IO_PB_23
- *				
+ *			WM_IO_PB_08
+ *
  * @return None
  */
 void wm_pwm5_config(enum tls_io_name io_name);

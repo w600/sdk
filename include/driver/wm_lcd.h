@@ -133,7 +133,7 @@ typedef struct tls_lcd_options
 
 /**
  * @brief initialize the LCD module
- *
+ * param[in] opts     LCD Structure pointer
  */
 void tls_lcd_init(tls_lcd_options_t *opts);
 
@@ -192,7 +192,7 @@ void tls_lcd_bias_set(LCD_BiasDef bias);
 /**
  * @brief  Enable or disable the LCD module gpio
  *
- * @param[in] the config value per bit for one LCD gpio, set enable gpio output ,clear disabled
+ * @param[in] val   Each bit of the value corresponds to a LCD gpio, set 1 gpio output enable ,0 output disabled
  *
  */
 void tls_lcd_io_config(unsigned int val);

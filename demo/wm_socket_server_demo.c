@@ -1,7 +1,7 @@
 /**
  * @file    wm_socket_server_demo.c
  *
- * @brief   socket demo function 
+ * @brief   socket demo function
  *
  * @Author  dave
  *
@@ -13,7 +13,7 @@
 
 
 #if DEMO_STD_SOCKET_SERVER
-#define     DEMO_SOCK_S_TASK_SIZE      		1024
+#define     DEMO_SOCK_S_TASK_SIZE      		512
 #define     DEMO_SOCK_BUF_SIZE            	1024
 #define     BACKLOG     7       // how many pending connections queue will hold
 
@@ -32,10 +32,10 @@ static OS_STK   sock_s_snd_task_stk[DEMO_SOCK_S_TASK_SIZE];
  */
 typedef struct demo_sock_s
 {
-//    OS_STK *sock_s_task_stk;
+    //    OS_STK *sock_s_task_stk;
     tls_os_queue_t *sock_s_q;
-//    OS_STK *sock_rcv_task_stk;
-//    OS_STK *sock_snd_task_stk;
+    //    OS_STK *sock_rcv_task_stk;
+    //    OS_STK *sock_snd_task_stk;
     char *sock_rx;
     char *sock_tx;
     bool socket_ok;
@@ -46,23 +46,23 @@ typedef struct demo_sock_s
     u32 rcv_data_len[BACKLOG];
     int if_snd[BACKLOG];
     int all_snd;
-	int uart_trans;
-	int uart_txlen;
+    int uart_trans;
+    int uart_txlen;
     int snd_data_len[BACKLOG];
 } ST_Demo_Sock_S;
 
 typedef struct demo_socks_uart
 {
-	u8 *rxbuf;
-	u16 rxlen;
-}ST_Demo_Socks_uart;
+    u8 *rxbuf;
+    u16 rxlen;
+} ST_Demo_Socks_uart;
 
 
 ST_Demo_Sock_S *demo_sock_s = NULL;
 
 tls_os_queue_t *demo_socks_q = NULL;
 
-ST_Demo_Socks_uart demo_socks_uart = {0}; 
+ST_Demo_Socks_uart demo_socks_uart = {0};
 
 
 
@@ -77,9 +77,9 @@ static void sock_server_recv_task(void *sdata)
     fd_set fdsr;
     fd_set fdexpt;
     int maxsock = 0;
-#if 1    
+#if 1
     struct timeval tv;
-#endif    
+#endif
     int i;
 
     for (;;)
@@ -87,14 +87,14 @@ static void sock_server_recv_task(void *sdata)
         tls_os_time_delay(1);
         if (sock_s->conn_num < 1)
         {
-           // printf("no socket \n");
+            // printf("no socket \n");
             continue;
         }
         /** initialize file descriptor set */
         FD_ZERO(&fdsr);
-   //     FD_ZERO(&fdexpt);
+        //     FD_ZERO(&fdexpt);
 #if 1       /**not use timeout*/
-         /** timeout setting */
+        /** timeout setting */
         tv.tv_sec = 1;
         tv.tv_usec = 0;
 #endif
@@ -105,7 +105,7 @@ static void sock_server_recv_task(void *sdata)
             if (sock_s->client_fd_queue[i] != -1)
             {
                 FD_SET(sock_s->client_fd_queue[i], &fdsr);
-             //   FD_SET(sock_s->client_fd_queue[i], &fdexpt);
+                //   FD_SET(sock_s->client_fd_queue[i], &fdexpt);
                 if (sock_s->client_fd_queue[i] > maxsock)
                 {
                     maxsock = sock_s->client_fd_queue[i];
@@ -115,10 +115,10 @@ static void sock_server_recv_task(void *sdata)
 
         ret = select(maxsock + 1, &fdsr, NULL, NULL, &tv);
         //ret = select(maxsock + 1, &fdsr, NULL, &fdexpt, NULL);
-    //    printf("recv select ret=%d\n",ret);
+        //    printf("recv select ret=%d\n",ret);
         if (0 == ret)
         {
-//            printf("select ret=%d\n",ret);
+            //            printf("select ret=%d\n",ret);
             continue;
         }
         else if (-1 == ret)
@@ -126,7 +126,7 @@ static void sock_server_recv_task(void *sdata)
             printf("select error\n");
             continue;
         }
-        
+
         for (i = 0; i < BACKLOG; i++)
         {
             if (-1 == sock_s->client_fd_queue[i])
@@ -135,10 +135,11 @@ static void sock_server_recv_task(void *sdata)
             }
             if (FD_ISSET(sock_s->client_fd_queue[i], &fdsr))
             {
-				memset(sock_s->sock_rx, 0, DEMO_SOCK_BUF_SIZE);
+                memset(sock_s->sock_rx, 0, DEMO_SOCK_BUF_SIZE);
                 ret = recv(sock_s->client_fd_queue[i], sock_s->sock_rx, DEMO_SOCK_BUF_SIZE, 0);
                 if (ret <= 0)
-                {      // client close
+                {
+                    // client close
                     printf("client[%d] close\n", i);
                     closesocket(sock_s->client_fd_queue[i]);
                     FD_CLR(sock_s->client_fd_queue[i], &fdsr);
@@ -150,22 +151,25 @@ static void sock_server_recv_task(void *sdata)
                     sock_s->client_fd_queue[i] = -1;
                 }
                 else
-                {     // receive data
+                {
+                    // receive data
                     sock_s->rcv_data_len[i] += ret;
-					if(sock_s->uart_trans
-						&& sock_s->if_snd[i])
-					{
-						tls_uart_write(TLS_UART_1, sock_s->sock_rx, ret);	
-					} else {
-						printf("\nsock[%d] rcv len==%d\n", sock_s->client_fd_queue[i], sock_s->rcv_data_len[i]);
-					}				
+                    if(sock_s->uart_trans
+                            && sock_s->if_snd[i])
+                    {
+                        tls_uart_write(TLS_UART_1, sock_s->sock_rx, ret);
+                    }
+                    else
+                    {
+                        printf("\nsock[%d] rcv len==%d\n", sock_s->client_fd_queue[i], sock_s->rcv_data_len[i]);
+                    }
                 }
             }
 
-        //    if (FD_ISSET(sock_s->client_fd_queue[i], &fdexpt))
-        //    {
-        //        printf("expt error\n");
-        //    }
+            //    if (FD_ISSET(sock_s->client_fd_queue[i], &fdexpt))
+            //    {
+            //        printf("expt error\n");
+            //    }
         }
 
     }
@@ -181,145 +185,147 @@ static void sock_server_snd_task(void *sdata)
     fd_set fdsr;
     int maxsock = 0;
     u8 if_send = 0;
-	void *uart_msg;
-	u16 offset = 0;
-	u16 readlen = 0;
+    void *uart_msg;
+    u16 offset = 0;
+    u16 readlen = 0;
 
     for (;;)
-    {	
+    {
         tls_os_queue_receive(sock_s->sock_s_q, (void **) &msg, 0, 0);
-     //   printf("msg=%d\n",msg);
+        //   printf("msg=%d\n",msg);
         switch ((u32) msg)
         {
-            case DEMO_MSG_UART_RECEIVE_DATA:                
-                while(1)
-                {						
-                    tls_os_time_delay(1);       /**adjust send speed*/
-                    FD_ZERO(&fdsr);
-                    /** add active connection to fd set */
-                    maxsock = 0;
-                    if_send = 0;
-                    for (i = 0; i < BACKLOG; i++)
+        case DEMO_MSG_UART_RECEIVE_DATA:
+            while(1)
+            {
+                tls_os_time_delay(1);       /**adjust send speed*/
+                FD_ZERO(&fdsr);
+                /** add active connection to fd set */
+                maxsock = 0;
+                if_send = 0;
+                for (i = 0; i < BACKLOG; i++)
+                {
+                    if (sock_s->client_fd_queue[i] != -1 && (sock_s->snd_data_len[i] != 0 || sock_s->uart_trans) &&
+                            (1 == sock_s->if_snd[i] || 1 == sock_s->all_snd))
                     {
-                        if (sock_s->client_fd_queue[i] != -1 && (sock_s->snd_data_len[i] != 0 || sock_s->uart_trans) && 
-							(1 == sock_s->if_snd[i] || 1 == sock_s->all_snd))
+                        if_send = 1;
+                        FD_SET(sock_s->client_fd_queue[i], &fdsr);
+
+                        if (sock_s->client_fd_queue[i] > maxsock)
                         {
-                            if_send = 1;
-                            FD_SET(sock_s->client_fd_queue[i], &fdsr);
-
-                            if (sock_s->client_fd_queue[i] > maxsock)
-                            {
-                                maxsock = sock_s->client_fd_queue[i];
-                            }
-                        }
-                    }
-				//printf("maxsock==%d\n",maxsock);
-                    if (0 == if_send)
-                    {
-                  //      printf("do not send\n");
-                        break;
-                    }
-					
-                    ret = select(maxsock + 1, NULL, &fdsr, NULL, NULL);
-                    if (ret <= 0)
-                    {
-                        printf("send select ret=%d\n", ret);
-                        continue;
-                    }
-
-					if(sock_s->uart_trans)
-					{
-						tls_os_queue_receive(demo_socks_q, (void **) &uart_msg, 0, 0);
-
-						if(uart_msg != DEMO_SOCK_MSG_UART_RX)
-						{
-							continue;
-						}
-						
-						readlen = (demo_socks_uart.rxlen > DEMO_SOCK_BUF_SIZE) ? 
-									DEMO_SOCK_BUF_SIZE : demo_socks_uart.rxlen;
-						demo_socks_uart.rxbuf = tls_mem_alloc(readlen);
-						if(demo_socks_uart.rxbuf == NULL)
-						{
-							printf("demo_socks_uart->rxbuf malloc err\n");
-							continue;
-						}
-						ret = tls_uart_read(TLS_UART_1, demo_socks_uart.rxbuf, readlen);
-						if(ret < 0)
-						{
-							tls_mem_free(demo_socks_uart.rxbuf);
-							continue;
-						}
-						demo_socks_uart.rxlen -= ret;
-						readlen = ret;
-					}
-	
-                    for (i = 0;i < BACKLOG; i ++)
-                    {
-                        if (-1 == sock_s->client_fd_queue[i] || (0 == sock_s->if_snd[i] &&
-							0 == sock_s->all_snd))
-                        {
-                            continue;    
-                        }
-                        if (FD_ISSET(sock_s->client_fd_queue[i], &fdsr))
-                        {
-
-							if(sock_s->uart_trans)
-							{	
-//								printf("send data len:%d\n", uart_msg->rxlen);
-								offset = 0;
-								do{
-									ret = send(sock_s->client_fd_queue[i], demo_socks_uart.rxbuf + offset, readlen, 0);
-									offset += ret;
-									readlen -= ret;
-								}while(readlen);
-								tls_mem_free(demo_socks_uart.rxbuf);
-							}
-							else
-							{
-								if (-1 == sock_s->snd_data_len[i])
-								{
-									len = DEMO_SOCK_BUF_SIZE;
-								}
-								else if(sock_s->snd_data_len[i] != 0)
-								{
-									len = (sock_s->snd_data_len[i] > DEMO_SOCK_BUF_SIZE) ? 
-										DEMO_SOCK_BUF_SIZE : sock_s->snd_data_len[i];
-								}
-								
-						//			printf("send skno=%d\n",sock_s->client_fd_queue[i]);
-								memset(sock_s->sock_tx, sock_s->client_fd_queue[i] + 0x30, len);
-								ret = send(sock_s->client_fd_queue[i], sock_s->sock_tx, len, 0);
-						//			 printf("ret=%d\n",ret);
-								if (ret != -1)
-								{
-									if (sock_s->snd_data_len[i] != -1)
-									{
-										sock_s->snd_data_len[i] -= ret;
-									}
-								}
-
-							}
+                            maxsock = sock_s->client_fd_queue[i];
                         }
                     }
                 }
-                break;     
-                
-            case DEMO_MSG_WJOIN_FAILD:
-                sock_s->server_fd = -1;
-                sock_s->socket_ok = FALSE;
-                break;
-    
-            default:
-                break;
-        }    
+                //printf("maxsock==%d\n",maxsock);
+                if (0 == if_send)
+                {
+                    //      printf("do not send\n");
+                    break;
+                }
+
+                ret = select(maxsock + 1, NULL, &fdsr, NULL, NULL);
+                if (ret <= 0)
+                {
+                    printf("send select ret=%d\n", ret);
+                    continue;
+                }
+
+                if(sock_s->uart_trans)
+                {
+                    tls_os_queue_receive(demo_socks_q, (void **) &uart_msg, 0, 0);
+
+                    if(uart_msg != DEMO_SOCK_MSG_UART_RX)
+                    {
+                        continue;
+                    }
+
+                    readlen = (demo_socks_uart.rxlen > DEMO_SOCK_BUF_SIZE) ?
+                              DEMO_SOCK_BUF_SIZE : demo_socks_uart.rxlen;
+                    demo_socks_uart.rxbuf = tls_mem_alloc(readlen);
+                    if(demo_socks_uart.rxbuf == NULL)
+                    {
+                        printf("demo_socks_uart->rxbuf malloc err\n");
+                        continue;
+                    }
+                    ret = tls_uart_read(TLS_UART_1, demo_socks_uart.rxbuf, readlen);
+                    if(ret < 0)
+                    {
+                        tls_mem_free(demo_socks_uart.rxbuf);
+                        continue;
+                    }
+                    demo_socks_uart.rxlen -= ret;
+                    readlen = ret;
+                }
+
+                for (i = 0; i < BACKLOG; i ++)
+                {
+                    if (-1 == sock_s->client_fd_queue[i] || (0 == sock_s->if_snd[i] &&
+                            0 == sock_s->all_snd))
+                    {
+                        continue;
+                    }
+                    if (FD_ISSET(sock_s->client_fd_queue[i], &fdsr))
+                    {
+
+                        if(sock_s->uart_trans)
+                        {
+                            //								printf("send data len:%d\n", uart_msg->rxlen);
+                            offset = 0;
+                            do
+                            {
+                                ret = send(sock_s->client_fd_queue[i], demo_socks_uart.rxbuf + offset, readlen, 0);
+                                offset += ret;
+                                readlen -= ret;
+                            }
+                            while(readlen);
+                            tls_mem_free(demo_socks_uart.rxbuf);
+                        }
+                        else
+                        {
+                            if (-1 == sock_s->snd_data_len[i])
+                            {
+                                len = DEMO_SOCK_BUF_SIZE;
+                            }
+                            else if(sock_s->snd_data_len[i] != 0)
+                            {
+                                len = (sock_s->snd_data_len[i] > DEMO_SOCK_BUF_SIZE) ?
+                                      DEMO_SOCK_BUF_SIZE : sock_s->snd_data_len[i];
+                            }
+
+                            //			printf("send skno=%d\n",sock_s->client_fd_queue[i]);
+                            memset(sock_s->sock_tx, sock_s->client_fd_queue[i] + 0x30, len);
+                            ret = send(sock_s->client_fd_queue[i], sock_s->sock_tx, len, 0);
+                            //			 printf("ret=%d\n",ret);
+                            if (ret != -1)
+                            {
+                                if (sock_s->snd_data_len[i] != -1)
+                                {
+                                    sock_s->snd_data_len[i] -= ret;
+                                }
+                            }
+
+                        }
+                    }
+                }
+            }
+            break;
+
+        case DEMO_MSG_WJOIN_FAILD:
+            sock_s->server_fd = -1;
+            sock_s->socket_ok = FALSE;
+            break;
+
+        default:
+            break;
+        }
     }
 }
 int sck_s_send_data_demo(int skt_no, int len, int uart_trans)
 {
     int i = 0;
-	
-    printf("\nsktno=%d, len=%d, uart_trans=%d\n",skt_no, len, uart_trans);
+
+    printf("\nsktno=%d, len=%d, uart_trans=%d\n", skt_no, len, uart_trans);
     if (NULL == demo_sock_s)
     {
         return WM_FAILED;
@@ -328,15 +334,15 @@ int sck_s_send_data_demo(int skt_no, int len, int uart_trans)
     if (0 == skt_no || -1 == skt_no)
     {
         demo_sock_s->all_snd = 1;
-        for (i = 0;i < BACKLOG;i ++)
+        for (i = 0; i < BACKLOG; i ++)
         {
             demo_sock_s->snd_data_len[i] = len;
-        }        
+        }
     }
     else
-    { 
+    {
         demo_sock_s->all_snd = 0;
-        for (i = 0;i < BACKLOG;i ++)
+        for (i = 0; i < BACKLOG; i ++)
         {
             if(demo_sock_s->client_fd_queue[i] != -1)
             {
@@ -344,34 +350,36 @@ int sck_s_send_data_demo(int skt_no, int len, int uart_trans)
                 {
                     demo_sock_s->if_snd[i] = 1;
                     demo_sock_s->snd_data_len[i] = len;
-                } else {
+                }
+                else
+                {
                     demo_sock_s->if_snd[i] = 0;
-				}
+                }
             }
         }
     }
 
-	if(demo_sock_s->uart_trans && (0 == uart_trans))
-	{
-		demo_sock_s->uart_trans = uart_trans;
-		tls_os_queue_send(demo_socks_q, (void *) DEMO_SOCK_MSG_UART_OFF, 0);
-	}
+    if(demo_sock_s->uart_trans && (0 == uart_trans))
+    {
+        demo_sock_s->uart_trans = uart_trans;
+        tls_os_queue_send(demo_socks_q, (void *) DEMO_SOCK_MSG_UART_OFF, 0);
+    }
 
-	demo_sock_s->uart_trans = uart_trans;
-	
+    demo_sock_s->uart_trans = uart_trans;
+
     tls_os_queue_send(demo_sock_s->sock_s_q,
                       (void *) DEMO_MSG_UART_RECEIVE_DATA, 0);
-   
+
     return WM_SUCCESS;
 }
 
 
 static s16 demo_socks_rx(u16 len)
-{	
-	demo_socks_uart.rxlen += len;
-	tls_os_queue_send(demo_socks_q, (void *) DEMO_SOCK_MSG_UART_RX, 0);
+{
+    demo_socks_uart.rxlen += len;
+    tls_os_queue_send(demo_socks_q, (void *) DEMO_SOCK_MSG_UART_RX, 0);
 
-	return 0;
+    return 0;
 }
 
 
@@ -387,7 +395,7 @@ int socket_server_demo(int port)
     {
         port = 1020;
     }
-    printf("server demo port=%d\n",port);
+    printf("server demo port=%d\n", port);
     if (NULL == demo_sock_s)
     {
         demo_sock_s = tls_mem_alloc(sizeof(ST_Demo_Sock_S));
@@ -415,36 +423,36 @@ int socket_server_demo(int port)
 
         tls_os_queue_create(&demo_sock_s->sock_s_q, DEMO_QUEUE_SIZE);
 
-		tls_os_queue_create(&demo_socks_q, DEMO_QUEUE_SIZE);
+        tls_os_queue_create(&demo_socks_q, DEMO_QUEUE_SIZE);
 
-		tls_uart_set_baud_rate(TLS_UART_1, 115200);
-		tls_uart_rx_callback_register(TLS_UART_1, demo_socks_rx);
+        tls_uart_set_baud_rate(TLS_UART_1, 115200);
+        tls_uart_rx_callback_register(TLS_UART_1, demo_socks_rx);
 
-		
-    // 用户处理socket相关的消息
-        tls_os_task_create(NULL, NULL, 
-                            demo_sock_s_task, 
-                            (void *) demo_sock_s, 
-                            (void *) sock_s_task_stk,   /* 任务栈的起始地址 */
-                           DEMO_SOCK_S_TASK_SIZE, /* 任务栈的大小 */
-                           DEMO_SOCKET_S_TASK_PRIO, 
+
+        //deal with user's socket message
+        tls_os_task_create(NULL, NULL,
+                           demo_sock_s_task,
+                           (void *) demo_sock_s,
+                           (void *) sock_s_task_stk, /* task's stack start address */
+                           DEMO_SOCK_S_TASK_SIZE*sizeof(u32),    /* task's stack size, unit:byte */
+                           DEMO_SOCKET_S_TASK_PRIO,
                            0);
 
-    // 用于socket数据的接收
-        tls_os_task_create(NULL, "recv", 
-                            sock_server_recv_task, 
-                            (void *) demo_sock_s, 
-                            (void *) sock_s_rcv_task_stk,    /* 任务栈的起始地址 */
-                           DEMO_SOCK_S_TASK_SIZE, /* 任务栈的大小 */
-                           DEMO_SOCKET_S_RECEIVE_TASK_PRIO, 
+        //deal with socket's rx data
+        tls_os_task_create(NULL, "recv",
+                           sock_server_recv_task,
+                           (void *) demo_sock_s,
+                           (void *) sock_s_rcv_task_stk,    /* task's stack start address */
+                           DEMO_SOCK_S_TASK_SIZE*sizeof(u32),           /* task's stack size, unit:byte */
+                           DEMO_SOCKET_S_RECEIVE_TASK_PRIO,
                            0);
-    // 用于socket数据的发送
-        tls_os_task_create(NULL, "send", 
-                            sock_server_snd_task, 
-                            (void *) demo_sock_s, 
-                            (void *) sock_s_snd_task_stk,    /* 任务栈的起始地址 */
-                           DEMO_SOCK_S_TASK_SIZE, /* 任务栈的大小 */
-                           DEMO_SOCKET_S_SEND_TASK_PRIO, 
+        // deal with socket's tx data
+        tls_os_task_create(NULL, "send",
+                           sock_server_snd_task,
+                           (void *) demo_sock_s,
+                           (void *) sock_s_snd_task_stk,    /* task's stack start address */
+                           DEMO_SOCK_S_TASK_SIZE*sizeof(u32),           /* task's stack size, unit:byte */
+                           DEMO_SOCKET_S_SEND_TASK_PRIO,
                            0);
     }
 
@@ -452,14 +460,14 @@ int socket_server_demo(int port)
 
     return WM_SUCCESS;
 
- _error5:
+_error5:
     tls_mem_free(demo_sock_s->sock_tx);
-  _error4:
+_error4:
     tls_mem_free(demo_sock_s->sock_rx);
-  _error3:
+_error3:
     tls_mem_free(demo_sock_s);
     demo_sock_s = NULL;
-  _error:
+_error:
     printf("mem err\n");
     return WM_FAILED;
 }
@@ -469,20 +477,20 @@ static void sock_s_net_status_changed_event(u8 status)
 {
     switch (status)
     {
-        case NETIF_WIFI_JOIN_FAILED:
-            tls_os_queue_send(demo_sock_s->sock_s_q,
-                              (void *) DEMO_MSG_WJOIN_FAILD, 0);
-            break;
-        case NETIF_WIFI_JOIN_SUCCESS:
-            tls_os_queue_send(demo_sock_s->sock_s_q,
-                              (void *) DEMO_MSG_WJOIN_SUCCESS, 0);
-            break;
-        case NETIF_IP_NET_UP:
-            tls_os_queue_send(demo_sock_s->sock_s_q,
-                              (void *) DEMO_MSG_SOCKET_CREATE, 0);
-            break;
-        default:
-            break;
+    case NETIF_WIFI_JOIN_FAILED:
+        tls_os_queue_send(demo_sock_s->sock_s_q,
+                          (void *) DEMO_MSG_WJOIN_FAILD, 0);
+        break;
+    case NETIF_WIFI_JOIN_SUCCESS:
+        tls_os_queue_send(demo_sock_s->sock_s_q,
+                          (void *) DEMO_MSG_WJOIN_SUCCESS, 0);
+        break;
+    case NETIF_IP_NET_UP:
+        tls_os_queue_send(demo_sock_s->sock_s_q,
+                          (void *) DEMO_MSG_SOCKET_CREATE, 0);
+        break;
+    default:
+        break;
     }
 }
 
@@ -507,7 +515,7 @@ static int socket_server(void)
     int yes = 1;
     int i;
     fd_set fdsr;
-    int ret;	
+    int ret;
 
     if ((demo_sock_s->server_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
     {
@@ -516,22 +524,22 @@ static int socket_server(void)
     }
 
     if (setsockopt(demo_sock_s->server_fd, SOL_SOCKET, SO_REUSEADDR, &yes,
-             sizeof(int)) == -1)
+                   sizeof(int)) == -1)
     {
         printf("set sockopt err\n");
         return WM_FAILED;
     }
-    
+
     /** host byte order */
-    server_addr.sin_family = AF_INET;   
+    server_addr.sin_family = AF_INET;
     /** short, network byte order */
     server_addr.sin_port = htons(demo_sock_s->my_port);
     /** automatically fill with my IP */
-    server_addr.sin_addr.s_addr = ((u32) 0x00000000UL);   
+    server_addr.sin_addr.s_addr = ((u32) 0x00000000UL);
     memset(server_addr.sin_zero, '\0', sizeof(server_addr.sin_zero));
 
     if (bind(demo_sock_s->server_fd, (struct sockaddr *) &server_addr,
-         sizeof(server_addr)) == -1)
+             sizeof(server_addr)) == -1)
     {
         printf("bind err\n");
         return 1;
@@ -554,17 +562,17 @@ static int socket_server(void)
         // initialize file descriptor set
         FD_ZERO(&fdsr);
         FD_SET(demo_sock_s->server_fd, &fdsr);
-    		
-    	ret = select(demo_sock_s->server_fd + 1, &fdsr, NULL, NULL, NULL);
-    	if(ret <= 0)
-    	{
-    	    continue;
-    	}
-    	if (FD_ISSET(demo_sock_s->server_fd, &fdsr))
-    	{
+
+        ret = select(demo_sock_s->server_fd + 1, &fdsr, NULL, NULL, NULL);
+        if(ret <= 0)
+        {
+            continue;
+        }
+        if (FD_ISSET(demo_sock_s->server_fd, &fdsr))
+        {
             new_fd = accept(demo_sock_s->server_fd, (struct sockaddr *) &client_addr,
-                       &sin_size);
-            printf("accept newfd=%d\n",new_fd);
+                            &sin_size);
+            printf("accept newfd=%d\n", new_fd);
             if (new_fd <= 0)
             {
                 printf("accept err\n");
@@ -597,12 +605,12 @@ static int socket_server(void)
                 printf("max connections arrive, exit\n");
                 closesocket(new_fd);
             }
-    
+
             showclient();
-    	}
+        }
     }
 #if 0
-// close other connections
+    // close other connections
     for (i = 0; i < BACKLOG; i++)
     {
         if (demo_sock_s->client_fd_queue[i] != -1)
@@ -612,7 +620,7 @@ static int socket_server(void)
     }
     closesocket(demo_sock_s->server_fd);
     return 0;
-#endif		
+#endif
 }
 
 
@@ -624,7 +632,7 @@ static void demo_sock_s_task(void *sdata)
 
     printf("\nsock s task\n");
 
-    if (ethif->status)          // 已经在网
+    if (ethif->status)          /*connected to ap and get IP*/
     {
         tls_os_queue_send(sock_s->sock_s_q, (void *) DEMO_MSG_SOCKET_CREATE, 0);
     }
@@ -636,7 +644,7 @@ static void demo_sock_s_task(void *sdata)
         ip_param.dhcp_enable = TRUE;
         tls_param_set(TLS_PARAM_ID_IP, &ip_param, TRUE);
 
-        tls_wifi_set_oneshot_flag(1);   /* 一键配置使能 */
+        tls_wifi_set_oneshot_flag(1);   /*Enable oneshot configuration*/
         printf("\nwait one shot......\n");
     }
     tls_netif_add_status_event(sock_s_net_status_changed_event);
@@ -646,24 +654,20 @@ static void demo_sock_s_task(void *sdata)
         tls_os_queue_receive(sock_s->sock_s_q, (void **) &msg, 0, 0);
         switch ((u32) msg)
         {
-            case DEMO_MSG_WJOIN_SUCCESS:
-                break;
+        case DEMO_MSG_WJOIN_SUCCESS:
+            break;
 
-            case DEMO_MSG_SOCKET_CREATE:
-                ethif = tls_netif_get_ethif();
-#if TLS_CONFIG_LWIP_VER2_0_3
-                printf("\nserver ip=%d.%d.%d.%d\n",  ip4_addr1(ip_2_ip4(&ethif->ip_addr)),ip4_addr2(ip_2_ip4(&ethif->ip_addr)),
-					ip4_addr3(ip_2_ip4(&ethif->ip_addr)),ip4_addr4(ip_2_ip4(&ethif->ip_addr)));
-#else
+        case DEMO_MSG_SOCKET_CREATE:
+            ethif = tls_netif_get_ethif();
+            printf("\nserver ip=%d.%d.%d.%d\n",  ip4_addr1(ip_2_ip4(&ethif->ip_addr)), ip4_addr2(ip_2_ip4(&ethif->ip_addr)),
+                   ip4_addr3(ip_2_ip4(&ethif->ip_addr)), ip4_addr4(ip_2_ip4(&ethif->ip_addr)));
+            socket_server();
+            break;
 
-#endif
-                socket_server();
-                break;
-				
-            default:
-                break;
+        default:
+            break;
         }
     }
 }
-    
+
 #endif

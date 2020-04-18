@@ -228,7 +228,7 @@ void tls_timer_destroy(u8 timer_id)
  * @param[in]      timeout the value writed into TMR0_PRD
  * @param[in]      m_flag millisecond flag in TIMER0
  *
- * @return         None
+ * @return         0
  *
  * @note           None
  */

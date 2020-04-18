@@ -39,7 +39,7 @@ ifeq ($(COMPILE), gcc)
 		OBJCOPY = arm-none-eabi-objcopy
 		OBJDUMP = arm-none-eabi-objdump
 	else
-		AR = @echo "GNU-AR $<"; arm-none-eabi-ar
+		AR = arm-none-eabi-ar
 		ASM = @echo "GNU-ASM $<"; arm-none-eabi-gcc
 		CC = @echo "GNU-CC  $<"; arm-none-eabi-gcc
 		CPP = @echo "GNU-CPP $<"; arm-none-eabi-c++
@@ -58,7 +58,7 @@ else
 		LINK = $(KEIL_PATH)/ARMCC/bin/armlink
 		FROMELF = $(KEIL_PATH)/ARMCC/bin/fromelf
 	else
-		AR = @echo "ARM-AR $<"; $(KEIL_PATH)/ARMCC/bin/armar
+		AR = $(KEIL_PATH)/ARMCC/bin/armar
 		ASM = @echo "ARM-ASM $<"; $(KEIL_PATH)/ARMCC/bin/armasm
 		CC = @echo "ARM-CC $<"; $(KEIL_PATH)/ARMCC/bin/armcc
 		CPP = @echo "ARM-CPP $<"; $(KEIL_PATH)/ARMCC/bin/armcc
@@ -94,7 +94,8 @@ ifeq ($(COMPILE), gcc)
 		-std=gnu99 \
 		-march=armv7-m \
 		-mabi=aapcs \
-		-fno-builtin
+		-fno-builtin	\
+		-w
 	
 	ASMFLAGS := -Wall \
 		-mthumb-interwork \

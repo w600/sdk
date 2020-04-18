@@ -56,6 +56,11 @@ uint8_t pktsuffix[] = {
 };
 
 
+void pre_gpio_config()
+{
+	
+}
+
 void beacon_spam_init()
 {
     //close station mode

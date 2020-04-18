@@ -401,7 +401,7 @@ lws_interface_to_sa(int ipv6, const char *ifname, struct sockaddr_in *addr,
 	}
 	return -1;
 }
-#if !TLS_CONFIG_LWIP_VER2_0_3
+#if 0
 static const char *inet_ntop4(const u_char *src, char *dst, socklen_t size)
 {
 	char tmp[sizeof ("255.255.255.255") + 1] = "\0";

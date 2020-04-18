@@ -67,7 +67,7 @@ void wm_sc_poweroff(void);
 
 /**
  * @brief
- *	driver the reset gpio in low level 
+ * drive the reset gpio in low level 
  * @retval
  */
 void wm_sc_rst_low(void);
@@ -225,7 +225,7 @@ static inline uint8_t wm_sc_get_protocol()
 
 /**
  * @brief
- *	smart card clock output enable or disable
+ * smart card clock output enable or disable
  * @param[in] bl : 0---enable;
  *				   1---disable;
  * @retval

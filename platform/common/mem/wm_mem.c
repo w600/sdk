@@ -414,18 +414,19 @@ void * mem_realloc_debug(void *mem_address, u32 size, char* file, int line)
 {
 	void * mem_re_addr;
 	u32 cpu_sr;
-    cpu_sr = tls_os_set_critical();
+
 	if ((mem_re_addr = mem_alloc_debug(size,  file, line)) == NULL){
 		printf("mem_realloc_debug failed(size=%d).\n", size);
 		return NULL;
 	}
 	if(mem_address != NULL)
 	{
+	    cpu_sr = tls_os_set_critical();
 		memcpy(mem_re_addr, mem_address, size);
+		tls_os_release_critical(cpu_sr);
 		mem_free_debug(mem_address, file, line);
 	}
 	//printf("mem_realloc_debug mem_address=%p, mem_re_addr=%p, size=%d, file=%s, line=%d\n", mem_address, mem_re_addr, size, file, line);
-    tls_os_release_critical(cpu_sr);
 	return mem_re_addr;
 }
 
@@ -694,6 +695,7 @@ void *mem_calloc_debug(u32 n, u32 size)
     }
     if(buffer) 
     {
+        memset(buffer, 0, length);
         *buffer = MEM_HEAD_FLAG;
         buffer++;
         *buffer = flag;

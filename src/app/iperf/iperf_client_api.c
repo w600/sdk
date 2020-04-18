@@ -148,11 +148,7 @@ iperf_connect(struct iperf_test *test)
    }
    else
    {
-#if TLS_CONFIG_LWIP_VER2_0_3
    	inet_ntoa_r(tls_nif->ip_addr,  test->bind_address, 16);
-#else
-   	inet_ntoa_r(tls_nif->ip_addr.addr,  test->bind_address, 16);
-#endif
    }
     /* Create and connect the control channel */
     test->ctrl_sck = netdial(test->settings->domain, Ptcp, test->bind_address, test->server_hostname, test->server_port, test->local_port);

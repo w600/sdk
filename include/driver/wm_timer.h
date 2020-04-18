@@ -118,10 +118,10 @@ void tls_timer_destroy(u8 timer_id);
 /**
  * @brief          This function is create a delay to elapse
  *
- * @param[timeout] timeout the value writed into TMR0_PRD
+ * @param[timeout] timeout the value written into TMR0_PRD
  * @param[in]      m_flag millisecond flag in TIMER0
  *
- * @return         None
+ * @return         0
  *
  * @note           None
  */

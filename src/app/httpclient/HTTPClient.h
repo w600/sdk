@@ -29,7 +29,7 @@ extern "C" {
 #define HTTP_CLIENT_VERSION_MAJOR           1
 
     // Global default sizes
-#define HTTP_CLIENT_MAX_SEND_RECV_HEADERS   1024        // Maximum Send and receive buffers size
+#define HTTP_CLIENT_MAX_SEND_RECV_HEADERS   2048        // Maximum Send and receive buffers size
 #define HTTP_CLIENT_INIT_SEND_RECV_HEADERS  2048        // If we can resize the buffers this would be the initial size
 
 #define HTTP_CLIENT_MAX_USERNAME_LENGTH     16          // Maximum length the user name (host and proxy authentication)

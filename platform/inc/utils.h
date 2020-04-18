@@ -33,5 +33,7 @@ int string_to_uint(char *buf, u32 *d);
 int string_to_ipaddr(const char *buf, u8 *addr);
 char * strdup(const char *s);
 char * strndup(const char *s, size_t len);
-	
+
+int sendchar(int ch);
+
 #endif /* UTILS_H */

@@ -129,7 +129,7 @@ void tls_lcd_seg_set(int com, int bit, int on_off)
 /**
  * @brief  enable or disable the LCD module gpio
  *
- * @param[in] the config value per bit for one LCD gpio, set enable gpio output ,clear disabled
+ * @param[in] the config value per bit for one of LCD gpios, set 1 gpio output enable ,0 output disabled
  *
  */
 void tls_lcd_io_config(unsigned int val)

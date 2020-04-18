@@ -461,8 +461,7 @@ void tls_uart_1_tx_task(void *data)
 struct tls_uart *tls_uart_open(u32 uart_no, TLS_UART_MODE_T uart_mode)
 {
     struct tls_uart *uart;
-//    char *stk;
-//  void * rx_msg  = NULL;
+
     if (uart_no == TLS_UART_0)
     {
         uart = &uart_st[0];
@@ -481,72 +480,6 @@ struct tls_uart *tls_uart_open(u32 uart_no, TLS_UART_MODE_T uart_mode)
         return NULL;
 
     uart->uart_port->uart_mode = uart_mode;
-
-#if 0
-    if (uart_mode == TLS_UART_MODE_POLL)
-    {
-    /* uart poll mode */
-        uart->tx_cb = NULL;
-    }
-    else
-#endif
-    {
-#if 0
-    /* 创建uart 发送任务和信号量 */
-        if (uart_no == TLS_UART_0)
-        {
-            stk = tls_mem_alloc(UART0_TX_TASK_STK_SIZE * sizeof(u32));
-            if (!stk)
-                return NULL;
-            memset(stk, 0, UART0_TX_TASK_STK_SIZE * sizeof(u32));
-            tls_os_task_create(NULL, "uart_0_tx", tls_uart_0_tx_task, (void *) uart, (void *) stk,  /* 任务栈的起始地址
-                                                                                                     */
-                               UART0_TX_TASK_STK_SIZE * sizeof(u32),    /* 任务栈的大小
-                                                                         */
-                               TLS_UART0_TX_TASK_PRIO, 0);
-            stk = tls_mem_alloc(UART0_RX_TASK_STK_SIZE * sizeof(u32));
-            if (!stk)
-                return NULL;
-            memset(stk, 0, UART0_RX_TASK_STK_SIZE * sizeof(u32));
-            tls_os_task_create(NULL, "uart_0_rx", tls_uart_0_rx_task, (void *) uart, (void *) stk,  /* 任务栈的起始地址
-                                                                                                     */
-                               UART0_RX_TASK_STK_SIZE * sizeof(u32),    /* 任务栈的大小
-                                                                         */
-                               TLS_UART0_RX_TASK_PRIO, 0);
-
-        }
-        else
-        {
-            stk = tls_mem_alloc(UART1_TX_TASK_STK_SIZE * sizeof(u32));
-            if (!stk)
-                return NULL;
-            memset(stk, 0, UART1_TX_TASK_STK_SIZE * sizeof(u32));
-            tls_os_task_create(NULL, "uart_1_tx", tls_uart_1_tx_task, (void *) uart, (void *) stk,  /* 任务栈的起始地址
-                                                                                                     */
-                               UART1_TX_TASK_STK_SIZE * sizeof(u32),    /* 任务栈的大小
-                                                                         */
-                               TLS_UART1_TX_TASK_PRIO, 0);
-            stk = tls_mem_alloc(UART1_RX_TASK_STK_SIZE * sizeof(u32));
-            if (!stk)
-                return NULL;
-            memset(stk, 0, UART1_RX_TASK_STK_SIZE * sizeof(u32));
-            tls_os_task_create(NULL, "uart_1_rx", tls_uart_1_rx_task, (void *) uart, (void *) stk,  /* 任务栈的起始地址
-                                                                                                     */
-                               UART1_RX_TASK_STK_SIZE * sizeof(u32),    /* 任务栈的大小
-                                                                         */
-                               TLS_UART1_RX_TASK_PRIO, 0);
-        }
-#endif
-
-
-    // tls_os_sem_create(&port->rx_sem, 0);
-    // tls_os_mailbox_create(&uart->rx_mailbox, (void *)0, 0, 0);
-
-    // tls_os_queue_create(&uart->rx_mailbox, 64);
-
-    // tls_os_mailbox_create(&uart->tx_mailbox, (void *)0, 0, 0);
-
-    }
     return uart;
 }
 
@@ -554,7 +487,6 @@ int tls_uart_close(struct tls_uart *uart)
 {
     return WM_FAILED;
 }
-
 
 static u8 *find_atcmd_eol(u8 * src, u32 len)
 {
@@ -597,15 +529,20 @@ static u8 *find_atcmd_eol(u8 * src, u32 len)
     return NULL;
 }
 
-static void modify_atcmd_tail(struct tls_uart_circ_buf *recv, u8 * p)
+static void modify_atcmd_tail(struct tls_uart_circ_buf *recv, u8 ** p)
 {
     u32 cmd_len;
 
-    cmd_len = p - &recv->buf[recv->tail];
+	if (*p >= &recv->buf[recv->tail])
+	{
+    	cmd_len = *p - &recv->buf[recv->tail];
+	}else{
+		cmd_len = *p + TLS_UART_RX_BUF_SIZE  - &recv->buf[recv->tail];
+	}
     if (cmd_len > 512)
     {
         recv->tail = recv->head;
-        p = NULL;
+        *p = NULL;
         TLS_DBGPRT_INFO("EOF char find > 512 \r\n");
     }
     else
@@ -619,6 +556,7 @@ static u8 *parse_atcmd_eol(struct tls_uart *uart)
     struct tls_uart_circ_buf *recv = &uart->uart_port->recv;
     u8 *p = NULL;
 
+
 /* jump to end of line */
     if (recv->head > recv->tail)
     {
@@ -626,7 +564,7 @@ static u8 *parse_atcmd_eol(struct tls_uart *uart)
         p = find_atcmd_eol(&recv->buf[recv->tail], recv->head - recv->tail);
         if (p)
         {
-            modify_atcmd_tail(recv, p);
+            modify_atcmd_tail(recv, &p);
         }
     }
     else
@@ -635,19 +573,20 @@ static u8 *parse_atcmd_eol(struct tls_uart *uart)
     /* check buf[tail - END] */
         p = find_atcmd_eol(&recv->buf[recv->tail],
                            TLS_UART_RX_BUF_SIZE - recv->tail);
+
         if (!p)
         {
         /* check buf[0 - HEAD] */
             p = find_atcmd_eol(&recv->buf[0], recv->head);
             if (p)
             {
-                modify_atcmd_tail(recv, p + TLS_UART_RX_BUF_SIZE);
+                modify_atcmd_tail(recv, &p);
 //              TLS_DBGPRT_INFO("3 find recv->tail = %d \r\n", recv->tail);
             }
         }
         else
         {
-            modify_atcmd_tail(recv, p);
+            modify_atcmd_tail(recv, &p);
         }
     }
 
@@ -656,7 +595,6 @@ static u8 *parse_atcmd_eol(struct tls_uart *uart)
     {
         recv->tail = (recv->tail + 1) & (TLS_UART_RX_BUF_SIZE - 1);
     }
-//    TLS_DBGPRT_INFO("4 recv->tail = %d\n", recv->tail);
     return p;
 }
 
@@ -682,7 +620,7 @@ static void parse_atcmd_line(struct tls_uart *uart)
     u8 hostif_uart_type;
 
 //  TLS_DBGPRT_INFO("A1 %d, %d\r\n", recv->tail, recv->head);
-    while ((CIRC_CNT(recv->head, recv->tail, TLS_UART_RX_BUF_SIZE) >= 3)
+    while ((CIRC_CNT(recv->head, recv->tail, TLS_UART_RX_BUF_SIZE) >= 4)
            && (atcmd_start == NULL))
     {                           // check "at+" char
         if (((recv->buf[recv->tail] == 'A') || (recv->buf[recv->tail] == 'a'))
@@ -787,10 +725,10 @@ static void parse_atcmd_line(struct tls_uart *uart)
         else
         {                       // start of string is not "at+", and string not
                                 // include '\r' and '\n' eat the string
-            ptr_eol = parse_atcmd_eol(uart);
-            if (!ptr_eol)
+//            ptr_eol = parse_atcmd_eol(uart);
+//           if (!ptr_eol)
             {
-                recv->tail = recv->head;
+                recv->tail = (recv->tail + 1)%TLS_UART_RX_BUF_SIZE;
             }
         }
     }
