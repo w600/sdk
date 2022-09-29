@@ -27,25 +27,26 @@ endif
 VERBOSE ?= NO   
 
 CROSS_MAKE := make
+TOOL_CHAIN_PATH ?= $(TOP_DIR)/bin/
 
 # select which tools to use as compiler, librarian and linker
 ifeq ($(COMPILE), gcc)
 	ifeq ($(VERBOSE),YES)
-		AR = arm-none-eabi-ar
-		ASM = arm-none-eabi-gcc
-		CC = arm-none-eabi-gcc
-		CPP = arm-none-eabi-c++
-		LINK = arm-none-eabi-ld.exe
-		OBJCOPY = arm-none-eabi-objcopy
-		OBJDUMP = arm-none-eabi-objdump
+		AR = $(TOOL_CHAIN_PATH)arm-none-eabi-ar
+		ASM = $(TOOL_CHAIN_PATH)arm-none-eabi-gcc
+		CC = $(TOOL_CHAIN_PATH)arm-none-eabi-gcc
+		CPP = $(TOOL_CHAIN_PATH)arm-none-eabi-c++
+		LINK = $(TOOL_CHAIN_PATH)arm-none-eabi-ld.exe
+		OBJCOPY = $(TOOL_CHAIN_PATH)arm-none-eabi-objcopy
+		OBJDUMP = $(TOOL_CHAIN_PATH)arm-none-eabi-objdump
 	else
-		AR = arm-none-eabi-ar
-		ASM = @echo "GNU-ASM $<"; arm-none-eabi-gcc
-		CC = @echo "GNU-CC  $<"; arm-none-eabi-gcc
-		CPP = @echo "GNU-CPP $<"; arm-none-eabi-c++
-		LINK = @echo "GNU-LINK $<"; arm-none-eabi-ld.exe
-		OBJCOPY = @echo "GNU-OBJCOPY $<"; arm-none-eabi-objcopy
-		OBJDUMP = @echo "GNU-OBJDUMP $<"; arm-none-eabi-objdump
+		AR = $(TOOL_CHAIN_PATH)arm-none-eabi-ar
+		ASM = @echo "GNU-ASM $<"; $(TOOL_CHAIN_PATH)arm-none-eabi-gcc
+		CC = @echo "GNU-CC  $<"; $(TOOL_CHAIN_PATH)arm-none-eabi-gcc
+		CPP = @echo "GNU-CPP $<"; $(TOOL_CHAIN_PATH)arm-none-eabi-c++
+		LINK = @echo "GNU-LINK $<"; $(TOOL_CHAIN_PATH)arm-none-eabi-ld.exe
+		OBJCOPY = @echo "GNU-OBJCOPY $<"; $(TOOL_CHAIN_PATH)arm-none-eabi-objcopy
+		OBJDUMP = @echo "GNU-OBJDUMP $<"; $(TOOL_CHAIN_PATH)arm-none-eabi-objdump
 	endif
 else
 	KEIL_PATH =  /cygdrive/d/Keil_V5/ARM
@@ -117,7 +118,8 @@ ifeq ($(COMPILE), gcc)
 	LINKFLAGS := -static	\
 		-nostartfiles	\
 		-mthumb	\
-		-mcpu=cortex-m3	
+		-mcpu=cortex-m3	\
+		-lm
 	MAP := -Wl,-Map,$(IMAGEODIR)/$(TARGET).map
 	INFO := 
 	LIST := 
