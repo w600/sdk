@@ -131,7 +131,8 @@ endif
 endif
 
 $(OBJODIR)/%.o: %.c
-	@mkdir -p $(OBJODIR);
+	#@mkdir -p $(OBJODIR);
+	@mkdir -p $(dir $(@))
 	$(CC) $(if $(findstring $<,$(DSRCS)),$(DFLAGS),$(CFLAGS)) $(COPTS_$(*F)) $(INCLUDES) $(CMACRO) -c -o $@  $<
 
 ifeq ($(COMPILE), gcc)
@@ -199,11 +200,11 @@ INCLUDES += -I $(TOP_DIR)/src/app/libupnp-1.6.19/upnp/include
 INCLUDES += -I $(TOP_DIR)/src/app/gmediarender-0.0.6
 INCLUDES += -I $(TOP_DIR)/src/app/web
 INCLUDES += -I $(TOP_DIR)/src/app/cloud
-INCLUDES += -I $(TOP_DIR)/src/app/cjson
+#INCLUDES += -I $(TOP_DIR)/src/app/cjson
 INCLUDES += -I $(TOP_DIR)/src/app/ajtcl-15.04.00a/inc
 INCLUDES += -I $(TOP_DIR)/src/app/ajtcl-15.04.00a/target/winnermicro
 INCLUDES += -I $(TOP_DIR)/src/app/ajtcl-15.04.00a/external/sha2
-INCLUDES += -I $(TOP_DIR)/src/app/cjson
+#INCLUDES += -I $(TOP_DIR)/src/app/cjson
 INCLUDES += -I $(TOP_DIR)/src/app/cloud/kii
 INCLUDES += -I $(TOP_DIR)/src/app/rmms
 INCLUDES += -I $(TOP_DIR)/src/app/ntp
