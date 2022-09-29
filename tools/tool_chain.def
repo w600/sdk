@@ -27,7 +27,7 @@ endif
 VERBOSE ?= NO   
 
 CROSS_MAKE := make
-TOOL_CHAIN_PATH ?= $(TOP_DIR)/bin/
+TOOL_CHAIN_PATH ?= ../w600-gcc-arm/bin/
 
 # select which tools to use as compiler, librarian and linker
 ifeq ($(COMPILE), gcc)
