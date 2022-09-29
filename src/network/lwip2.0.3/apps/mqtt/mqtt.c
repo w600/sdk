@@ -56,7 +56,14 @@
 #include "lwip/tcp.h"
 #include <string.h>
 
+#ifdef WINDOWS
+#define LWIP_TCP 1
+#define LWIP_CALLBACK_API 1
+#endif
 #if LWIP_TCP && LWIP_CALLBACK_API
+
+
+#define MQTT_DEBUG                  1
 
 /**
  * MQTT_DEBUG: Default is off.
@@ -360,7 +367,7 @@ mqtt_take_request(struct mqtt_request_t **tail, u16_t pkt_id)
 static void
 mqtt_request_time_elapsed(struct mqtt_request_t **tail, u8_t t)
 {
-  struct mqtt_request_t *r;
+  struct mqtt_request_t *r = *tail;
   LWIP_ASSERT("mqtt_request_time_elapsed: tail != NULL", tail != NULL);
   r = *tail;
   while (t > 0 && r != NULL) {
@@ -1206,7 +1213,7 @@ mqtt_client_connect(mqtt_client_t *client, const ip_addr_t *ip_addr, u16_t port,
   u16_t client_id_length;
   /* Length is the sum of 2+"MQTT", protocol level, flags and keep alive */
   u16_t remaining_length = 2 + 4 + 1 + 1 + 2;
-  u8_t flags = 0, will_topic_len = 0, will_msg_len = 0;
+  u8_t flags = 0, will_topic_len = 0, will_msg_len = 0, client_user_len = 0, client_pass_len = 0;
 
   LWIP_ASSERT("mqtt_client_connect: client != NULL", client != NULL);
   LWIP_ASSERT("mqtt_client_connect: ip_addr != NULL", ip_addr != NULL);
@@ -1240,6 +1247,27 @@ mqtt_client_connect(mqtt_client_t *client, const ip_addr_t *ip_addr, u16_t port,
     LWIP_ERROR("mqtt_client_connect: client_info->will_msg length overflow", len <= 0xFF, return ERR_VAL);
     will_msg_len = (u8_t)len;
     len = remaining_length + 2 + will_topic_len + 2 + will_msg_len;
+    LWIP_ERROR("mqtt_client_connect: remaining_length overflow", len <= 0xFFFF, return ERR_VAL);
+    remaining_length = (u16_t)len;
+  }
+
+  if (client_info->client_user != NULL && client_info->client_user[0] != NULL) {
+    flags |= MQTT_CONNECT_FLAG_USERNAME;
+    len = strlen(client_info->client_user);
+    LWIP_ERROR("mqtt_client_connect: client_info->client_user length overflow", len <= 0xFF, return ERR_VAL);
+    LWIP_ERROR("mqtt_client_connect: client_info->client_user length must be > 0", len > 0, return ERR_VAL);
+    client_user_len = (u8_t)len;
+    len = remaining_length + 2 + client_user_len;
+    LWIP_ERROR("mqtt_client_connect: remaining_length overflow", len <= 0xFFFF, return ERR_VAL);
+    remaining_length = (u16_t)len;
+  }
+  if (client_info->client_pass != NULL && client_info->client_pass[0] != NULL) {
+    flags |= MQTT_CONNECT_FLAG_PASSWORD;
+    len = strlen(client_info->client_pass);
+    LWIP_ERROR("mqtt_client_connect: client_info->client_pass length overflow", len <= 0xFF, return ERR_VAL);
+    LWIP_ERROR("mqtt_client_connect: client_info->client_pass length must be > 0", len > 0, return ERR_VAL);
+    client_pass_len = (u8_t)len;
+    len = remaining_length + 2 + client_pass_len;
     LWIP_ERROR("mqtt_client_connect: remaining_length overflow", len <= 0xFFFF, return ERR_VAL);
     remaining_length = (u16_t)len;
   }
@@ -1299,6 +1327,12 @@ mqtt_client_connect(mqtt_client_t *client, const ip_addr_t *ip_addr, u16_t port,
   if ((flags & MQTT_CONNECT_FLAG_WILL) != 0) {
     mqtt_output_append_string(&client->output, client_info->will_topic, will_topic_len);
     mqtt_output_append_string(&client->output, client_info->will_msg, will_msg_len);
+  }
+  if ((flags & MQTT_CONNECT_FLAG_USERNAME) != 0) {
+    mqtt_output_append_string(&client->output, client_info->client_user, client_user_len);
+  }
+  if ((flags & MQTT_CONNECT_FLAG_PASSWORD) != 0) {
+    mqtt_output_append_string(&client->output, client_info->client_pass, client_pass_len);
   }
   return ERR_OK;
 

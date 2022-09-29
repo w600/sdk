@@ -553,6 +553,21 @@ lwip_accept(int s, struct sockaddr *addr, socklen_t *addrlen)
   return newsock;
 }
 
+int LWIP_GetMaxSockets() {
+	return NUM_SOCKETS;
+}
+int LWIP_GetActiveSockets() {
+	int i;
+	int r=0;
+	for (i = 0; i < NUM_SOCKETS; ++i) {
+		if (sockets[i].conn) {
+			r++;
+		}
+	}
+	return r;
+}
+
+
 int
 lwip_bind(int s, const struct sockaddr *name, socklen_t namelen)
 {
