@@ -77,12 +77,14 @@
 #define configTICK_RATE_HZ			( ( portTickType ) 500u )	//时间片中断的频率
 #define configMAX_PRIORITIES		( ( unsigned portBASE_TYPE ) 63)	//应用程序中可用优先级的数目
 #define configMINIMAL_STACK_SIZE	( ( unsigned short ) 90 )	//空闲任务使用的堆栈大小
-#define configTOTAL_HEAP_SIZE		( ( size_t ) 12 * 1024 )		//内核中可用的RAM数量,heap2使用
+#define configTOTAL_HEAP_SIZE		( ( size_t ) 48 * 1024 )		//内核中可用的RAM数量,heap2使用
 #define configMAX_TASK_NAME_LEN		( 8 )	//创建任务名称最大允许长度
 #define configUSE_TRACE_FACILITY	1		//是否使用可视化追踪
 #define configUSE_16_BIT_TICKS		0	//定义portTickType
 #define configIDLE_SHOULD_YIELD		1	//讲阻止空闲任务让出时间直到他的时间片用完
+#define configUSE_HEAP2				1
 #define configUSE_HEAP3				0
+#define configUSE_MUTEXES			1
 
 #define configQUEUE_REGISTRY_SIZE 	0
 #define configSEMAPHORE_INIT_VALUE	5	//创建信号量的最大计数值
