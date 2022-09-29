@@ -12,11 +12,12 @@
 #     a generated lib/image xxx.a ()
 #
 
-TOP_DIR:=./
+TOP_DIR:=.
 sinclude $(TOP_DIR)/tools/tool_chain.def
 
 TARGET = w600
 
+#This matches CONFIG_W800_USE_LIB=n
 USE_LIB=0
 
 #EXTRA_CCFLAGS += -u
@@ -25,7 +26,7 @@ GEN_IMAGES= $(TARGET).out
 GEN_BINS = $(TARGET).bin
 SUBDIRS = 	\
 	$(TOP_DIR)/app	\
-	$(TOP_DIR)/demo		\
+#	$(TOP_DIR)/demo		\
 	$(TOP_DIR)/platform/boot/$(COMPILE)
 endif # } PDIR
 
@@ -45,8 +46,8 @@ COMPONENTS_$(TARGET) =	\
 	$(TOP_DIR)/platform/boot/$(COMPILE)/startup.o	\
 	$(TOP_DIR)/platform/boot/$(COMPILE)/misc.o	\
 	$(TOP_DIR)/platform/boot/$(COMPILE)/retarget.o	\
-	$(TOP_DIR)/app/libuser$(LIB_EXT)	\
-	$(TOP_DIR)/demo/libdemo$(LIB_EXT)
+	$(TOP_DIR)/app/libuser$(LIB_EXT)
+#	$(TOP_DIR)/demo/libdemo$(LIB_EXT)
 
 ifeq ($(USE_LIB), 0)
 COMPONENTS_$(TARGET) += \
@@ -94,7 +95,7 @@ endif
 #   for a subtree within the makefile rooted therein
 #
 
-CONFIGURATION_DEFINES =	-DWM_W600
+CONFIGURATION_DEFINES =	-DWM_W600 -DPLATFORM_W600
 
 DEFINES +=				\
 	$(CONFIGURATION_DEFINES)
