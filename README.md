@@ -1,3 +1,36 @@
+
+# Setup
+
+The folder sharedAppContainer contains source from OpenBK7231T_App. One quick way to get this working in Windows is to create a symbolic link
+* Open an elevated Command window
+* Go to OpenBK7231T\apps\OpenBK7231T_App\sdk\OpenW600\sharedAppContainer folder
+* mklink /d src Path_to_OpenBK7231T\apps\OpenBK7231T_App\src
+
+The toolchain can be downloaded from
+* https://launchpad.net/gcc-arm-embedded/4.9/4.9-2014-q4-major/+download/gcc-arm-none-eabi-4_9-2014q4-20141203-linux.tar.bz2
+* https://launchpad.net/gcc-arm-embedded/4.9/4.9-2014-q4-major/+download/gcc-arm-none-eabi-4_9-2014q4-20141203-win32.zip
+
+And should be extracted to the folder `w600-gcc-arm`.
+
+## Build
+* Download tooolchain
+* Launch cygwin
+* Change dir to apps\OpenBK7231T_App\sdk\OpenW600
+* Run `make`.
+
+## Uploading firmware
+
+* Firmware can be uploaded by running `tools/wm_tool.exe -c COM# -eo all -rs none -dl bin/w600/w600_gz.img` and then resetting the device. 
+  * The `-eo all` will erase the flash completely.
+* You can also use this python tool https://github.com/vshymanskyy/w600tool.git for uploading
+  * python "Path_to_w600tool.py" -p COM# -e --upload "bin/w600/w600.fls"
+  * python "Path_to_w600tool.py" -p COM# --upload "bin/w600/w600_gz.img"
+
+
+
+---
+# Original readme
+
 `1. 当前 sdk 版本 v3.2.0 ，建议首次升级时先下载 FLS 文件，固件烧录请参考` http://docs.thingsturn.com/application_note/download_firmware/
 
 `2. 重点优化了低功耗模式，目前功耗有明显改善。`
