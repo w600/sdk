@@ -1,10 +1,12 @@
 
 # Setup
 
-The folder sharedAppContainer contains source from OpenBK7231T_App. One quick way to get this working in Windows is to create a symbolic link
-* Open an elevated Command window
-* Go to OpenBK7231T\apps\OpenBK7231T_App\sdk\OpenW600\sharedAppContainer folder
-* mklink /d src Path_to_OpenBK7231T\apps\OpenBK7231T_App\src
+The folder sharedAppContainer contains source from OpenBK7231T_App. One quick way to get this working in Windows is to create a symbolic link. Open an elevated Command window and run:
+
+```
+cd OpenBK7231T\apps\OpenBK7231T_App\sdk\OpenW600\sharedAppContainer folder
+mklink /d sharedApp Path_to_OpenBK7231T\apps\OpenBK7231T_App
+```
 
 The toolchain can be downloaded from
 * https://launchpad.net/gcc-arm-embedded/4.9/4.9-2014-q4-major/+download/gcc-arm-none-eabi-4_9-2014q4-20141203-linux.tar.bz2
@@ -18,6 +20,12 @@ And should be extracted to the folder `w600-gcc-arm`.
 * Change dir to apps\OpenBK7231T_App\sdk\OpenW600
 * Run `make`.
 
+
+You can also specify custom toolchain as following:
+```
+TOOL_CHAIN=/workspaces/OpenBK7231T_Dev/w600-gcc-arm/bin/
+make -C OpenBK7231T_App/sdk/OpenW600 TOOL_CHAIN_PATH=$TOOL_CHAIN
+```
 ## Uploading firmware
 
 * Firmware can be uploaded by running `tools/wm_tool.exe -c COM# -eo all -rs none -dl bin/w600/w600_gz.img` and then resetting the device. 

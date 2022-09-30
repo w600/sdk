@@ -19,7 +19,7 @@ ifndef PDIR
 GEN_LIBS = libuser$(LIB_EXT)
 endif
 
-_SHARED_APP = $(TOP_DIR)/sharedAppContainer/src
+_SHARED_APP = $(TOP_DIR)/sharedAppContainer/sharedApp/src
 
 CSRCS += $(_SHARED_APP)/cmnds/cmd_channels.c
 CSRCS += $(_SHARED_APP)/cmnds/cmd_eventHandlers.c
