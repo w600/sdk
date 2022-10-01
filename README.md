@@ -1,44 +1,61 @@
 
-# Setup
+# Steps
 
-The folder sharedAppContainer contains source from OpenBK7231T_App. One quick way to get this working in Windows is to create a symbolic link. Open an elevated Command window and run:
+1. Source from [OpenBK7231T_App](https://github.com/openshwprojects/OpenBK7231T_App) needs to be present in the `sharedAppContainer\sharedApp` folder. Windows instructions are for [cygwin](https://www.cygwin.com/).
 
-```
-cd OpenBK7231T\apps\OpenBK7231T_App\sdk\OpenW600\sharedAppContainer folder
-mklink /d sharedApp Path_to_OpenBK7231T\apps\OpenBK7231T_App
-```
+    ## Windows
+    Open an elevated Command window and run:
 
-The toolchain can be downloaded from
-* https://launchpad.net/gcc-arm-embedded/4.9/4.9-2014-q4-major/+download/gcc-arm-none-eabi-4_9-2014q4-20141203-linux.tar.bz2
-* https://launchpad.net/gcc-arm-embedded/4.9/4.9-2014-q4-major/+download/gcc-arm-none-eabi-4_9-2014q4-20141203-win32.zip
+    ```
+    cd OpenBK7231T\apps\OpenBK7231T_App\sdk\OpenW600\sharedAppContainer
+    mklink /d sharedApp Path_to_OpenBK7231T_apps_OpenBK7231T_App
+    ```
 
-And should be extracted to the folder `w600-gcc-arm`.
+    ## Linux
+    ```
+    cd OpenBK7231T_App/sdk
+    ln -s Path_to_OpenBK7231T_apps_OpenBK7231T_App OpenW600/sharedAppContainer/sharedApp
+    ```
 
-## Build
-* Download tooolchain
-* Launch cygwin
-* Change dir to apps\OpenBK7231T_App\sdk\OpenW600
-* Run `make`.
-
-
-You can also specify custom toolchain as following:
-```
-make -C OpenBK7231T_App/sdk/OpenW600 TOOL_CHAIN_PATH=/workspaces/OpenBK7231T_Dev/w600-gcc-arm/bin/
-```
+2. Extract toolchain to the folder `w600-gcc-arm` which is the default location. The toolchain can be extracted elsewhere and defined while invoking `make` command.
+    * Windows: `support\gcc-arm-none-eabi-4_9-2014q4-20141203-win32.zip` (downloaded from 
+  https://launchpad.net/gcc-arm-embedded/4.9/4.9-2014-q4-major/+download/gcc-arm-none-eabi-4_9-2014q4-20141203-win32.zip)
+    * Linux: `support\gcc-arm-none-eabi-4_9-2014q4-20141203-linux.tar.bz2` (downloaded from 
+  https://launchpad.net/gcc-arm-embedded/4.9/4.9-2014-q4-major/+download/gcc-arm-none-eabi-4_9-2014q4-20141203-win32.zip)
 
 
-## Uploading firmware
+3. Build
+    * cd `apps\OpenBK7231T_App\sdk\OpenW600`
+    * Run `make`
+    * or `make -C OpenBK7231T_App/sdk/OpenW600 TOOL_CHAIN_PATH=Path_to_ww600-gcc-arm_bin`
+    * To clean, run `make -C OpenBK7231T_App/sdk/OpenW600 clean`.
 
-* Firmware can be uploaded by running `tools/wm_tool.exe -c COM# -eo all -rs none -dl bin/w600/w600_gz.img` and then resetting the device. 
-  * The `-eo all` will erase the flash completely.
-* You can also use this python tool https://github.com/vshymanskyy/w600tool.git for uploading
-  * python "Path_to_w600tool.py" -p COM# -e --upload "bin/w600/w600.fls"
-  * python "Path_to_w600tool.py" -p COM# --upload "bin/w600/w600_gz.img"
 
+4. Uploading firmware
+
+    * Firmware can be uploaded by running `tools/wm_tool.exe -c COM# -eo all -rs none -dl bin/w600/w600.fls` and then resetting the device.
+      * The `-eo all` will erase the flash completely. Run `tools/wm_tool.exe -h` to see all options.
+
+    * You can also use this python tool https://github.com/vshymanskyy/w600tool.git
+      * `python "Path_to_w600tool.py" -p COM# -e --upload "bin/w600/w600.fls"`
+      * `python "Path_to_w600tool.py" -p COM# --upload "bin/w600/w600_gz.img"`
+
+
+# Adjustments to build script
+* This SDK lacked the tools (`makeimg`, `makeimg_all`) for Linux build. The source for the same have been copied from another [W600 SDK](https://docs.wiznet.io/img/products/wizfi360/board/wizfi360sdk/wm_sdk_w60x_g3.02.00_190729.zip) provided by [WIZnet](https://docs.wiznet.io/) saved into `support` folder.
+
+* `tools\rules.mk` was adjusted to pass in correct type. `IMG_TYPE` should be 0 for 1M and 3 for 2M. The firmware otherwise generated was being reported as incorrect during upload. This enum declaration in `wm_tools.cs` from [W800](https://github.com/openshwprojects/OpenW800) confirms the same.
+
+  ```
+  typedef enum {
+      WM_TOOL_LAYOUT_TYPE_1M = 0,
+      WM_TOOL_LAYOUT_TYPE_2M = 3
+  } wm_tool_layout_type_e;
+  ```
 
 
 ---
-# Original readme
+# Original Readme
 
 `1. 当前 sdk 版本 v3.2.0 ，建议首次升级时先下载 FLS 文件，固件烧录请参考` http://docs.thingsturn.com/application_note/download_firmware/
 

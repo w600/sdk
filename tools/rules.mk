@@ -31,10 +31,10 @@ UNAME_S:=$(shell uname -s)
 # default use 1m flash
 
 ifeq ($(FLASH_SIZE), 2M)
-	IMG_TYPE:=2M
+	IMG_TYPE:=3
 	IMG_START:=100000
 else
-	IMG_TYPE:=1M
+	IMG_TYPE:=0
 	IMG_START:=90000
 endif
 
