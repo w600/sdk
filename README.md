@@ -23,9 +23,10 @@ And should be extracted to the folder `w600-gcc-arm`.
 
 You can also specify custom toolchain as following:
 ```
-TOOL_CHAIN=/workspaces/OpenBK7231T_Dev/w600-gcc-arm/bin/
-make -C OpenBK7231T_App/sdk/OpenW600 TOOL_CHAIN_PATH=$TOOL_CHAIN
+make -C OpenBK7231T_App/sdk/OpenW600 TOOL_CHAIN_PATH=/workspaces/OpenBK7231T_Dev/w600-gcc-arm/bin/
 ```
+
+
 ## Uploading firmware
 
 * Firmware can be uploaded by running `tools/wm_tool.exe -c COM# -eo all -rs none -dl bin/w600/w600_gz.img` and then resetting the device. 

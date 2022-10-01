@@ -1,3 +1,1 @@
-OpenBK7231T app is now located here:
-https://github.com/openshwprojects/OpenBK7231T_App
-You have to manually check out second repository and put it here.
+Checkout https://github.com/openshwprojects/OpenBK7231T_App into SharedAppp or link it to an existing checkedout location.
