@@ -78,6 +78,11 @@ endif
 
 ifeq ($(UNAME_S),Linux)
 	@echo "linux platform"
+
+	@echo "Building makeimg"
+	@gcc $(SDK_TOOLS)/makeimgsource/makeimg.c -lpthread -O2 -o $(SDK_TOOLS)/makeimg
+	@gcc $(SDK_TOOLS)/makeimgsource/makeimg_all.c -lpthread -O2 -o $(SDK_TOOLS)/makeimg_all
+
 	@cp $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin.bk
 	@gzip -fv $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin
 	@mv $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin.bk $(FIRMWAREDIR)/$(TARGET)/$(TARGET).bin

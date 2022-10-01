@@ -22,3 +22,5 @@ Bin/*
 *.map
 *.lst
 .vscode
+tools/makeimg
+tools/makeimg_all
