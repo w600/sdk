@@ -26,7 +26,7 @@ GEN_IMAGES= $(TARGET).out
 GEN_BINS = $(TARGET).bin
 SUBDIRS = 	\
 	$(TOP_DIR)/app	\
-	$(TOP_DIR)/platform/boot/$(COMPILE)	\
+	$(TOP_DIR)/platform/boot/$(COMPILE)
 	#	$(TOP_DIR)/demo
 endif # } PDIR
 
